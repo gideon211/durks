@@ -1,14 +1,17 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Search, User, Menu, X } from 'lucide-react';
-import { Button } from './ui/button';
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
-import Logo from "../assets/logo.svg"
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ShoppingCart, Search, User, Menu } from 'lucide-react'
+import { Button } from './ui/button'
+import { Sheet, SheetContent, SheetTrigger } from './ui/sheet'
+import Logo from '../assets/logo.svg'
+import { useCartStore } from '@/store/cartStore'
 
 export const Header = () => {
-  const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const cartItemCount = 0; // TODO: Connect to cart state
+  const navigate = useNavigate()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  // Get cart count from Zustand
+  const totalQty = useCartStore((state) => state.totalQty())
 
   const productCategories = [
     { name: 'Pure Juice', path: '/products/pure-juice' },
@@ -17,7 +20,7 @@ export const Header = () => {
     { name: 'Cut Fruits', path: '/products/cut-fruits' },
     { name: 'Gift Packs', path: '/products/gift-packs' },
     { name: 'Events', path: '/products/events' },
-  ];
+  ]
 
   return (
     <header className="sticky top-0 z-50 w-full bg-card border-b border-border shadow-sm transition-all duration-300">
@@ -25,9 +28,7 @@ export const Header = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 hover-lift">
-
-          <img src={Logo} alt="img" className='w-24 h-24 object-contain' />
-
+            <img src={Logo} alt="Logo" className="w-24 h-24 object-contain" />
           </Link>
 
           {/* Desktop Navigation */}
@@ -50,10 +51,16 @@ export const Header = () => {
                 </div>
               </div>
             </div>
-            <Link to="/csr" className="font-medium text-foreground hover:text-primary transition-colors">
+            <Link
+              to="/csr"
+              className="font-medium text-foreground hover:text-primary transition-colors"
+            >
               CSR
             </Link>
-            <Link to="/contact" className="font-medium text-foreground hover:text-primary transition-colors">
+            <Link
+              to="/contact"
+              className="font-medium text-foreground hover:text-primary transition-colors"
+            >
               Contact
             </Link>
           </nav>
@@ -63,7 +70,7 @@ export const Header = () => {
             <Button variant="ghost" size="icon" className="hidden md:flex">
               <Search className="h-5 w-5" />
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -83,6 +90,7 @@ export const Header = () => {
               Get Bulk Quote
             </Button>
 
+            {/* Cart icon with live badge */}
             <Button
               variant="ghost"
               size="icon"
@@ -90,14 +98,14 @@ export const Header = () => {
               className="relative"
             >
               <ShoppingCart className="h-5 w-5" />
-              {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-secondary text-secondary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartItemCount}
+              {totalQty > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {totalQty}
                 </span>
               )}
             </Button>
 
-            {/* Mobile menu */}
+            {/* Mobile Menu */}
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden">
@@ -107,7 +115,9 @@ export const Header = () => {
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col gap-6 mt-8">
                   <div>
-                    <h3 className="font-heading font-semibold text-lg mb-3">Products</h3>
+                    <h3 className="font-heading font-semibold text-lg mb-3">
+                      Products
+                    </h3>
                     <div className="flex flex-col gap-2">
                       {productCategories.map((category) => (
                         <Link
@@ -121,7 +131,7 @@ export const Header = () => {
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col gap-3">
                     <Link
                       to="/csr"
@@ -140,11 +150,22 @@ export const Header = () => {
                   </div>
 
                   <div className="flex flex-col gap-3 pt-4 border-t border-border">
-                    <Button onClick={() => { navigate('/auth'); setIsMenuOpen(false); }}>
+                    <Button
+                      onClick={() => {
+                        navigate('/auth')
+                        setIsMenuOpen(false)
+                      }}
+                    >
                       <User className="h-4 w-4" />
                       Sign In
                     </Button>
-                    <Button variant="secondary" onClick={() => { navigate('/bulk-quote'); setIsMenuOpen(false); }}>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        navigate('/bulk-quote')
+                        setIsMenuOpen(false)
+                      }}
+                    >
                       Get Bulk Quote
                     </Button>
                   </div>
@@ -155,5 +176,5 @@ export const Header = () => {
         </div>
       </div>
     </header>
-  );
-};
+  )
+}

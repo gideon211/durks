@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
+import { Link } from "react-router-dom";
+import { ShoppingCart } from "lucide-react";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { useCartStore } from "@/store/cartStore";
 
 interface ProductCardProps {
   id: string;
@@ -10,7 +11,7 @@ interface ProductCardProps {
   image: string;
   price: number;
   category?: string;
-  options?: string[]; // for dropdown like "12 cans", "24 cans"
+  options?: string[];
 }
 
 export const ProductCard = ({
@@ -20,12 +21,24 @@ export const ProductCard = ({
   image,
   price,
   category,
-  options = ["24 Cans","12 Cans"],
+  options = ["12", "24"],
 }: ProductCardProps) => {
+  const addToCart = useCartStore((state) => state.addToCart);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault(); // prevent navigation to product page
+    addToCart({
+      id,
+      name,
+      price,
+      image,
+      category,
+    });
+  };
+
   return (
     <Link to={`/product/${id}`}>
       <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-[30rem]">
-        
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img
@@ -53,14 +66,20 @@ export const ProductCard = ({
 
           {/* Dropdown + Add to Cart */}
           <div className="flex flex-col gap-2 mt-auto">
-            <select className="w-full border rounded  px-2 py-2 text-sm">
-             
-                <option>12</option>
-                <option>24</option>
-            
+            <select 
+            className="w-full border rounded px-2 py-2 text-sm"
+            onClick={(e) => e.stopPropagation()}
+            >
+              {options.map((opt) => (
+                <option key={opt}>{opt}</option>
+              ))}
             </select>
 
-            <Button size="sm" className="w-full flex justify-center items-center gap-2 font-bold ">
+            <Button
+              size="sm"
+              onClick={handleAddToCart}
+              className="w-full flex justify-center items-center gap-2 font-bold"
+            >
               Add to cart
               <ShoppingCart className="h-4 w-4" />
             </Button>

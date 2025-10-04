@@ -6,12 +6,7 @@ import { ProductCard } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import heroImage from '@/assets/heroimg.jpg';
-import orangeImg from '@/assets/orangefull.jpg';
-import cleanseImg from '@/assets/greenfull.jpg';
-import smoothiesImg from '@/assets/berryfull.jpg';
-import cutFruitsImg from '@/assets/cutsfull.jpg';
-import giftPacksImg from '@/assets/trofull.jpg';
-import eventsImg from '@/assets/events.jpg';
+import { motion, easeIn, easeInOut } from 'framer-motion';
 
 const categories = [
   { id: 'all', name: 'All Products', slug: 'all' },
@@ -23,97 +18,8 @@ const categories = [
   { id: 'events', name: 'Events', slug: 'events' },
 ];
 
-// Mock product data
-const mockProducts = [
-  {
-    id: '1',
-    name: 'Orange Sunrise',
-    description: 'Fresh-pressed orange juice packed with vitamin C and natural sweetness',
-    image: orangeImg,
-    price: 8.5,
-    category: 'Pure Juice',
-    categorySlug: 'pure-juice',
-    bulkTiers: [
-      { minQty: 1, maxQty: 9, discount: 0 },
-      { minQty: 10, maxQty: 49, discount: 8 },
-      { minQty: 50, maxQty: 999, discount: 12 },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Green Detox',
-    description: 'Cleansing blend of kale, cucumber, celery, and green apple',
-    image: cleanseImg,
-    price: 12.0,
-    category: 'Cleanse Juices',
-    categorySlug: 'cleanse',
-    bulkTiers: [
-      { minQty: 1, maxQty: 9, discount: 0 },
-      { minQty: 10, maxQty: 49, discount: 10 },
-      { minQty: 50, maxQty: 999, discount: 15 },
-    ],
-  },
-  {
-    id: '3',
-    name: 'Berry Blast Smoothie',
-    description: 'Creamy blend of strawberries, blueberries, banana, and yogurt',
-    image: smoothiesImg,
-    price: 10.5,
-    category: 'Smoothies',
-    categorySlug: 'smoothies',
-    bulkTiers: [
-      { minQty: 1, maxQty: 9, discount: 0 },
-      { minQty: 10, maxQty: 49, discount: 8 },
-      { minQty: 50, maxQty: 999, discount: 12 },
-    ],
-  },
-  {
-    id: '4',
-    name: 'Tropical Mix',
-    description: 'Fresh-cut pineapple, mango, papaya, and watermelon',
-    image: cutFruitsImg,
-    price: 15.0,
-    category: 'Cut Fruits',
-    categorySlug: 'cut-fruits',
-    bulkTiers: [
-      { minQty: 1, maxQty: 9, discount: 0 },
-      { minQty: 10, maxQty: 49, discount: 10 },
-      { minQty: 50, maxQty: 999, discount: 15 },
-    ],
-  },
-  {
-    id: '5',
-    name: 'Executive Gift Pack',
-    description: 'Premium selection of 6 juice varieties in elegant packaging',
-    image: giftPacksImg,
-    price: 45.0,
-    category: 'Gift Packs',
-    categorySlug: 'gift-packs',
-    bulkTiers: [
-      { minQty: 1, maxQty: 9, discount: 0 },
-      { minQty: 10, maxQty: 49, discount: 12 },
-      { minQty: 50, maxQty: 999, discount: 18 },
-    ],
-  },
-  {
-    id: '6',
-    name: 'Corporate Event Package',
-    description: 'Complete juice station setup for 50-200 guests',
-    image: eventsImg,
-    price: 250.0,
-    category: 'Events',
-    categorySlug: 'events',
-    bulkTiers: [],
-  },
-];
-
 /**
- * TypingHero - small in-file component to animate heading + paragraph
- * Props:
- *  - heading: string
- *  - paragraph: string
- *  - typingSpeed: number (ms per char)
- *  - pauseBetween: number (ms between heading finish and paragraph start)
+ * TypingHero - animates heading and paragraph
  */
 function TypingHero({
   heading,
@@ -132,7 +38,6 @@ function TypingHero({
   const [typedParagraph, setTypedParagraph] = useState('');
   const [phase, setPhase] = useState<'heading' | 'pause' | 'paragraph' | 'done'>('heading');
 
-  // Heading typing
   useEffect(() => {
     if (phase !== 'heading') return;
     let i = 0;
@@ -151,14 +56,12 @@ function TypingHero({
     return () => clearInterval(t);
   }, [phase, heading, typingSpeed]);
 
-  // Pause then start paragraph
   useEffect(() => {
     if (phase !== 'pause') return;
     const to = setTimeout(() => setPhase('paragraph'), pauseBetween);
     return () => clearTimeout(to);
   }, [phase, pauseBetween]);
 
-  // Paragraph typing
   useEffect(() => {
     if (phase !== 'paragraph') return;
     let i = 0;
@@ -177,9 +80,13 @@ function TypingHero({
     return () => clearInterval(t);
   }, [phase, paragraph, typingSpeed]);
 
+  const handWaveAnimation = {
+    rotate: [0, 15, -10, 15, -10, 15, -10, 15, -10, 15, 0],
+    transition: { duration: 1.5, ease: easeInOut },
+  };
+
   return (
     <section className={`max-w-4xl ${className}`}>
-      {/* small cursor style */}
       <style>{`
         @keyframes blink {
           0% { opacity: 1; }
@@ -208,13 +115,8 @@ function TypingHero({
         {phase === 'paragraph' && <span className="typing-cursor" aria-hidden="true" />}
       </p>
 
-      {/* screen-reader friendly live regions */}
-      <div aria-live="polite" className="sr-only">
-        {typedHeading}
-      </div>
-      <div aria-live="polite" className="sr-only">
-        {typedParagraph}
-      </div>
+      <div aria-live="polite" className="sr-only">{typedHeading}</div>
+      <div aria-live="polite" className="sr-only">{typedParagraph}</div>
     </section>
   );
 }
@@ -223,19 +125,25 @@ export default function Products() {
   const { category: urlCategory } = useParams<{ category?: string }>();
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState(urlCategory || 'all');
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    // sync with URL param if navigation changes outside this component
+    fetch('/products.json')
+      .then(res => res.json())
+      .then(data => setProducts(data))
+      .catch(err => console.error('Error loading products:', err));
+  }, []);
+
+  useEffect(() => {
     if (urlCategory && urlCategory !== activeCategory) {
       setActiveCategory(urlCategory);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlCategory]);
 
   const filteredProducts =
     activeCategory === 'all'
-      ? mockProducts
-      : mockProducts.filter((p) => p.categorySlug === activeCategory);
+      ? products
+      : products.filter((p) => p.categorySlug === activeCategory);
 
   const handleCategoryChange = (categorySlug: string) => {
     setActiveCategory(categorySlug);
@@ -277,9 +185,7 @@ export default function Products() {
         </section>
       )}
 
-      {/* Products Section */}
       <section className="container mx-auto px-4 py-12">
-        {/* Category Tabs */}
         <div className="mb-8 overflow-x-auto">
           <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
             <TabsList className="inline-flex w-auto">
@@ -292,7 +198,6 @@ export default function Products() {
           </Tabs>
         </div>
 
-        {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} {...product} />

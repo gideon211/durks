@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Phone, Mail } from 'lucide-react';
+import Logo from "@/assets/logo.svg"
 
 export const Footer = () => {
   return (
@@ -9,10 +10,10 @@ export const Footer = () => {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xl">🍊</span>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center">
+                <span className=""><img src={Logo} alt="logo" className='h-[rem] w-[rem]'/></span>
               </div>
-              <span className="font-heading font-bold text-xl">Durk's Juice</span>
+              <span className="font-heading font-bold text-xl"></span>
             </div>
             <p className="text-muted-foreground text-sm">
               Premium bulk fruit juice for businesses, events, and wholesale orders.

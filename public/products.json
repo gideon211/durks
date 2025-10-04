@@ -1,0 +1,82 @@
+[
+  {
+    "id": "1",
+    "name": "Orange Sunrise",
+    "description": "Fresh-pressed orange juice packed with vitamin C and natural sweetness",
+    "image": "/images/orangefull.jpg",
+    "price": 8.5,
+    "category": "Pure Juice",
+    "categorySlug": "pure-juice",
+    "bulkTiers": [
+      { "minQty": 1, "maxQty": 9, "discount": 0 },
+      { "minQty": 10, "maxQty": 49, "discount": 8 },
+      { "minQty": 50, "maxQty": 999, "discount": 12 }
+    ]
+  },
+  {
+    "id": "2",
+    "name": "Green Detox",
+    "description": "Cleansing blend of kale, cucumber, celery, and green apple",
+    "image": "/images/greenfull.jpg",
+    "price": 12.0,
+    "category": "Cleanse Juices",
+    "categorySlug": "cleanse",
+    "bulkTiers": [
+      { "minQty": 1, "maxQty": 9, "discount": 0 },
+      { "minQty": 10, "maxQty": 49, "discount": 10 },
+      { "minQty": 50, "maxQty": 999, "discount": 15 }
+    ]
+  },
+  {
+    "id": "3",
+    "name": "Berry Blast Smoothie",
+    "description": "Creamy blend of strawberries, blueberries, banana, and yogurt",
+    "image": "/images/berryfull.jpg",
+    "price": 10.5,
+    "category": "Smoothies",
+    "categorySlug": "smoothies",
+    "bulkTiers": [
+      { "minQty": 1, "maxQty": 9, "discount": 0 },
+      { "minQty": 10, "maxQty": 49, "discount": 8 },
+      { "minQty": 50, "maxQty": 999, "discount": 12 }
+    ]
+  },
+  {
+    "id": "4",
+    "name": "Tropical Mix",
+    "description": "Fresh-cut pineapple, mango, papaya, and watermelon",
+    "image": "/images/cutsfull.jpg",
+    "price": 15.0,
+    "category": "Cut Fruits",
+    "categorySlug": "cut-fruits",
+    "bulkTiers": [
+      { "minQty": 1, "maxQty": 9, "discount": 0 },
+      { "minQty": 10, "maxQty": 49, "discount": 10 },
+      { "minQty": 50, "maxQty": 999, "discount": 15 }
+    ]
+  },
+  {
+    "id": "5",
+    "name": "Executive Gift Pack",
+    "description": "Premium selection of 6 juice varieties in elegant packaging",
+    "image": "/images/trofull.jpg",
+    "price": 45.0,
+    "category": "Gift Packs",
+    "categorySlug": "gift-packs",
+    "bulkTiers": [
+      { "minQty": 1, "maxQty": 9, "discount": 0 },
+      { "minQty": 10, "maxQty": 49, "discount": 12 },
+      { "minQty": 50, "maxQty": 999, "discount": 18 }
+    ]
+  },
+  {
+    "id": "6",
+    "name": "Corporate Event Package",
+    "description": "Complete juice station setup for 50-200 guests",
+    "image": "/images/events.jpg",
+    "price": 250.0,
+    "category": "Events",
+    "categorySlug": "events",
+    "bulkTiers": []
+  }
+]
