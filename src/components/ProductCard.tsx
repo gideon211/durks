@@ -1,17 +1,17 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Plus, Minus } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { useCartStore } from "@/store/cartStore";
+import { useState } from "react";
 
 interface ProductCardProps {
   id: string;
   name: string;
   description?: string;
   image: string;
-  price: number;
+  price: number; // unit price
   category?: string;
-  options?: string[];
 }
 
 export const ProductCard = ({
@@ -21,31 +21,43 @@ export const ProductCard = ({
   image,
   price,
   category,
-  options = ["12", "24"],
 }: ProductCardProps) => {
   const addToCart = useCartStore((state) => state.addToCart);
+  const [quantity, setQuantity] = useState<number>(1);
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault(); // prevent navigation to product page
-    addToCart({
-      id,
-      name,
-      price,
-      image,
-      category,
-    });
+    e.preventDefault();
+    e.stopPropagation();
+    if (quantity < 1) return;
+    // pass unit price, quantity handled in store
+    addToCart(
+      { id, name, price, image, category },
+      quantity
+    );
+  };
+
+  const increment = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setQuantity((prev) => prev + 1);
+  };
+
+  const decrement = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setQuantity((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuantity(Math.max(1, Number(e.target.value)));
   };
 
   return (
     <Link to={`/product/${id}`}>
-      <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-[30rem]">
+      <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-[25rem]">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-muted">
-          <img
-            src={image}
-            alt={name}
-            className="w-full h-full object-cover"
-          />
+          <img src={image} alt={name} className="w-full h-full object-cover" />
         </div>
 
         {/* Content */}
@@ -60,20 +72,38 @@ export const ProductCard = ({
             {name}
           </h3>
 
-          <p className="font-heading font-bold text-lg text-foreground mb-4">
-            ₵{price.toFixed(2)}
+          <p className="font-heading font-bold text-lg text-foreground mb-1">
+            ₵{(price * quantity).toFixed(2)}
           </p>
 
-          {/* Dropdown + Add to Cart */}
+          {/* Quantity Selector + Add to Cart */}
           <div className="flex flex-col gap-2 mt-auto">
-            <select 
-            className="w-full border rounded px-2 py-2 text-sm"
-            onClick={(e) => e.stopPropagation()}
-            >
-              {options.map((opt) => (
-                <option key={opt}>{opt}</option>
-              ))}
-            </select>
+            <div className="flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={decrement}
+                className="p-1 border rounded hover:bg-gray-100"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+
+              <input
+                type="number"
+                min={1}
+                value={quantity}
+                onChange={handleInputChange}
+                onClick={(e) => e.stopPropagation()}
+                className="w-16 text-center border rounded px-1 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+
+              <button
+                type="button"
+                onClick={increment}
+                className="p-1 border rounded hover:bg-gray-100"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
 
             <Button
               size="sm"
@@ -89,3 +119,4 @@ export const ProductCard = ({
     </Link>
   );
 };
+

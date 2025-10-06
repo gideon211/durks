@@ -4,7 +4,7 @@ import { persist } from "zustand/middleware";
 export interface Product {
   id: string | number;
   name: string;
-  price: number;
+  price: number; // unit price
   image?: string;
   category?: string;
 }
@@ -15,7 +15,7 @@ export interface CartItem extends Product {
 
 interface CartState {
   cart: CartItem[];
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product, qty?: number) => void;
   removeFromCart: (id: string | number) => void;
   updateQty: (id: string | number, qty: number) => void;
   clearCart: () => void;
@@ -28,19 +28,19 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       cart: [],
 
-      addToCart: (product) => {
+      addToCart: (product, qty = 1) => {
         const cart = get().cart;
         const existing = cart.find((item) => item.id === product.id);
 
         if (existing) {
           set({
             cart: cart.map((item) =>
-              item.id === product.id ? { ...item, qty: item.qty + 1 } : item
+              item.id === product.id ? { ...item, qty: item.qty + qty } : item
             ),
           });
         } else {
           set({
-            cart: [...cart, { ...product, qty: 1 }],
+            cart: [...cart, { ...product, qty }],
           });
         }
       },
@@ -68,7 +68,7 @@ export const useCartStore = create<CartState>()(
         get().cart.reduce((sum, item) => sum + item.price * item.qty, 0),
     }),
     {
-      name: "cart-storage", // name in localStorage
+      name: "cart-storage",
     }
   )
 );

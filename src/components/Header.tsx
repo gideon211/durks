@@ -28,35 +28,27 @@ export const Header = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 hover-lift">
-            <img src={Logo} alt="Logo" className="w-24 h-24 object-contain" />
+            <img src={Logo} alt="Logo" className="w-24 h-26 object-contain" />
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8">
-            <div className="relative group">
-              <button className="font-medium text-foreground hover:text-primary transition-colors">
-                Products
-              </button>
-              <div className="absolute top-full left-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                <div className="p-2">
-                  {productCategories.map((category) => (
-                    <Link
-                      key={category.path}
-                      to={category.path}
-                      className="block px-4 py-3 rounded-md hover:bg-muted transition-colors"
-                    >
-                      {category.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {/* Products: navigate to /products, skip the hero and scroll to tabs */}
+            <Link
+              to="/products"
+              state={{ skipHero: true, scrollToTabs: true }}
+              className="font-medium text-foreground hover:text-primary transition-colors"
+            >
+              Products
+            </Link>
+
             <Link
               to="/csr"
               className="font-medium text-foreground hover:text-primary transition-colors"
             >
               CSR
             </Link>
+
             <Link
               to="/contact"
               className="font-medium text-foreground hover:text-primary transition-colors"
@@ -67,9 +59,19 @@ export const Header = () => {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2 md:gap-4">
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <Search className="h-5 w-5" />
-            </Button>
+            {/* Search with hover input */}
+            <div className="relative group hidden md:flex">
+              <Button variant="ghost" size="icon" className="relative z-10">
+                <Search className="h-5 w-5" />
+              </Button>
+
+              <input
+                type="text"
+                placeholder="Search products..."
+                className="absolute right-0 top-0 z-0 opacity-0 w-0 group-hover:opacity-100 group-hover:w-48 transition-all duration-300 border border-border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
 
             <Button
               variant="outline"
@@ -123,6 +125,7 @@ export const Header = () => {
                         <Link
                           key={category.path}
                           to={category.path}
+                          state={{ skipHero: true, scrollToTabs: true }}
                           onClick={() => setIsMenuOpen(false)}
                           className="px-4 py-3 rounded-md hover:bg-muted transition-colors"
                         >
