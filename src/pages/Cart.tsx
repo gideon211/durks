@@ -78,11 +78,11 @@ export default function Cart() {
     className="bg-card border border-border rounded-xl p-3 flex flex-row items-center gap-3"
   >
     {/* Image */}
-    <div className="w-16 flex-shrink-0">
+    <div className="w-24 flex-shrink-0">
       <img
         src={item.image}
         alt={item.name}
-        className="w-full h-22 object-cover rounded-md border"
+        className="w-full h-24 object-cover rounded-md border"
       />
     </div>
 
