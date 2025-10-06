@@ -82,7 +82,7 @@ export default function Cart() {
       <img
         src={item.image}
         alt={item.name}
-        className="w-full h-16 object-cover rounded-md border"
+        className="w-full h-22 object-cover rounded-md border"
       />
     </div>
 

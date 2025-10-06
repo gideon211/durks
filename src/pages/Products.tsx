@@ -152,7 +152,7 @@ export default function Products() {
         {/* tabs wrapper - no scroll-mt class because we compute offset in JS */}
         <div className="mb-8 overflow-x-auto" ref={tabsRef}>
           <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
-            <TabsList className="inline-flex w-auto">
+            <TabsList className="inline-flex w-auto no-scrollbar">
               {categories.map((cat) => (
                 <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap">
                   {cat.name}
