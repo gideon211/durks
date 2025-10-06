@@ -13,7 +13,7 @@ export const Footer = () => {
               <div className="w-10 h-10 flex items-center justify-center">
                 <img src={Logo} alt="logo" className="h-8 w-8" />
               </div>
-              <span className="font-heading font-bold text-lg">Fresh Juice</span>
+              <span className="font-heading font-bold text-lg"></span>
             </div>
             <p className="text-muted-foreground text-xs">
               Premium bulk fruit juice for businesses, events, and wholesale orders.
@@ -75,7 +75,7 @@ export const Footer = () => {
 
         {/* Bottom bar */}
         <div className="border-t border-border mt-4 pt-4 text-center text-xs text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Fresh Juice Co. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Duks. All rights reserved.</p>
         </div>
       </div>
     </footer>
