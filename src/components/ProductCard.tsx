@@ -60,7 +60,7 @@ export const ProductCard = ({
           </h3>
         </div>
 
-        <p className="font-heading font-bold text-lg text-foreground mb-1">
+        <p className="font-heading font-semibold text-lg text-foreground mb-1">
           ₵{(price * quantity).toFixed(2)}
         </p>
 
