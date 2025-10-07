@@ -85,7 +85,7 @@ export default function Auth() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="signin-password">Password</Label>
-                    <Input id="signin-password" name="signin-password" type="password" placeholder="••••••••" required />
+                    <Input id="signin-password" name="signin-password" type="password" placeholder="" required />
                   </div>
 
                   <div className="flex items-center justify-between">
