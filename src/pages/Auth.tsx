@@ -64,9 +64,9 @@ export default function Auth() {
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="bg-card border-2 border-border rounded-2xl shadow-xl p-8">
-            <div className="text-center mb-8">
-              <h1 className="font-heading font-bold text-3xl mb-2">Welcome to Duk's Juice.</h1>
-              <p className="text-muted-foreground">Log in to manage your orders and bulk quotes</p>
+            <div className="text-center">
+              <h1 className="font-heading font-bold text-3xl "></h1>
+              <p className="text-muted-foreground"></p>
             </div>
 
             <Tabs defaultValue="signin" className="w-full">
