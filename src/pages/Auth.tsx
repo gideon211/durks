@@ -76,11 +76,11 @@ export default function Auth() {
               </TabsList>
 
               <TabsContent value="signin">
-                <p className="text-muted-foreground py-8">Log in to manage your orders and bulk quotes</p>
+                <p className="text-muted-foreground mx-auto text-center">Log in to manage your orders </p>
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
-                    <Input id="signin-email" name="signin-email" type="email" placeholder="you@company.com" required />
+                    <Input id="signin-email" name="signin-email" type="email" placeholder="" required />
                   </div>
                   
                   <div className="space-y-2">
@@ -103,21 +103,21 @@ export default function Auth() {
               </TabsContent>
 
               <TabsContent value="signup">
-                <p className="text-muted-foreground py-8">Sign up to make your orders </p>
+                <p className="text-muted-foreground mx-auto text-center">Sign up to make your orders </p>
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Full Name</Label>
-                    <Input id="signup-name" name="signup-name" type="text" placeholder="Gideon Mensah" required />
+                    <Input id="signup-name" name="signup-name" type="text" placeholder="" required />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
-                    <Input id="signup-email" name="signup-email" type="email" placeholder="you@company.com" required />
+                    <Input id="signup-email" name="signup-email" type="email" placeholder="" required />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="signup-company">Company (Optional)</Label>
-                    <Input id="signup-company" name="signup-company" type="text" placeholder="Your company name" />
+                    <Input id="signup-company" name="signup-company" type="text" placeholder="" />
                   </div>
                   
                   <div className="space-y-2">
