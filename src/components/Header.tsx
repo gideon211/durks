@@ -89,7 +89,7 @@ export const Header = () => {
               onClick={() => navigate('/bulk-quote')}
               className="hidden md:flex"
             >
-              Get Bulk Quote
+              Get Bulk 
             </Button>
 
             {/* Cart icon with live badge */}

@@ -10,6 +10,7 @@ import CSR from "./pages/CSR";
 import Cart from "./pages/Cart";
 import BulkQuote from "./pages/BulkQuote";
 import NotFound from "./pages/NotFound";
+import Checkout from "./pages/Checkout";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/csr/project-unforgotten" element={<CSR />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/bulk-quote" element={<BulkQuote />} />
+          <Route path="/checkout" element={<Checkout />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -22,10 +22,12 @@ export default function Cart() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
-  const handleCheckout = () => {
+    const handleCheckout = () => {
     toast.success('Proceeding to checkout...')
-    // integrate backend checkout later
-  }
+    setTimeout(() => {
+        navigate('/checkout')
+    }, 800)
+    }
 
   const handleBulkQuote = () => {
     toast.success('Converting to bulk quote...')
@@ -65,18 +67,18 @@ export default function Cart() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-2">
         <h1 className="font-heading font-bold text-3xl md:text-4xl mb-6">Shopping Cart</h1>
 
         {/* Grid: items column (2 cols on lg) and summary column */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
           {/* Items list: spans 2/3 on large screens */}
-          <div className="lg:col-span-2 space-y-4">
-{cartItems.map((item) => (
-  <div
-    key={item.id}
-    className="bg-card border border-border rounded-xl p-3 flex flex-row items-center gap-3"
-  >
+          <div className="lg:col-span-2 space-y-2">
+        {cartItems.map((item) => (
+        <div
+            key={item.id}
+            className="bg-card border border-border rounded-xl p-3 flex flex-row items-center gap-3"
+        >
     {/* Image */}
     <div className="w-24 flex-shrink-0">
       <img
