@@ -57,7 +57,7 @@ export const ProductCard = ({
 
   return (
     <>
-      <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-[25rem]">
+      <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-[20rem]">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-muted block">
           <img src={image} alt={name} className="w-full h-full object-cover" />
@@ -72,12 +72,12 @@ export const ProductCard = ({
           )}
 
           <div>
-            <h3 className="font-heading font-semibold text-base text-foreground">
+            <h3 className="font-heading font-semibold text-sm text-foreground">
               {name}
             </h3>
           </div>
 
-          <p className="font-heading font-semibold text-lg text-foreground ">
+          <p className="font-heading font-semibold text-sm text-foreground ">
             ₵{(price * quantity).toFixed(2)}
           </p>
 
