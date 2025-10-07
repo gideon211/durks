@@ -116,14 +116,6 @@ All colors MUST be HSL.
     @apply font-heading;
   }
 
-  /* hide horizontal scrollbar on mobile */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none; /* IE/Edge */
-  scrollbar-width: none; /* Firefox */
-}
 
 }
 
@@ -177,7 +169,6 @@ All colors MUST be HSL.
     transform: translateY(-4px);
   }
 
-    /* hide horizontal scrollbar on mobile */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -185,7 +176,7 @@ All colors MUST be HSL.
   .no-scrollbar {
     -ms-overflow-style: none; /* IE/Edge */
     scrollbar-width: none; /* Firefox */
-    -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+    -webkit-overflow-scrolling: touch; /* iOS smooth scroll */
   }
 
 

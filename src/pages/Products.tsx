@@ -147,35 +147,41 @@ export default function Products() {
         </div>
       </section>
 
-      {/* Products section with tabs */}
-      <section className="container mx-auto px-4 py-12">
-        {/* tabs wrapper - no scroll-mt class because we compute offset in JS */}
-        <div className="mb-8 overflow-x-auto scrollbar-none">
+        {/* Products section with tabs */}
+    <section className="container mx-auto px-4 py-12">
+    {/* Tabs wrapper */}
+    <div className="mb-8 overflow-x-auto no-scrollbar">
         <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
-            <TabsList className="inline-flex w-auto">
+        <TabsList className="inline-flex w-auto">
             {categories.map((cat) => (
-                <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap">
+            <TabsTrigger
+                key={cat.id}
+                value={cat.slug}
+                className="whitespace-nowrap"
+            >
                 {cat.name}
-                </TabsTrigger>
+            </TabsTrigger>
             ))}
-            </TabsList>
+        </TabsList>
         </Tabs>
+    </div>
+
+    {/* Products grid */}
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        {filteredProducts.map((product) => (
+        <ProductCard key={product.id} {...product} />
+        ))}
+    </div>
+
+    {filteredProducts.length === 0 && (
+        <div className="text-center py-16">
+        <p className="text-muted-foreground text-lg">
+            No products found in this category.
+        </p>
         </div>
+    )}
+    </section>
 
-
-        {/* products grid */}
-        <div className="grid  grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} {...product} />
-          ))}
-        </div>
-
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">No products found in this category.</p>
-          </div>
-        )}
-      </section>
 
       <Footer />
     </div>
