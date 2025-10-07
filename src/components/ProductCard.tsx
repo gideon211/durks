@@ -66,18 +66,18 @@ export const ProductCard = ({
         {/* Content */}
         <div className="p-4 flex flex-col flex-grow text-center">
           {category && (
-            <Badge variant="outline" className="mb-2 mx-auto text-xs">
+            <Badge variant="outline" className="mb-0.5 mx-auto text-xs">
               {category}
             </Badge>
           )}
 
           <div>
-            <h3 className="font-heading font-semibold text-base mb-2 text-foreground">
+            <h3 className="font-heading font-semibold text-base text-foreground">
               {name}
             </h3>
           </div>
 
-          <p className="font-heading font-semibold text-lg text-foreground mb-1">
+          <p className="font-heading font-semibold text-lg text-foreground ">
             ₵{(price * quantity).toFixed(2)}
           </p>
 
