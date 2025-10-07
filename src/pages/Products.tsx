@@ -150,17 +150,18 @@ export default function Products() {
       {/* Products section with tabs */}
       <section className="container mx-auto px-4 py-12">
         {/* tabs wrapper - no scroll-mt class because we compute offset in JS */}
-        <div className="mb-8 overflow-x-auto" ref={tabsRef}>
-          <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
-            <TabsList className="inline-flex w-auto no-scrollbar">
-              {categories.map((cat) => (
+        <div className="mb-8 overflow-x-auto scrollbar-none">
+        <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
+            <TabsList className="inline-flex w-auto">
+            {categories.map((cat) => (
                 <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap">
-                  {cat.name}
+                {cat.name}
                 </TabsTrigger>
-              ))}
+            ))}
             </TabsList>
-          </Tabs>
+        </Tabs>
         </div>
+
 
         {/* products grid */}
         <div className="grid  grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
