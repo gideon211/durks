@@ -211,8 +211,8 @@ export default function Checkout() {
 
           {/* RIGHT: Summary */}
           <div className="bg-card border border-border rounded-xl p-6">
-            <h2 className="font-heading text-xl font-bold mb-4">
-              Order Summary
+            <h2 className="font-heading text-xl font-semibold mb-4">
+              Order Slip
             </h2>
 
             <div className="divide-y divide-border mb-6">
