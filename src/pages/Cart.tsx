@@ -154,9 +154,9 @@ export default function Cart() {
           </div>
 
           {/* Summary column */}
-          <div>
+          <div className='mt-12'>
             <div className="bg-card border border-border rounded-xl p-6 lg:sticky lg:top-24">
-              <h2 className="font-heading font-bold text-2xl mb-4">Order Summary</h2>
+              <h2 className="font-heading font-semibold text-2xl mb-4">Order Summary</h2>
 
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
