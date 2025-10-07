@@ -65,8 +65,8 @@ export default function Auth() {
         <div className="w-full max-w-md">
           <div className="bg-card border-2 border-border rounded-2xl shadow-xl p-8">
             <div className="text-center">
-              <h1 className="font-heading font-bold text-3xl "></h1>
-              <p className="text-muted-foreground"></p>
+              <h1 className="font-heading font-bold text-3xl"></h1>
+              
             </div>
 
             <Tabs defaultValue="signin" className="w-full">
@@ -76,6 +76,7 @@ export default function Auth() {
               </TabsList>
 
               <TabsContent value="signin">
+                <p className="text-muted-foreground py-8">Log in to manage your orders and bulk quotes</p>
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
@@ -102,6 +103,7 @@ export default function Auth() {
               </TabsContent>
 
               <TabsContent value="signup">
+                <p className="text-muted-foreground py-8">Sign up to make your orders </p>
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Full Name</Label>
