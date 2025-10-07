@@ -211,9 +211,11 @@ export default function Checkout() {
 
           {/* RIGHT: Summary */}
           <div className="bg-card border border-border rounded-xl p-6">
-            <h2 className="font-heading text-xl font-semibold mb-4">
+            <h2 className="font-heading text-xl font-semibold mb-4 text-center">
               Order Slip
             </h2>
+
+            <div className="border-t border-gray-300 w-full"></div>
 
             <div className="divide-y divide-border mb-6">
               {cart.map((item) => (
@@ -246,7 +248,7 @@ export default function Checkout() {
               </div>
 
               <div className="flex justify-between font-bold border-t border-border pt-3 text-lg">
-                <span>Total</span>
+                <span>Total:</span>
                 <span>₵{(totalPrice() + 15).toFixed(2)}</span>
               </div>
             </div>
