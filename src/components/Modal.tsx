@@ -1,5 +1,5 @@
 // src/components/Modal.tsx
-import React, { ReactNode, useEffect, useRef } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { X, Package, CheckCircle2 } from "lucide-react";
@@ -64,14 +64,17 @@ export const Modal: React.FC<ModalProps> = ({
   className = "",
 }) => {
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
 
-  // Ensure portal root
+  // Ensure portal root exists
   useEffect(() => {
-    if (!document.getElementById("modal-root")) {
-      const root = document.createElement("div");
+    let root = document.getElementById("modal-root");
+    if (!root) {
+      root = document.createElement("div");
       root.id = "modal-root";
       document.body.appendChild(root);
     }
+    setPortalRoot(root);
   }, []);
 
   // Escape key to close
@@ -92,8 +95,6 @@ export const Modal: React.FC<ModalProps> = ({
     };
   }, [isOpen]);
 
-  const portalRoot = document.getElementById("modal-root")!;
-
   const renderChildren = () => {
     if (!children) return <p className="text-sm text-slate-600">Quick info</p>;
     if (shorten && typeof children === "string") {
@@ -106,6 +107,8 @@ export const Modal: React.FC<ModalProps> = ({
     }
     return <div className="text-sm text-slate-700 leading-relaxed">{children}</div>;
   };
+
+  if (!portalRoot) return null; // wait until portal root exists
 
   return createPortal(
     <AnimatePresence>
@@ -177,7 +180,7 @@ export const Modal: React.FC<ModalProps> = ({
               <div className="mt-4 sm:mt-5">{renderChildren()}</div>
 
               {/* Footer */}
-              <div className="mt-5 sm:mt-6 flex sm:flex-row items-end sm:items-center justify-end  gap-2 sm:gap-3">
+              <div className="mt-5 sm:mt-6 flex sm:flex-row items-end sm:items-center justify-end gap-2 sm:gap-3">
                 {footer ? (
                   footer
                 ) : (
