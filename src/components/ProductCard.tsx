@@ -81,7 +81,7 @@ export const ProductCard = ({
             ₵{(price * quantity).toFixed(2)}
           </p>
 
-          <div className="flex flex-col gap-2 mt-auto">
+          <div className="flex flex-col gap-2 mt-1.5">
             <div className="flex items-center justify-center gap-2">
               <button
                 type="button"
