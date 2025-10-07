@@ -68,7 +68,7 @@ export default function Cart() {
       <Header />
 
       <main className="flex-1 container mx-auto px-4 py-2">
-        <h1 className="font-heading font-bold text-3xl md:text-4xl mb-6">Shopping Cart</h1>
+        <h1 className="font-heading font-semibold text-3xl md:text-4xl mb-6">Cart</h1>
 
         {/* Grid: items column (2 cols on lg) and summary column */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
