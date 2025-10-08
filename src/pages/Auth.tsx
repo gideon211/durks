@@ -105,7 +105,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-transparent via-transparent to-transparent">
-      <Header />
+      {/* <Header /> */}
 
       {/* Decorative background shapes */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
