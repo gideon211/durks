@@ -6,7 +6,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
-import { TypeAnimation } from 'react-type-animation';
+import { TypeAnimation } from "react-type-animation";
 import heroImage from "@/assets/heroimg.jpg";
 
 const categories = [
@@ -81,10 +81,7 @@ export default function Products() {
       : products.filter((p) => p.categorySlug === activeCategory);
 
   const handleCategoryChange = (categorySlug: string) => {
-    setActiveCategory(categorySlug);
-    navigate(categorySlug === "all" ? "/products" : `/products/${categorySlug}`, {
-      replace: true,
-    });
+    setActiveCategory(categorySlug); // only update state, do not navigate
   };
 
   const handleShopClick = () => {
@@ -104,7 +101,6 @@ export default function Products() {
       <section className="relative bg-soft-sand overflow-hidden">
         <div className="container mx-auto px-4 py-16 md:py-24">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left text side */}
             <motion.div
               className="space-y-6"
               initial={{ opacity: 0, y: 40 }}
@@ -127,17 +123,16 @@ export default function Products() {
                 transition={{ delay: 0.5 }}
               >
                 <TypeAnimation
-                sequence={[
+                  sequence={[
                     "Premium fresh-pressed juices for businesses, events, and wholesale.",
                     2000,
                     "Save up to 18% on bulk orders.",
                     2000,
-                ]}
-                speed={50}
-                repeat={Infinity}
-                cursor={true}
+                  ]}
+                  speed={50}
+                  repeat={Infinity}
+                  cursor={true}
                 />
-
               </motion.div>
 
               <motion.div
@@ -155,7 +150,6 @@ export default function Products() {
               </motion.div>
             </motion.div>
 
-            {/* Right image side */}
             <motion.div
               className="relative"
               initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
@@ -177,7 +171,6 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Floating glow animation */}
         <motion.div
           className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-orange-100/40 rounded-full blur-3xl"
           animate={{ y: [0, 20, 0] }}
@@ -185,49 +178,40 @@ export default function Products() {
         />
       </section>
 
-    {/* Products section with tabs */}
-    <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar">
+      {/* Tabs */}
+      <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar">
         <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
-        <TabsList className="inline-flex w-auto">
+          <TabsList className="inline-flex w-auto">
             {categories.map((cat) => (
-            <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap">
+              <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap">
                 {cat.name}
-            </TabsTrigger>
+              </TabsTrigger>
             ))}
-        </TabsList>
+          </TabsList>
         </Tabs>
-    </div>
-    {/* <motion.section
-    className="container mx-auto px-4 py-4"
-    initial={{ opacity: 0, y: 50 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.6, ease: "easeOut" }}
-    > */}
+      </div>
 
+      {/* Products Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 px-4">
+        {filteredProducts.map((product) => (
+          <motion.div
+            key={product.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0 * filteredProducts.indexOf(product), duration: 0.4 }}
+          >
+            <ProductCard {...product} />
+          </motion.div>
+        ))}
+      </div>
 
-  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-    {filteredProducts.map((product) => (
-      <motion.div
-        key={product.id}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 * filteredProducts.indexOf(product), duration: 0.4 }}
-      >
-        <ProductCard {...product} />
-      </motion.div>
-    ))}
-  </div>
-  {/* </motion.section> */}
-
-  {filteredProducts.length === 0 && (
-    <div className="text-center py-16">
-      <p className="text-muted-foreground text-lg">
-        No products found in this category.
-      </p>
-    </div>
-  )}
-
-
+      {filteredProducts.length === 0 && (
+        <div className="text-center py-16">
+          <p className="text-muted-foreground text-lg">
+            No products found in this category.
+          </p>
+        </div>
+      )}
 
       <Footer />
     </div>
