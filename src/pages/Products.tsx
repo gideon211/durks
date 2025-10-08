@@ -185,24 +185,24 @@ export default function Products() {
         />
       </section>
 
-{/* Products section with tabs */}
-  <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar">
-    <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
-      <TabsList className="inline-flex w-auto">
-        {categories.map((cat) => (
-          <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap">
-            {cat.name}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
-  </div>
-<motion.section
-  className="container mx-auto px-4 py-4"
-  initial={{ opacity: 0, y: 50 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.6, ease: "easeOut" }}
->
+    {/* Products section with tabs */}
+    <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar">
+        <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
+        <TabsList className="inline-flex w-auto">
+            {categories.map((cat) => (
+            <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap">
+                {cat.name}
+            </TabsTrigger>
+            ))}
+        </TabsList>
+        </Tabs>
+    </div>
+    <motion.section
+    className="container mx-auto px-4 py-4"
+    initial={{ opacity: 0, y: 50 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6, ease: "easeOut" }}
+    >
 
 
   <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

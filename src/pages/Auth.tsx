@@ -76,6 +76,8 @@ export default function Auth() {
   };
 
   return (
+    <div>
+        <Header />
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
@@ -83,7 +85,7 @@ export default function Auth() {
       transition={{ duration: 0.4 }}
       className="min-h-screen flex flex-col"
     >
-      <Header />
+      
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="bg-card border-2 border-border rounded-2xl shadow-xl p-8">
@@ -145,5 +147,8 @@ export default function Auth() {
         </div>
       </main>
     </motion.div>
+
+    </div>
   );
+
 }
