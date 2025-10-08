@@ -1,4 +1,3 @@
-// src/components/Header.jsx
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, Search, User as UserIcon, Menu, Box, LogOut } from 'lucide-react'
@@ -6,18 +5,16 @@ import { Button } from './ui/button'
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet'
 import Logo from '../assets/logo.svg'
 import { useCartStore } from '@/store/cartStore'
-import { useAuth } from "../context/Authcontext";
+import { useAuth } from "../context/Authcontext"
 
 export const Header = () => {
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-  // Cart quantity
+  const { user, logout } = useAuth()
+
+  // Reactive cart quantity
   const totalQty = useCartStore((state) => state.totalQty())
-
-  // User
- const { user, logout } = useAuth();
-
 
   const productCategories = [
     { name: 'Pure Juice', path: '/products/pure-juice' },
@@ -27,8 +24,9 @@ export const Header = () => {
     { name: 'Gift Packs', path: '/products/gift-packs' },
     { name: 'Events', path: '/products/events' },
   ]
+    const userInitial = user?.username?.charAt(0).toUpperCase() ?? 'U';
 
-  const userInitial = user?.fullName?.trim()?.charAt(0)?.toUpperCase() ?? 'U'
+
 
   return (
     <header className="sticky top-0 z-50 w-full bg-card border-b border-border shadow-sm transition-all duration-300">
@@ -48,63 +46,54 @@ export const Header = () => {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2 md:gap-4">
-            {/* Search with hover input */}
+            {/* Search */}
             <div className="relative group hidden md:flex">
-              <Button variant="ghost" size="icon" className="relative z-10">
+              <Button variant="ghost" size="icon">
                 <Search className="h-5 w-5" />
               </Button>
-
               <input
                 type="text"
                 placeholder="Search products..."
-                className="absolute right-0 top-0 z-0 opacity-0 w-0 group-hover:opacity-100 group-hover:w-48 transition-all duration-300 border border-border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
-                onClick={(e) => e.stopPropagation()}
+                className="absolute right-0 top-0 opacity-0 w-0 group-hover:opacity-100 group-hover:w-48 transition-all duration-300 border border-border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
-            {/* Desktop: Profile (show initial circle when authenticated) */}
-            <div className="hidden md:flex items-center gap-2">
-              {user ? (
-                // Hover dropdown container
-                <div className="relative group">
-                  <button
-                    className="w-9 h-9 rounded-full bg-muted flex items-center justify-center font-semibold text-sm uppercase hover:scale-[1.03] transition"
-                    aria-label="Open profile menu"
-                  >
-                    {userInitial}
-                  </button>
+            {/* Profile */}
+            {user ? (
+              <div className="hidden md:flex items-center gap-2 relative group">
+                <button className="w-9 h-9 rounded-full bg-muted flex items-center justify-center font-semibold text-sm uppercase hover:scale-[1.03] transition">
+                  {userInitial}
+                </button>
 
-                  {/* Hover dropdown */}
-                  <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-150 absolute right-0 mt-2 w-44 bg-card border border-border rounded shadow-lg z-50">
-                    <button
-                      onClick={() => navigate('/orders')}
-                      className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted transition-colors"
-                    >
-                      <Box className="h-4 w-4" />
-                      <span className="text-sm">My Orders</span>
-                    </button>
-                    <button
-                      onClick={() => { logout(); navigate('/') }}
-                      className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted transition-colors"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span className="text-sm">Sign Out</span>
-                    </button>
-                  </div>
+                <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-150 absolute right-0 mt-2 w-44 bg-card border border-border rounded shadow-lg z-50">
+                  <button
+                    onClick={() => navigate('/orders')}
+                    className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted transition-colors"
+                  >
+                    <Box className="h-4 w-4" />
+                    <span className="text-sm">My Orders</span>
+                  </button>
+                  <button
+                    onClick={() => { logout(); navigate('/') }}
+                    className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="text-sm">Sign Out</span>
+                  </button>
                 </div>
-              ) : (
-                <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
-                  <UserIcon className="h-4 w-4" />
-                  <span>Sign In</span>
-                </Button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
+                <UserIcon className="h-4 w-4" />
+                <span>Sign In</span>
+              </Button>
+            )}
 
             <Button variant="secondary" size="sm" onClick={() => navigate('/bulk-quote')} className="hidden md:flex">
               Get Bulk
             </Button>
 
-            {/* Cart icon with live badge */}
+            {/* Cart */}
             <Button variant="ghost" size="icon" onClick={() => navigate('/cart')} className="relative">
               <ShoppingCart className="h-5 w-5" />
               {totalQty > 0 && (
@@ -117,34 +106,35 @@ export const Header = () => {
             {/* Mobile Menu */}
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
+                <Button variant="ghost" size="icon" className="lg:hidden relative">
                   <Menu className="h-6 w-6" />
+                  {totalQty > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {totalQty}
+                    </span>
+                  )}
                 </Button>
               </SheetTrigger>
+
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col gap-6 mt-8 px-4">
-                  {/* Profile area */}
+                  {/* Profile */}
                   <div className="flex items-center gap-4">
                     {user ? (
                       <>
-                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center font-semibold text-lg uppercase">
-                          {userInitial}
-                        </div>
+                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center font-semibold text-lg uppercase">{userInitial}</div>
                         <div>
-                          <div className="font-semibold">{user.fullName}</div>
+                          <div className="font-semibold">{user.username}</div>
                           <div className="text-xs text-muted-foreground">{user.email}</div>
                         </div>
                       </>
                     ) : (
-                      <div className="flex items-center gap-3">
-                        <Button onClick={() => { navigate('/auth'); setIsMenuOpen(false) }}>Sign In</Button>
-                      </div>
+                      <Button onClick={() => { navigate('/auth'); setIsMenuOpen(false) }}>Sign In</Button>
                     )}
                   </div>
 
                   <div>
                     <Link to="/products" onClick={() => setIsMenuOpen(false)} className="font-heading font-semibold text-lg mb-3 block">Products</Link>
-                    {/* categories if you want */}
                     <div className="flex flex-col gap-2">
                       {productCategories.map((category) => (
                         <Link
@@ -161,10 +151,9 @@ export const Header = () => {
                   </div>
 
                   <div className="flex flex-col gap-3 pt-4 border-t border-border">
-                    <Link to="/csr" onClick={() => setIsMenuOpen(false)} className="px-4 py-3 rounded-md hover:bg-muted transition-colors font-medium">Corporate Social Responsibility</Link>
+                    <Link to="/csr" onClick={() => setIsMenuOpen(false)} className="px-4 py-3 rounded-md hover:bg-muted transition-colors font-medium">CSR</Link>
                     <Link to="/contact" onClick={() => setIsMenuOpen(false)} className="px-4 py-3 rounded-md hover:bg-muted transition-colors font-medium">Contact</Link>
 
-                    {/* My Orders + Sign out shown in mobile sheet */}
                     {user && (
                       <>
                         <button

@@ -1,23 +1,28 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import axiosInstance from "@/api/axios"; // your axios.ts
+import { toast } from "sonner";
 
 export interface Product {
   id: string | number;
   name: string;
-  price: number; // unit price
+  price: number;
   image?: string;
   category?: string;
 }
 
 export interface CartItem extends Product {
+  id: string | number; // backend cart item id
+  drinkId: string | number; // original product id
   qty: number;
 }
 
 interface CartState {
   cart: CartItem[];
-  addToCart: (product: Product, qty?: number) => void;
-  removeFromCart: (id: string | number) => void;
-  updateQty: (id: string | number, qty: number) => void;
+  fetchCart: () => Promise<void>;
+  addToCart: (product: Product, qty?: number) => Promise<void>;
+  removeFromCart: (cartItemId: string | number) => Promise<void>;
+  updateQty: (cartItemId: string | number, qty: number) => Promise<void>;
   clearCart: () => void;
   totalQty: () => number;
   totalPrice: () => number;
@@ -28,38 +33,73 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       cart: [],
 
-      addToCart: (product, qty = 1) => {
-        const cart = get().cart;
-        const existing = cart.find((item) => item.id === product.id);
-
-        if (existing) {
-          set({
-            cart: cart.map((item) =>
-              item.id === product.id ? { ...item, qty: item.qty + qty } : item
-            ),
-          });
-        } else {
-          set({
-            cart: [...cart, { ...product, qty }],
-          });
+      fetchCart: async () => {
+        try {
+          const res = await axiosInstance.get("/cart");
+          const items: CartItem[] = res.data.cartItems.map((item: any) => ({
+            id: item.id,
+            drinkId: item.drinkId,
+            name: item.Drink.name,
+            price: item.Drink.price,
+            image: item.Drink.image,
+            qty: item.quantity,
+          }));
+          set({ cart: items });
+        } catch (err) {
+          console.error("Fetch cart failed:", err);
         }
       },
 
-      removeFromCart: (id) => {
-        set({ cart: get().cart.filter((item) => item.id !== id) });
+      addToCart: async (product: Product, qty = 1) => {
+        try {
+          const res = await axiosInstance.post("/cart", { drinkId: product.id, quantity: qty });
+          const item = res.data.cartItem;
+          set({
+            cart: [...get().cart, {
+              id: item.id,
+              drinkId: item.drinkId,
+              name: item.Drink.name,
+              price: item.Drink.price,
+              image: item.Drink.image,
+              qty: item.quantity,
+            }],
+          });
+          toast.success(`${product.name} added to cart`);
+        } catch (err) {
+          console.error("Add to cart failed:", err);
+          toast.error("Failed to add to cart");
+        }
       },
 
-      updateQty: (id, qty) => {
+      removeFromCart: async (cartItemId: string | number) => {
+        try {
+          await axiosInstance.delete(`/cart/${cartItemId}`);
+          set({ cart: get().cart.filter((item) => item.id !== cartItemId) });
+          toast.success("Item removed from cart");
+        } catch (err) {
+          console.error("Remove from cart failed:", err);
+          toast.error("Failed to remove item");
+        }
+      },
+
+      updateQty: async (cartItemId: string | number, qty: number) => {
         if (qty <= 0) return;
-        set({
-          cart: get().cart.map((item) =>
-            item.id === id ? { ...item, qty } : item
-          ),
-        });
+        try {
+          await axiosInstance.put(`/cart/${cartItemId}`, { quantity: qty });
+          set({
+            cart: get().cart.map((item) =>
+              item.id === cartItemId ? { ...item, qty } : item
+            ),
+          });
+        } catch (err) {
+          console.error("Update quantity failed:", err);
+          toast.error("Failed to update quantity");
+        }
       },
 
       clearCart: () => {
         set({ cart: [] });
+        toast.success("Cart cleared");
       },
 
       totalQty: () => get().cart.reduce((sum, item) => sum + item.qty, 0),

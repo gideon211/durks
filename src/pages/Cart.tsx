@@ -1,43 +1,53 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Header } from '@/components/Header'
-import { Footer } from '@/components/Footer'
-import { Button } from '@/components/ui/button'
-import { Trash2, Plus, Minus, Package } from 'lucide-react'
-import { toast } from 'sonner'
-import { useCartStore } from '@/store/cartStore'
+// src/pages/Cart.tsx
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { Button } from '@/components/ui/button';
+import { Trash2, Plus, Minus, Package } from 'lucide-react';
+import { toast } from 'sonner';
+import { useCartStore, CartItem } from '@/store/cartStore';
+import { useAuth } from '@/context/Authcontext';
 
 export default function Cart() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const cartItems = useCartStore((state) => state.cart)
-  const removeFromCart = useCartStore((state) => state.removeFromCart)
-  const updateQty = useCartStore((state) => state.updateQty)
-  const totalPrice = useCartStore((state) => state.totalPrice)
-  const clearCart = useCartStore((state) => state.clearCart)
+  const cartItems = useCartStore((state) => state.cart);
+  const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const updateQty = useCartStore((state) => state.updateQty);
+  const clearCart = useCartStore((state) => state.clearCart);
+  const totalPrice = useCartStore((state) => state.totalPrice);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [])
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   const handleCheckout = () => {
-    toast.success('Proceeding to checkout...')
-    setTimeout(() => {
-      navigate('/checkout')
-    }, 800)
-  }
+    if (!user) {
+      toast.error('Please sign in first');
+      navigate('/auth', { state: { from: '/cart' } });
+      return;
+    }
+    toast.success('Proceeding to checkout...');
+    setTimeout(() => navigate('/checkout'), 800);
+  };
 
   const handleBulkQuote = () => {
-    toast.success('Converting to bulk quote...')
-    navigate('/bulk-quote')
-  }
+    if (!user) {
+      toast.error('Please sign in first');
+      navigate('/auth', { state: { from: '/cart' } });
+      return;
+    }
+    toast.success('Converting to bulk quote...');
+    navigate('/bulk-quote');
+  };
 
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-
         <main className="flex-1 flex items-center justify-center px-4 py-16">
           <div className="text-center max-w-md">
             <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
@@ -56,8 +66,9 @@ export default function Cart() {
             </Button>
           </div>
         </main>
+        <Footer />
       </div>
-    )
+    );
   }
 
   return (
@@ -67,20 +78,16 @@ export default function Cart() {
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 100 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
       >
         <Header />
-
         <main className="flex-1 container mx-auto px-4 py-2">
           <h1 className="font-heading font-semibold text-3xl md:text-4xl mb-6">Cart</h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
             <div className="lg:col-span-2 space-y-2">
-              {cartItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-card border border-border rounded-xl p-3 flex flex-row items-center gap-3"
-                >
+              {cartItems.map((item: CartItem) => (
+                <div key={item.id} className="bg-card border border-border rounded-xl p-3 flex flex-row items-center gap-3">
                   <div className="w-24 flex-shrink-0">
                     <img
                       src={item.image}
@@ -93,9 +100,7 @@ export default function Cart() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <h3 className="font-semibold text-sm truncate">{item.name}</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          ₵{item.price.toFixed(2)} each
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">₵{item.price.toFixed(2)} each</p>
                       </div>
 
                       <div className="flex items-start gap-1">
@@ -184,11 +189,20 @@ export default function Cart() {
                     className="w-full"
                     size="lg"
                     onClick={() => {
-                      clearCart()
-                      toast.success('Cart cleared')
+                      clearCart();
+                      toast.success('Cart cleared');
                     }}
                   >
                     Clear Cart
+                  </Button>
+
+                  <Button
+                    variant="secondary"
+                    className="w-full"
+                    size="lg"
+                    onClick={handleBulkQuote}
+                  >
+                    Request Bulk Quote
                   </Button>
                 </div>
               </div>
@@ -199,7 +213,8 @@ export default function Cart() {
             </div>
           </div>
         </main>
+        <Footer />
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }

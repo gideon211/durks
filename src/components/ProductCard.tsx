@@ -33,7 +33,7 @@ export const ProductCard = ({
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (quantity < 1) return;
 
@@ -42,7 +42,14 @@ export const ProductCard = ({
       return;
     }
 
-    addToCart({ id, name, price, image, category }, quantity);
+    try {
+      setIsLoading(true);
+      await addToCart({ id, name, price, image, category }, quantity);
+    } catch (err) {
+      console.error("Add to cart failed", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const increment = () => setQuantity((prev) => prev + 1);
@@ -55,13 +62,11 @@ export const ProductCard = ({
 
   return (
     <>
-      <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-[25rem]">
-        {/* Image */}
+      <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-full ">
         <div className="relative aspect-square overflow-hidden bg-muted block">
           <img src={image} alt={name} className="w-full h-full object-cover" />
         </div>
 
-        {/* Content */}
         <div className="p-4 flex flex-col flex-grow text-center">
           {category && (
             <Badge variant="outline" className="mb-0.5 mx-auto text-xs">
@@ -69,12 +74,7 @@ export const ProductCard = ({
             </Badge>
           )}
 
-          <div>
-            <h3 className="font-heading font-semibold text-sm text-foreground">
-              {name}
-            </h3>
-          </div>
-
+          <h3 className="font-heading font-semibold text-sm text-foreground">{name}</h3>
           <p className="font-heading font-semibold text-sm text-foreground">
             ₵{(price * quantity).toFixed(2)}
           </p>
@@ -113,47 +113,38 @@ export const ProductCard = ({
               size="sm"
               onClick={handleAddToCart}
               className="w-full flex justify-center items-center gap-2 font-bold"
+              disabled={isLoading}
             >
-              Add to cart
+              {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : "Add to cart"}
               <ShoppingCart className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Modal when not logged in */}
       <Modal
         isOpen={isModalOpen}
         title="Please sign in to continue"
         onClose={() => setModalOpen(false)}
         footer={
           <>
-            <Button
-              variant="outline"
-              onClick={() => setModalOpen(false)}
-            >
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
             <Button
               onClick={() => {
-                setIsLoading(true); // show loader
-
+                setIsLoading(true);
                 const pending = {
                   product: { id, name, price, image, category },
                   quantity,
                   from: `/products/${id}`,
                 };
-                try {
-                  localStorage.setItem("pendingAdd", JSON.stringify(pending));
-                } catch (err) {
-                  console.warn("Could not save pending add", err);
-                }
+                try { localStorage.setItem("pendingAdd", JSON.stringify(pending)); } 
+                catch (err) { console.warn("Could not save pending add", err); }
 
                 setTimeout(() => {
                   setIsLoading(false);
                   setModalOpen(false);
                   navigate("/auth", { state: { from: `/products/${id}` } });
-                }, 1000); // smooth loader
+                }, 1000);
               }}
               disabled={isLoading}
             >
