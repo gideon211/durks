@@ -141,10 +141,10 @@ export default function Products() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2, duration: 0.7 }}
               >
-                <Button variant="hero" size="lg" onClick={handleShopClick}>
+                <Button variant="hero" size="md" onClick={handleShopClick}>
                   Shop
                 </Button>
-                <Button variant="bulk" size="lg" onClick={() => navigate("/bulk-quote")}>
+                <Button variant="bulk" size="md" onClick={() => navigate("/bulk-quote")}>
                   Bulk Purchase
                 </Button>
               </motion.div>
