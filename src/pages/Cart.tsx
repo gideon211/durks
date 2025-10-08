@@ -245,14 +245,14 @@ export default function Cart() {
                 </div>
 
                 <div className="space-y-3">
-                  <Button className="w-full" size="lg" onClick={handleCheckout}>
+                  <Button className="w-full" size="md" onClick={handleCheckout}>
                     Proceed to Checkout
                   </Button>
 
                   <Button
                     variant="outline"
                     className="w-full"
-                    size="lg"
+                    size="md"
                     onClick={() => {
                       clearCart();
                       try { localStorage.removeItem('pendingCart'); } catch (err) {}
