@@ -12,6 +12,7 @@ import Cart from "./pages/Cart";
 import BulkQuote from "./pages/BulkQuote";
 import NotFound from "./pages/NotFound";
 import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ function AnimatedRoutes() {
         <Route path="/bulk-quote" element={<BulkQuote />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="orders" element={<Orders />} />
       </Routes>
     </AnimatePresence>
   );

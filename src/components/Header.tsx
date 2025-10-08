@@ -1,32 +1,31 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart, Search, User as UserIcon, Menu, Box, LogOut } from 'lucide-react'
-import { Button } from './ui/button'
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet'
-import Logo from '../assets/logo.svg'
-import { useCartStore } from '@/store/cartStore'
-import { useAuth } from "../context/Authcontext"
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ShoppingCart, Search, User as UserIcon, Menu, Box, LogOut } from "lucide-react";
+import { Button } from "./ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import Logo from "../assets/logo.svg";
+import { useCartStore } from "@/store/cartStore";
+import { useAuth } from "../context/Authcontext";
 
 export const Header = () => {
-  const navigate = useNavigate()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const { user, logout } = useAuth()
+  const { user, logout } = useAuth();
 
   // Reactive cart quantity
-  const totalQty = useCartStore((state) => state.totalQty())
+  const totalQty = useCartStore((state) => state.totalQty());
 
   const productCategories = [
-    { name: 'Pure Juice', path: '/products/pure-juice' },
-    { name: 'Cleanse Juices', path: '/products/cleanse' },
-    { name: 'Smoothies', path: '/products/smoothies' },
-    { name: 'Cut Fruits', path: '/products/cut-fruits' },
-    { name: 'Gift Packs', path: '/products/gift-packs' },
-    { name: 'Events', path: '/products/events' },
-  ]
-    const userInitial = user?.username?.charAt(0).toUpperCase() ?? 'U';
+    { name: "Pure Juice", path: "/products/pure-juice" },
+    { name: "Cleanse Juices", path: "/products/cleanse" },
+    { name: "Smoothies", path: "/products/smoothies" },
+    { name: "Cut Fruits", path: "/products/cut-fruits" },
+    { name: "Gift Packs", path: "/products/gift-packs" },
+    { name: "Events", path: "/products/events" },
+  ];
 
-
+  const userInitial = (user?.username ??  "U").charAt(0).toUpperCase();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-card border-b border-border shadow-sm transition-all duration-300">
@@ -108,7 +107,6 @@ export const Header = () => {
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden relative">
                   <Menu className="h-6 w-6" />
-
                 </Button>
               </SheetTrigger>
 
@@ -120,32 +118,52 @@ export const Header = () => {
                       <>
                         <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center font-semibold text-lg uppercase">{userInitial}</div>
                         <div>
-                          <div className="font-semibold">{user.username}</div>
+                          <div className="font-semibold">{user.username ?? user.username}</div>
                           <div className="text-xs text-muted-foreground">{user.email}</div>
                         </div>
                       </>
                     ) : (
-                      <Button onClick={() => { navigate('/auth'); setIsMenuOpen(false) }}>Sign In</Button>
+                      <p></p>
                     )}
                   </div>
 
+                  {/* Simplified Products link (just goes to /products) */}
                   <div>
-                    <Link to="/products" onClick={() => setIsMenuOpen(false)} className="font-heading font-semibold text-lg mb-3 block">Products</Link>
-                    <div className="flex flex-col gap-2">
-                      {productCategories.map((category) => (
-                        <Link
-                          key={category.path}
-                          to={category.path}
-                          state={{ skipHero: true, scrollToTabs: true }}
-                          onClick={() => setIsMenuOpen(false)}
-                          className="px-4 py-3 rounded-md hover:bg-muted transition-colors"
-                        >
-                          {category.name}
-                        </Link>
-                      ))}
-                    </div>
+
                   </div>
 
+                  {/* My Orders & About Us */}
+                  <div className="flex flex-col gap-3">
+                    <button><Link to="/products" onClick={() => setIsMenuOpen(false)} className="px-4 py-3 rounded-md hover:bg-muted transition-colors text-left flex items-center gap-3 font-medium">
+                      Products
+                    </Link></button>
+
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        if (!user) {
+                          navigate('/orders');
+                        } else {
+                          navigate('/orders');
+                        }
+                      }}
+                      className="px-4 py-3 rounded-md hover:bg-muted transition-colors text-left flex items-center gap-3 font-medium"
+                    >
+                      
+                      My Orders
+                    </button>
+
+                    <Link
+                      to="/about"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="px-4 py-3 rounded-md hover:bg-muted transition-colors text-left flex items-center gap-3 font-medium"
+                    >
+
+                      About Us
+                    </Link>
+                  </div>
+
+                  {/* Other links */}
                   <div className="flex flex-col gap-3 pt-4 border-t border-border">
                     <Link to="/csr" onClick={() => setIsMenuOpen(false)} className="px-4 py-3 rounded-md hover:bg-muted transition-colors font-medium">CSR</Link>
                     <Link to="/contact" onClick={() => setIsMenuOpen(false)} className="px-4 py-3 rounded-md hover:bg-muted transition-colors font-medium">Contact</Link>
@@ -153,14 +171,7 @@ export const Header = () => {
                     {user && (
                       <>
                         <button
-                          onClick={() => { navigate('/orders'); setIsMenuOpen(false) }}
-                          className="px-4 py-3 rounded-md hover:bg-muted transition-colors text-left flex items-center gap-3"
-                        >
-                          <Box className="h-4 w-4" />
-                          My Orders
-                        </button>
-                        <button
-                          onClick={() => { logout(); setIsMenuOpen(false); navigate('/') }}
+                          onClick={() => { logout(); setIsMenuOpen(false); navigate('/'); }}
                           className="px-4 py-3 rounded-md hover:bg-muted transition-colors text-left flex items-center gap-3"
                         >
                           <LogOut className="h-4 w-4" />
@@ -173,8 +184,8 @@ export const Header = () => {
                   <div className="flex flex-col gap-3 pt-4 border-t border-border">
                     <Button
                       onClick={() => {
-                        navigate('/bulk-quote')
-                        setIsMenuOpen(false)
+                        navigate('/bulk-quote');
+                        setIsMenuOpen(false);
                       }}
                     >
                       Get Bulk Quote
@@ -187,5 +198,5 @@ export const Header = () => {
         </div>
       </div>
     </header>
-  )
-}
+  );
+};

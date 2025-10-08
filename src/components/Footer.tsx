@@ -12,19 +12,24 @@ export const Footer = () => {
           <div className="flex-1 min-w-[180px]">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-10 h-10 flex items-center justify-center">
-                <img src={Logo} alt="logo" className="h-8 w-8" />
+                <img src={Logo} alt="logo" className="h-12 w-12" />
               </div>
-              <span className="font-heading font-bold text-lg">Duks</span>
+
             </div>
             <p className="text-muted-foreground text-xs">
               Premium bulk fruit juice for businesses, events, and wholesale orders.
             </p>
           </div>
 
+
+          <div className='flex gap-8 min-w-[140px]'>
+
+         
+
           {/* Products */}
-          <div className="flex-1 min-w-[140px]">
-            <h3 className="font-heading font-semibold text-sm mb-2">Products</h3>
-            <ul className="space-y-1">
+          <div className="flex-1 ">
+            <h3 className="font-heading font-semibold text-sm mb-1">Products</h3>
+            <ul className="">
               {["pure-juice", "cleanse", "smoothies", "cut-fruits", "gift-packs", "events"].map((cat) => (
                 <li key={cat}>
                   <Link
@@ -39,7 +44,7 @@ export const Footer = () => {
           </div>
 
           {/* Company */}
-          <div className="flex-1 min-w-[120px]">
+          <div className="flex-1 ">
             <h3 className="font-heading font-semibold text-sm mb-2">Company</h3>
             <ul className="space-y-1">
               <li>
@@ -82,6 +87,8 @@ export const Footer = () => {
             </ul>
           </div>
         </div>
+
+     </div>
 
         {/* Bottom bar */}
         <div className="border-t border-border mt-4 pt-4 text-center text-xs text-muted-foreground">

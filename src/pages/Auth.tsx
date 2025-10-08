@@ -1,6 +1,6 @@
 // src/pages/Auth.tsx
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -15,13 +15,29 @@ import { Eye, EyeOff } from "lucide-react";
 
 export default function Auth() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
 
   // track active tab so we can animate titles/subtitles
-  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
+  const [activeTab, setActiveTab] = useState<"signin" | "signup">(
+    (location.state as any)?.tab === "signup" ? "signup" : "signin"
+  );
+
+  // prefill email on the sign-in form after successful signup
+  const [prefillEmail, setPrefillEmail] = useState<string>(
+    (location.state as any)?.prefillEmail || ""
+  );
+
+  // If the route state requested a specific tab (navigated from elsewhere), honour it once.
+  useEffect(() => {
+    const s = (location.state as any) || {};
+    if (s.tab === "signup" || s.tab === "signin") setActiveTab(s.tab);
+    if (s.prefillEmail) setPrefillEmail(s.prefillEmail);
+    // we intentionally do not clear location.state here; it's fine to let it be
+  }, [location.state]);
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -61,19 +77,18 @@ export default function Auth() {
     const company = (form.elements.namedItem("signup-company") as HTMLInputElement)?.value || "";
 
     try {
+      // Create account on backend
       const data = await signUpUser({ fullName, email, password, company });
-      login({
-        id: data.user?.id || "",
-        username: data.user?.username || "",
-        fullName: data.user?.fullName || fullName,
-        email: data.user?.email || "",
-        isAdmin: data.role === "admin",
-        role: data.role,
-        token: data.token,
-        refreshToken: data.refreshToken,
-      } as any);
-      toast.success("Account created successfully!");
-      navigate("/products");
+
+      // DO NOT auto-login. Instead:
+      toast.success("Account created! Please sign in to continue.");
+
+      // prefill the signin email and switch to the sign-in tab
+      setPrefillEmail(email);
+      setActiveTab("signin");
+
+      // Optionally, clear the signup form fields by resetting the form element
+      form.reset();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to create account");
     } finally {
@@ -105,6 +120,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-transparent via-transparent to-transparent">
+      {/* header optionally */}
       {/* <Header /> */}
 
       {/* Decorative background shapes */}
@@ -161,21 +177,19 @@ export default function Auth() {
                       are waiting. Quick tip: Use the email you signed up with.
                     </motion.p>
 
-                    {/* small animated illustration */}
                     <motion.div
                       initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.5 }}
                       className="mt-4 w-full max-w-sm"
                     >
-                      {/* simple SVG badge illustration */}
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 2v6" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M8 10h8" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M6 14h12" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M9 18h6" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M12 2v6" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M8 10h8" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M6 14h12" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M9 18h6" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </div>
                         <div>
@@ -212,27 +226,6 @@ export default function Auth() {
                       Join us and enjoy personalised deals, order history, and easy bulk purchases.
                       It only takes a minute — and you'll get special offers for first orders.
                     </motion.p>
-
-                    {/* <motion.div
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.5 }}
-                      className="mt-4 w-full max-w-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 3v6" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M8 13h8" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M7 17h10" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="font-semibold">New here?</div>
-                          <div className="text-xs text-muted-foreground">Sign up and grab welcome discounts.</div>
-                        </div>
-                      </div>
-                    </motion.div> */}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -244,7 +237,7 @@ export default function Auth() {
                 transition={{ delay: 0.15 }}
                 className=" text-xs text-muted-foreground"
               >
-                Secure checkout • 30-day returns 
+                Secure checkout • 30-day returns
               </motion.div>
             </div>
 
@@ -262,10 +255,15 @@ export default function Auth() {
                 </TabsList>
 
                 <TabsContent value="signin">
+                  {/* Show a small success hint if we've arrived here after signup */}
+                  {prefillEmail && activeTab === "signin" && (
+                    <div className="mb-3 text-sm text-emerald-600">Account created — please sign in using the email below.</div>
+                  )}
+
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="signin-email">Email</Label>
-                      <Input id="signin-email" name="signin-email" type="email" required />
+                      <Input id="signin-email" name="signin-email" type="email" required defaultValue={prefillEmail} />
                     </div>
 
                     <div className="space-y-2 relative">
@@ -295,17 +293,6 @@ export default function Auth() {
                       <div className="text-center text-xs text-muted-foreground">
                         Or continue with
                       </div>
-
-                      {/* <div className="flex gap-3 justify-center">
-                        <motion.button whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} className="px-3 py-2 border rounded flex items-center gap-2">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2v6" stroke="currentColor" strokeWidth="1.4"/></svg>
-                          Google
-                        </motion.button>
-                        <motion.button whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} className="px-3 py-2 border rounded flex items-center gap-2">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12h18" stroke="currentColor" strokeWidth="1.4"/></svg>
-                          Apple
-                        </motion.button>
-                      </div> */}
                     </div>
                   </form>
                 </TabsContent>
