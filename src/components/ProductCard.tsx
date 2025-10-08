@@ -1,18 +1,17 @@
 // src/components/ProductCard.tsx
-import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, Plus, Minus, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { useCartStore } from "@/store/cartStore";
 import { useState } from "react";
-import { Modal } from "./Modal";
+import { toast } from "sonner";
 import { useAuth } from "@/context/Authcontext";
 
 interface ProductCardProps {
-  id: string;
+  id: string | number;
   name: string;
   description?: string;
-  image: string;
+  image?: string;
   price: number; // unit price
   category?: string;
 }
@@ -26,27 +25,31 @@ export const ProductCard = ({
   category,
 }: ProductCardProps) => {
   const addToCart = useCartStore((state) => state.addToCart);
+  const cart = useCartStore((state) => state.cart);
   const [quantity, setQuantity] = useState<number>(1);
-  const [isModalOpen, setModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (quantity < 1) return;
 
-    if (!user) {
-      setModalOpen(true);
-      return;
-    }
-
     try {
       setIsLoading(true);
       await addToCart({ id, name, price, image, category }, quantity);
+
+      // If user is not signed in, persist a pendingCart snapshot (useful if you want separate key)
+      if (!user) {
+        try {
+          localStorage.setItem("pendingCart", JSON.stringify(cart));
+        } catch (err) {
+          console.warn("Could not persist pendingCart to localStorage", err);
+        }
+      }
     } catch (err) {
       console.error("Add to cart failed", err);
+      toast.error("Could not add to cart");
     } finally {
       setIsLoading(false);
     }
@@ -61,103 +64,64 @@ export const ProductCard = ({
   };
 
   return (
-    <>
-      <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-full ">
-        <div className="relative aspect-square overflow-hidden bg-muted block">
-          <img src={image} alt={name} className="w-full h-full object-cover" />
-        </div>
-
-        <div className="p-4 flex flex-col flex-grow text-center">
-          {category && (
-            <Badge variant="outline" className="mb-0.5 mx-auto text-xs">
-              {category}
-            </Badge>
-          )}
-
-          <h3 className="font-heading font-semibold text-sm text-foreground">{name}</h3>
-          <p className="font-heading font-semibold text-sm text-foreground">
-            ₵{(price * quantity).toFixed(2)}
-          </p>
-
-          <div className="flex flex-col gap-2 mt-1.5">
-            <div className="flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={decrement}
-                className="p-1 border rounded hover:bg-gray-100"
-                aria-label={`Decrease ${name} quantity`}
-              >
-                <Minus className="h-4 w-4" />
-              </button>
-
-              <input
-                type="number"
-                min={1}
-                value={quantity}
-                onChange={handleInputChange}
-                className="w-16 text-center border rounded px-1 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
-                aria-label={`${name} quantity`}
-              />
-
-              <button
-                type="button"
-                onClick={increment}
-                className="p-1 border rounded hover:bg-gray-100"
-                aria-label={`Increase ${name} quantity`}
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-
-            <Button
-              size="sm"
-              onClick={handleAddToCart}
-              className="w-full flex justify-center items-center gap-2 font-bold"
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : "Add to cart"}
-              <ShoppingCart className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+    <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-full ">
+      <div className="relative aspect-square overflow-hidden bg-muted block">
+        <img src={image} alt={name} className="w-full h-full object-cover" />
       </div>
 
-      <Modal
-        isOpen={isModalOpen}
-        title="Please sign in to continue"
-        onClose={() => setModalOpen(false)}
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button
-              onClick={() => {
-                setIsLoading(true);
-                const pending = {
-                  product: { id, name, price, image, category },
-                  quantity,
-                  from: `/products/${id}`,
-                };
-                try { localStorage.setItem("pendingAdd", JSON.stringify(pending)); } 
-                catch (err) { console.warn("Could not save pending add", err); }
+      <div className="p-4 flex flex-col flex-grow text-center">
+        {category && (
+          <Badge variant="outline" className="mb-0.5 mx-auto text-xs">
+            {category}
+          </Badge>
+        )}
 
-                setTimeout(() => {
-                  setIsLoading(false);
-                  setModalOpen(false);
-                  navigate("/auth", { state: { from: `/products/${id}` } });
-                }, 1000);
-              }}
-              disabled={isLoading}
-            >
-              {isLoading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
-              {isLoading ? "Redirecting..." : "Sign In"}
-            </Button>
-          </>
-        }
-      >
-        <p className="text-sm">
-          You need to be signed in to purchase and manage items. Signing in lets you save your cart and view orders.
+        <h3 className="font-heading font-semibold text-sm text-foreground">{name}</h3>
+        <p className="font-heading font-semibold text-sm text-foreground">
+          ₵{(price * quantity).toFixed(2)}
         </p>
-      </Modal>
-    </>
+
+        <div className="flex flex-col gap-2 mt-1.5">
+          <div className="flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={decrement}
+              className="p-1 border rounded hover:bg-gray-100"
+              aria-label={`Decrease ${name} quantity`}
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+
+            <input
+              type="number"
+              min={1}
+              value={quantity}
+              onChange={handleInputChange}
+              className="w-16 text-center border rounded px-1 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+              aria-label={`${name} quantity`}
+            />
+
+            <button
+              type="button"
+              onClick={increment}
+              className="p-1 border rounded hover:bg-gray-100"
+              aria-label={`Increase ${name} quantity`}
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+
+          <Button
+            size="sm"
+            onClick={handleAddToCart}
+            className="w-full flex justify-center items-center gap-2 font-bold"
+            disabled={isLoading}
+          >
+            {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : "Add to cart"}
+            <ShoppingCart className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };

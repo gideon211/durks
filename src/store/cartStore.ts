@@ -1,3 +1,4 @@
+// src/store/cartStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axiosInstance from "@/api/axios"; // your axios.ts
@@ -12,9 +13,11 @@ export interface Product {
 }
 
 export interface CartItem extends Product {
-  id: string | number; // backend cart item id
+  id: string | number; // backend cart item id OR local id like "local-<ts>"
   drinkId: string | number; // original product id
   qty: number;
+  // optional flag to indicate it's only local (not synced to backend)
+  _local?: boolean;
 }
 
 interface CartState {
@@ -26,12 +29,18 @@ interface CartState {
   clearCart: () => void;
   totalQty: () => number;
   totalPrice: () => number;
+  setCart: (items: CartItem[]) => void; // setter to replace/restore cart
 }
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       cart: [],
+
+      // replace/restore cart (used when restoring pendingCart after sign-in)
+      setCart: (items: CartItem[]) => {
+        set({ cart: items });
+      },
 
       fetchCart: async () => {
         try {
@@ -47,44 +56,90 @@ export const useCartStore = create<CartState>()(
           set({ cart: items });
         } catch (err) {
           console.error("Fetch cart failed:", err);
+          // keep local cart if fetch fails (e.g. unauthenticated)
         }
       },
 
       addToCart: async (product: Product, qty = 1) => {
+        // optimistic handling: first try server, fall back to local-only item
         try {
           const res = await axiosInstance.post("/cart", { drinkId: product.id, quantity: qty });
           const item = res.data.cartItem;
-          set({
-            cart: [...get().cart, {
-              id: item.id,
-              drinkId: item.drinkId,
-              name: item.Drink.name,
-              price: item.Drink.price,
-              image: item.Drink.image,
-              qty: item.quantity,
-            }],
-          });
+          const newItem: CartItem = {
+            id: item.id,
+            drinkId: item.drinkId,
+            name: item.Drink.name,
+            price: item.Drink.price,
+            image: item.Drink.image,
+            qty: item.quantity,
+          };
+
+          set({ cart: [...get().cart, newItem] });
           toast.success(`${product.name} added to cart`);
         } catch (err) {
-          console.error("Add to cart failed:", err);
-          toast.error("Failed to add to cart");
+          // fallback: create local-only cart item
+          console.warn("Add to cart (server) failed, using local fallback:", err);
+          try {
+            const localItem: CartItem = {
+              id: `local-${Date.now()}`,
+              drinkId: product.id,
+              name: product.name,
+              price: product.price,
+              image: product.image,
+              qty,
+              _local: true,
+            };
+            set({ cart: [...get().cart, localItem] });
+            toast.success(`${product.name} added to cart`);
+          } catch (fallbackErr) {
+            console.error("Local fallback addToCart failed:", fallbackErr);
+            toast.error("Failed to add to cart");
+          }
         }
       },
 
       removeFromCart: async (cartItemId: string | number) => {
+        // if item looks local (string starting with "local-"), just remove locally
         try {
+          const current = get().cart;
+          const item = current.find((i) => i.id === cartItemId);
+
+          if (!item) {
+            return;
+          }
+
+          if (typeof cartItemId === "string" && String(cartItemId).startsWith("local-")) {
+            set({ cart: current.filter((i) => i.id !== cartItemId) });
+            toast.success("Item removed");
+            return;
+          }
+
+          // try server delete
           await axiosInstance.delete(`/cart/${cartItemId}`);
-          set({ cart: get().cart.filter((item) => item.id !== cartItemId) });
-          toast.success("Item removed from cart");
+          set({ cart: current.filter((i) => i.id !== cartItemId) });
+          
         } catch (err) {
-          console.error("Remove from cart failed:", err);
-          toast.error("Failed to remove item");
+          console.warn("Remove from cart (server) failed, falling back to local remove:", err);
+          // fallback: remove locally
+          set({ cart: get().cart.filter((i) => i.id !== cartItemId) });
+          toast.success("Item removed from cart (local)");
         }
       },
 
       updateQty: async (cartItemId: string | number, qty: number) => {
         if (qty <= 0) return;
         try {
+          // if local item, only update locally
+          if (typeof cartItemId === "string" && String(cartItemId).startsWith("local-")) {
+            set({
+              cart: get().cart.map((item) =>
+                item.id === cartItemId ? { ...item, qty } : item
+              ),
+            });
+            return;
+          }
+
+          // try to update server
           await axiosInstance.put(`/cart/${cartItemId}`, { quantity: qty });
           set({
             cart: get().cart.map((item) =>
@@ -92,8 +147,14 @@ export const useCartStore = create<CartState>()(
             ),
           });
         } catch (err) {
-          console.error("Update quantity failed:", err);
-          toast.error("Failed to update quantity");
+          console.warn("Update quantity (server) failed, updating locally:", err);
+          // fallback: update local copy
+          set({
+            cart: get().cart.map((item) =>
+              item.id === cartItemId ? { ...item, qty } : item
+            ),
+          });
+          toast.error("Could not sync quantity ");
         }
       },
 

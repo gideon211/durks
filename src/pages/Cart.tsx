@@ -1,14 +1,15 @@
 // src/pages/Cart.tsx
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { Trash2, Plus, Minus, Package } from 'lucide-react';
+import { Trash2, Plus, Minus, Package, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCartStore, CartItem } from '@/store/cartStore';
 import { useAuth } from '@/context/Authcontext';
+import { Modal } from '@/components/Modal';
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -19,15 +20,65 @@ export default function Cart() {
   const updateQty = useCartStore((state) => state.updateQty);
   const clearCart = useCartStore((state) => state.clearCart);
   const totalPrice = useCartStore((state) => state.totalPrice);
+  const setCart = useCartStore((state) => state.setCart);
+
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'checkout' | 'bulk' | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  // Restore pendingCart snapshot after sign-in
+  useEffect(() => {
+    try {
+      const pendingCartRaw = localStorage.getItem('pendingCart');
+      if (user && pendingCartRaw) {
+        const parsed = JSON.parse(pendingCartRaw) as CartItem[] | undefined;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          if (typeof setCart === 'function') {
+            // Replace store cart with saved snapshot (you may prefer merge logic)
+            setCart(parsed);
+            toast.success('Restored your saved cart after signing in');
+          } else {
+            console.warn('setCart not available on cart store — pendingCart not restored automatically.');
+          }
+        }
+        localStorage.removeItem('pendingCart');
+      }
+    } catch (err) {
+      console.warn('Error restoring pendingCart', err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Auto-redirect to checkout if user becomes authenticated and pendingCheckout exists.
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const pending = localStorage.getItem('pendingCheckout');
+      if (pending) {
+        localStorage.removeItem('pendingCheckout');
+        // small delay for UX (optional)
+        setTimeout(() => {
+          navigate('/checkout');
+        }, 250);
+      }
+    } catch (err) {
+      console.warn('Error handling pendingCheckout', err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  const openAuthModal = (action: 'checkout' | 'bulk') => {
+    setPendingAction(action);
+    setModalOpen(true);
+  };
+
   const handleCheckout = () => {
     if (!user) {
-      toast.error('Please sign in first');
-      navigate('/auth', { state: { from: '/cart' } });
+      openAuthModal('checkout');
       return;
     }
     toast.success('Proceeding to checkout...');
@@ -36,12 +87,26 @@ export default function Cart() {
 
   const handleBulkQuote = () => {
     if (!user) {
-      toast.error('Please sign in first');
-      navigate('/auth', { state: { from: '/cart' } });
+      openAuthModal('bulk');
       return;
     }
     toast.success('Converting to bulk quote...');
     navigate('/bulk-quote');
+  };
+
+  const handleSignInFromModal = () => {
+    try {
+      setIsLoading(true);
+      localStorage.setItem('pendingCheckout', JSON.stringify({ from: '/cart', action: pendingAction ?? 'checkout' }));
+    } catch (err) {
+      console.warn('Could not persist pendingCheckout', err);
+    }
+
+    setTimeout(() => {
+      setIsLoading(false);
+      setModalOpen(false);
+      navigate('/auth', { state: { from: '/cart' } });
+    }, 800);
   };
 
   if (cartItems.length === 0) {
@@ -190,20 +255,14 @@ export default function Cart() {
                     size="lg"
                     onClick={() => {
                       clearCart();
+                      try { localStorage.removeItem('pendingCart'); } catch (err) {}
                       toast.success('Cart cleared');
                     }}
                   >
                     Clear Cart
                   </Button>
 
-                  <Button
-                    variant="secondary"
-                    className="w-full"
-                    size="lg"
-                    onClick={handleBulkQuote}
-                  >
-                    Request Bulk Quote
-                  </Button>
+
                 </div>
               </div>
 
@@ -214,6 +273,28 @@ export default function Cart() {
           </div>
         </main>
         <Footer />
+
+        <Modal
+          isOpen={isModalOpen}
+          title={pendingAction === 'checkout' ? 'Please sign in to continue to checkout' : 'Please sign in to request a bulk quote'}
+          onClose={() => setModalOpen(false)}
+          footer={
+            <>
+              <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
+              <Button
+                onClick={handleSignInFromModal}
+                disabled={isLoading}
+              >
+                {isLoading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
+                {isLoading ? 'Redirecting...' : 'Sign In'}
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm">
+            You need to be signed in to {pendingAction === 'checkout' ? 'complete checkout' : 'request a bulk quote'}. Signing in lets you save orders, view order history and manage shipping/payment details.
+          </p>
+        </Modal>
       </motion.div>
     </AnimatePresence>
   );
