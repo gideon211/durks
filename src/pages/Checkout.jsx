@@ -8,7 +8,75 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
-import { CreditCard, Truck, ShoppingBag, CheckCircle, Phone } from "lucide-react";
+import { CreditCard, Truck, CheckCircle, Phone } from "lucide-react";
+import React from "react"
+
+
+// Radix Select Imports
+import * as SelectPrimitive from "@radix-ui/react-select";
+import { ChevronDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// Custom Select Components
+const Select = SelectPrimitive.Root;
+
+const SelectTrigger = React.forwardRef(
+  ({ className, children, ...props }, ref) => (
+    <SelectPrimitive.Trigger
+      ref={ref}
+      className={cn(
+        "flex w-full items-center justify-between rounded-lg border border-border bg-card p-3 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary hover:border-primary hover:bg-muted/50 transition-all",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <SelectPrimitive.Icon asChild>
+        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+      </SelectPrimitive.Icon>
+    </SelectPrimitive.Trigger>
+  )
+);
+SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
+
+const SelectContent = React.forwardRef(
+  ({ className, children, ...props }, ref) => (
+    <SelectPrimitive.Portal>
+      <SelectPrimitive.Content
+        ref={ref}
+        className={cn(
+          "z-50 min-w-[8rem] overflow-hidden rounded-lg border border-border bg-popover shadow-md animate-in fade-in-0 zoom-in-95",
+          className
+        )}
+        {...props}
+      >
+        <SelectPrimitive.Viewport className="p-1">
+          {children}
+        </SelectPrimitive.Viewport>
+      </SelectPrimitive.Content>
+    </SelectPrimitive.Portal>
+  )
+);
+SelectContent.displayName = SelectPrimitive.Content.displayName;
+
+const SelectItem = React.forwardRef(
+  ({ className, children, ...props }, ref) => (
+    <SelectPrimitive.Item
+      ref={ref}
+      className={cn(
+        "relative flex w-full cursor-pointer select-none items-center rounded-md px-3 py-2 text-sm outline-none focus:bg-muted focus:text-foreground data-[state=checked]:font-semibold",
+        className
+      )}
+      {...props}
+    >
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemIndicator className="absolute right-2 flex items-center">
+        <Check className="h-4 w-4" />
+      </SelectPrimitive.ItemIndicator>
+    </SelectPrimitive.Item>
+  )
+);
+SelectItem.displayName = SelectPrimitive.Item.displayName;
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -24,6 +92,7 @@ export default function Checkout() {
     address: "",
     city: "",
     country: "",
+    orderType: "delivery",
     paymentMethod: "card",
   });
 
@@ -56,9 +125,12 @@ export default function Checkout() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-soft-sand px-4">
         <CheckCircle className="h-20 w-20 text-accent mb-6 animate-float" />
-        <h1 className="text-3xl font-heading font-bold mb-2">Order Confirmed</h1>
+        <h1 className="text-3xl font-heading font-bold mb-2">
+          Order Confirmed
+        </h1>
         <p className="text-muted-foreground text-center max-w-md mb-6">
-          Thank you for your purchase. We’re processing your order and will contact you soon.
+          Thank you for your purchase. We’re processing your order and will
+          contact you soon.
         </p>
         <Button size="lg" onClick={() => navigate("/products")}>
           Continue Shopping
@@ -72,10 +144,6 @@ export default function Checkout() {
       <Header />
 
       <main className="flex-1 container mx-auto px-4 py-8">
-        {/* <h1 className="font-heading font-bold text-3xl md:text-4xl mb-8">
-          Checkout
-        </h1> */}
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* LEFT: Billing form */}
           <form
@@ -86,26 +154,33 @@ export default function Checkout() {
               <h2 className="font-heading text-2xl font-semibold mb-4">
                 Checkout Details
               </h2>
-              <div className="space-y-2">
-            <label className="block text-sm font-medium text-muted-foreground">
-                Order Type
-            </label>
-            <select
-                className="w-54 rounded-lg border border-border bg-card p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-semibold mx-auto"
-                defaultValue="delivery"
-            >
-                <option value="delivery" className="">Delivery</option>
-                <option value="pickup" className="">Pickup</option>
-            </select>
-            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Order Type using Radix Select */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-muted-foreground">
+                  Order Type
+                </label>
+                <Select
+                  value={formData.orderType}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, orderType: value }))
+                  }
+                >
+                  <SelectTrigger />
+                  <SelectContent>
+                    <SelectItem value="delivery">Delivery</SelectItem>
+                    <SelectItem value="pickup">Pickup</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Form Inputs */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
                   <Label htmlFor="fullName">Full Name</Label>
                   <Input
                     id="fullName"
                     name="fullName"
-                    placeholder="John Doe"
                     value={formData.fullName}
                     onChange={handleChange}
                     required
@@ -118,7 +193,6 @@ export default function Checkout() {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="john@example.com"
                     value={formData.email}
                     onChange={handleChange}
                     required
@@ -130,7 +204,6 @@ export default function Checkout() {
                   <Input
                     id="phone"
                     name="phone"
-                    placeholder="+233 555 123 456"
                     value={formData.phone}
                     onChange={handleChange}
                     required
@@ -142,7 +215,6 @@ export default function Checkout() {
                   <Input
                     id="city"
                     name="city"
-                    placeholder="Accra"
                     value={formData.city}
                     onChange={handleChange}
                     required
@@ -161,8 +233,6 @@ export default function Checkout() {
                   required
                 />
               </div>
-
-
             </div>
 
             {/* Payment Section */}
@@ -178,7 +248,7 @@ export default function Checkout() {
                 }
                 className="space-y-3"
               >
-                <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary cursor-pointer">
+                <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer">
                   <RadioGroupItem value="card" id="card" />
                   <Label htmlFor="card" className="flex items-center gap-2">
                     <CreditCard className="h-4 w-4" />
@@ -186,7 +256,7 @@ export default function Checkout() {
                   </Label>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary cursor-pointer">
+                <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer">
                   <RadioGroupItem value="mobile" id="mobile" />
                   <Label htmlFor="mobile" className="flex items-center gap-2">
                     <Phone className="h-4 w-4" />
@@ -194,7 +264,7 @@ export default function Checkout() {
                   </Label>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary cursor-pointer">
+                <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer">
                   <RadioGroupItem value="delivery" id="delivery" />
                   <Label htmlFor="delivery" className="flex items-center gap-2">
                     <Truck className="h-4 w-4" />
@@ -209,7 +279,7 @@ export default function Checkout() {
             </Button>
           </form>
 
-          {/* RIGHT: Summary */}
+          {/* RIGHT: Order Summary */}
           <div className="bg-card border border-border rounded-xl p-6">
             <h2 className="font-heading text-xl font-semibold mb-4 text-center">
               Order Slip
@@ -253,7 +323,7 @@ export default function Checkout() {
               </div>
             </div>
 
-            <div className="mt-6 text-xs text-muted-foreground">
+            <div className="mt-6 text-xs text-muted-foreground text-center">
               You’ll receive an order confirmation email after payment.
             </div>
           </div>

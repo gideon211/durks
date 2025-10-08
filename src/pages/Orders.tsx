@@ -1,22 +1,26 @@
 // src/pages/Orders.jsx
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Header } from '@/components/Header'
-import { Footer } from '@/components/Footer'
-import { Button } from '@/components/ui/button'
-import { Package } from 'lucide-react'
-import { useOrdersStore } from '@/store/ordersStore'
-import { useUserStore } from '@/store/userStore'
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Package } from "lucide-react";
+import { useAuth } from "@/context/Authcontext";
+// import { useOrdersStore } from "@/store/ordersStore";
 
 export default function Orders() {
-  const navigate = useNavigate()
-  const orders = useOrdersStore((s) => s.orders)
-  const clearOrders = useOrdersStore((s) => s.clearOrders)
-  const user = useUserStore((s) => s.user)
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  // const orders = useOrdersStore((s) => s.orders);
+  // const clearOrders = useOrdersStore((s) => s.clearOrders);
+
+  // Placeholder orders for demo
+  const orders = []; // Replace with your store hook
+  const clearOrders = () => console.log("Clearing orders"); // Replace with your store hook
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [])
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   if (!user) {
     return (
@@ -28,12 +32,14 @@ export default function Orders() {
               <Package className="h-12 w-12 text-muted-foreground" />
             </div>
             <h1 className="font-heading font-bold text-3xl mb-4">Please sign in</h1>
-            <p className="text-muted-foreground mb-8">You need an account to view your orders.</p>
-            <Button onClick={() => navigate('/auth')}>Sign in</Button>
+            <p className="text-muted-foreground mb-8">
+              You need an account to view your orders.
+            </p>
+            <Button onClick={() => navigate("/auth")}>Sign in</Button>
           </div>
         </main>
       </div>
-    )
+    );
   }
 
   if (!orders || orders.length === 0) {
@@ -46,14 +52,20 @@ export default function Orders() {
               <Package className="h-12 w-12 text-muted-foreground" />
             </div>
             <h1 className="font-heading font-bold text-3xl mb-4">No orders yet</h1>
-            <p className="text-muted-foreground mb-8">Looks like you haven't placed any orders yet.</p>
-            <Button onClick={() => navigate('/products', { state: { skipHero: true, scrollToTabs: true } })}>
+            <p className="text-muted-foreground mb-8">
+              Looks like you haven't placed any orders yet.
+            </p>
+            <Button
+              onClick={() =>
+                navigate("/products", { state: { skipHero: true, scrollToTabs: true } })
+              }
+            >
               Browse Products
             </Button>
           </div>
         </main>
       </div>
-    )
+    );
   }
 
   return (
@@ -76,23 +88,38 @@ export default function Orders() {
                 </div>
 
                 <div className="text-right">
-                  <div className={`text-sm font-semibold ${order.status === 'Delivered' ? 'text-accent' : ''}`}>
+                  <div
+                    className={`text-sm font-semibold ${
+                      order.status === "Delivered" ? "text-accent" : ""
+                    }`}
+                  >
                     {order.status}
                   </div>
-                  <div className="text-sm mt-2 font-heading font-bold">₵{order.total.toFixed(2)}</div>
+                  <div className="text-sm mt-2 font-heading font-bold">
+                    ₵{order.total.toFixed(2)}
+                  </div>
                 </div>
               </div>
 
               <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2 space-y-3">
                   {order.items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 bg-muted border border-border rounded p-2">
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3 bg-muted border border-border rounded p-2"
+                    >
                       <div className="w-20 flex-shrink-0">
-                        <img src={item.image} alt={item.name} className="w-full h-20 object-cover rounded" />
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-20 object-cover rounded"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-sm truncate">{item.name}</div>
-                        <div className="text-xs text-muted-foreground">₵{item.price.toFixed(2)} each</div>
+                        <div className="text-xs text-muted-foreground">
+                          ₵{item.price.toFixed(2)} each
+                        </div>
                         <div className="text-xs text-muted-foreground">Qty: {item.qty}</div>
                       </div>
                     </div>
@@ -101,13 +128,24 @@ export default function Orders() {
 
                 <div className="bg-card border border-border rounded-xl p-4">
                   <div className="text-muted-foreground text-sm">Order Summary</div>
-                  <div className="font-heading font-semibold text-lg mt-2">₵{order.total.toFixed(2)}</div>
+                  <div className="font-heading font-semibold text-lg mt-2">
+                    ₵{order.total.toFixed(2)}
+                  </div>
 
                   <div className="mt-4 space-y-2">
-                    <Button className="w-full" onClick={() => navigate(`/orders/${order.id}`)}>
+                    <Button
+                      className="w-full"
+                      onClick={() => navigate(`/orders/${order.id}`)}
+                    >
                       View Details
                     </Button>
-                    <Button variant="outline" className="w-full" onClick={() => { navigator.clipboard?.writeText(order.id); }}>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(order.id);
+                      }}
+                    >
                       Copy Order ID
                     </Button>
                   </div>
@@ -118,7 +156,12 @@ export default function Orders() {
         </div>
 
         <div className="mt-6">
-          <Button variant="outline" onClick={() => { clearOrders(); }}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              clearOrders();
+            }}
+          >
             Clear Order History
           </Button>
         </div>
@@ -126,5 +169,5 @@ export default function Orders() {
 
       {/* <Footer /> */}
     </div>
-  )
+  );
 }

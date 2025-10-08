@@ -185,34 +185,47 @@ export default function Products() {
         />
       </section>
 
-      {/* Products section with tabs */}
-      <section className="container mx-auto px-4 py-12">
-        <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar">
-          <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
-            <TabsList className="inline-flex w-auto">
-              {categories.map((cat) => (
-                <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap">
-                  {cat.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        </div>
+{/* Products section with tabs */}
+<motion.section
+  className="container mx-auto px-4 py-12"
+  initial={{ opacity: 0, y: 50 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6, ease: "easeOut" }}
+>
+  <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar">
+    <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
+      <TabsList className="inline-flex w-auto">
+        {categories.map((cat) => (
+          <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap">
+            {cat.name}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+  </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} {...product} />
-          ))}
-        </div>
+  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+    {filteredProducts.map((product) => (
+      <motion.div
+        key={product.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 * filteredProducts.indexOf(product), duration: 0.4 }}
+      >
+        <ProductCard {...product} />
+      </motion.div>
+    ))}
+  </div>
 
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">
-              No products found in this category.
-            </p>
-          </div>
-        )}
-      </section>
+  {filteredProducts.length === 0 && (
+    <div className="text-center py-16">
+      <p className="text-muted-foreground text-lg">
+        No products found in this category.
+      </p>
+    </div>
+  )}
+</motion.section>
+
 
       <Footer />
     </div>

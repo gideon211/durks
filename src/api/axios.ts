@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api"; // replace with your backend
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -9,9 +9,9 @@ const axiosInstance = axios.create({
 // Attach token to every request
 axiosInstance.interceptors.request.use(
   (config) => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const { token } = JSON.parse(storedUser);
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      const { token } = JSON.parse(stored);
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -19,13 +19,13 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Optional: handle 401 Unauthorized (token expired)
+// Handle 401 Unauthorized (token expired)
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("user"); // clear expired token
-      window.location.href = "/auth"; // redirect to login
+      localStorage.removeItem("user");
+      window.location.href = "/auth";
     }
     return Promise.reject(error);
   }

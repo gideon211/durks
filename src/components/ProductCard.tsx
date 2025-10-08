@@ -1,13 +1,12 @@
 // src/components/ProductCard.tsx
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, Plus, Minus } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { useCartStore } from "@/store/cartStore";
 import { useState } from "react";
 import { Modal } from "./Modal";
 import { useAuth } from "@/context/Authcontext";
-
 
 interface ProductCardProps {
   id: string;
@@ -29,21 +28,20 @@ export const ProductCard = ({
   const addToCart = useCartStore((state) => state.addToCart);
   const [quantity, setQuantity] = useState<number>(1);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { user } = useAuth(); // <-- uses your AuthContext
+  const { user } = useAuth();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     if (quantity < 1) return;
 
-    // If not logged in, show modal and do NOT add to cart
     if (!user) {
       setModalOpen(true);
       return;
     }
 
-    // logged in: proceed
     addToCart({ id, name, price, image, category }, quantity);
   };
 
@@ -57,7 +55,7 @@ export const ProductCard = ({
 
   return (
     <>
-      <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-[20rem]">
+      <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-[25rem]">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-muted block">
           <img src={image} alt={name} className="w-full h-full object-cover" />
@@ -77,7 +75,7 @@ export const ProductCard = ({
             </h3>
           </div>
 
-          <p className="font-heading font-semibold text-sm text-foreground ">
+          <p className="font-heading font-semibold text-sm text-foreground">
             ₵{(price * quantity).toFixed(2)}
           </p>
 
@@ -137,24 +135,30 @@ export const ProductCard = ({
               Cancel
             </Button>
             <Button
-            onClick={() => {
-                // Save pending add-to-cart details so we can resume after login
+              onClick={() => {
+                setIsLoading(true); // show loader
+
                 const pending = {
-                product: { id, name, price, image, category },
-                quantity,
-                from: `/products/${id}`, // optional: where user came from
+                  product: { id, name, price, image, category },
+                  quantity,
+                  from: `/products/${id}`,
                 };
                 try {
-                localStorage.setItem("pendingAdd", JSON.stringify(pending));
+                  localStorage.setItem("pendingAdd", JSON.stringify(pending));
                 } catch (err) {
-                console.warn("Could not save pending add", err);
+                  console.warn("Could not save pending add", err);
                 }
 
-                setModalOpen(false);
-                navigate("/auth", { state: { from: `/products/${id}` } });
-            }}
+                setTimeout(() => {
+                  setIsLoading(false);
+                  setModalOpen(false);
+                  navigate("/auth", { state: { from: `/products/${id}` } });
+                }, 1000); // smooth loader
+              }}
+              disabled={isLoading}
             >
-            Sign In
+              {isLoading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
+              {isLoading ? "Redirecting..." : "Sign In"}
             </Button>
           </>
         }
