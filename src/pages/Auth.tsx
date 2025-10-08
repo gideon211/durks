@@ -112,7 +112,7 @@ export default function Auth() {
         <motion.div
           animate={{ rotate: [0, 6, -6, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[-10%] left-[-10%] w-[36rem] h-[36rem] rounded-full bg-gradient-to-tr from-primary/10 to-pink-50 blur-3xl opacity-60"
+          className="absolute top-[-20%] left-[-10%] w-[36rem] h-[36rem] rounded-full bg-gradient-to-tr from-primary/10 to-pink-50 blur-3xl opacity-60"
         />
         <motion.div
           animate={{ y: [0, -12, 0] }}
@@ -296,7 +296,7 @@ export default function Auth() {
                         Or continue with
                       </div>
 
-                      <div className="flex gap-3 justify-center">
+                      {/* <div className="flex gap-3 justify-center">
                         <motion.button whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} className="px-3 py-2 border rounded flex items-center gap-2">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2v6" stroke="currentColor" strokeWidth="1.4"/></svg>
                           Google
@@ -305,7 +305,7 @@ export default function Auth() {
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12h18" stroke="currentColor" strokeWidth="1.4"/></svg>
                           Apple
                         </motion.button>
-                      </div>
+                      </div> */}
                     </div>
                   </form>
                 </TabsContent>
