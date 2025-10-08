@@ -197,12 +197,12 @@ export default function Products() {
         </TabsList>
         </Tabs>
     </div>
-    <motion.section
+    {/* <motion.section
     className="container mx-auto px-4 py-4"
     initial={{ opacity: 0, y: 50 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6, ease: "easeOut" }}
-    >
+    > */}
 
 
   <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -217,6 +217,7 @@ export default function Products() {
       </motion.div>
     ))}
   </div>
+  {/* </motion.section> */}
 
   {filteredProducts.length === 0 && (
     <div className="text-center py-16">
@@ -225,7 +226,7 @@ export default function Products() {
       </p>
     </div>
   )}
-</motion.section>
+
 
 
       <Footer />
