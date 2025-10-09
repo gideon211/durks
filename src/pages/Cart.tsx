@@ -234,7 +234,7 @@ export default function Cart() {
         <div className="w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Subtotal */}
             <div className="flex items-center justify-between w-full sm:w-auto gap-8">
-            <span className="text-lg font-extrabold text-black text-pretty">subtotal</span>
+            <span className="text-lg font-heading font-extrabold text-black text-pretty">subtotal</span>
             <span className="font-heading font-bold text-md">₵{totalPrice().toFixed(2)}</span>
             </div>
 
