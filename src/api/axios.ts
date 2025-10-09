@@ -6,7 +6,7 @@ const axiosInstance = axios.create({
   baseURL: API_URL,
 });
 
-// Attach token to every request
+// ✅ Attach token to every request
 axiosInstance.interceptors.request.use(
   (config) => {
     const stored = localStorage.getItem("user");
@@ -19,7 +19,7 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle 401 Unauthorized (token expired)
+// ✅ Handle expired tokens (401)
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
