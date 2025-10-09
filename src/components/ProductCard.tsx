@@ -97,7 +97,7 @@ export const ProductCard = ({
               min={1}
               value={quantity}
               onChange={handleInputChange}
-              className="w-16 text-center border rounded px-1 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-16 text-center border rounded px-1 py-1 focus:outline-none focus:ring-1 focus:ring-primary font-bold"
               aria-label={`${name} quantity`}
             />
 
