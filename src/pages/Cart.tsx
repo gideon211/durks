@@ -193,7 +193,7 @@ export default function Cart() {
                         <Button
                           variant="outline"
                           size="xs"
-                           className="rounded-none"
+                           className="rounded-none border px-4"
                          
                          
                         >
