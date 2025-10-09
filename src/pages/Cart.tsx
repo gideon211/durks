@@ -136,7 +136,7 @@ export default function Cart() {
     <AnimatePresence>
         <Header />
       <motion.div
-        className="min-h-screen flex flex-col pb-32" // bottom padding so content isn't hidden behind sticky card
+        className="min-h-screen flex flex-col pb-32" 
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 100 }}
@@ -144,12 +144,12 @@ export default function Cart() {
       >
         
 
-        <main className="flex-1 container mx-auto px-4 py-6">
+        <main className="flex-1 container mx-auto px-2 py-4">
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-3">
               {cartItems.map((item: CartItem) => (
-                <div key={item.id} className="bg-card border border-border rounded p-3 flex flex-row items-center gap-3">
+                <div key={item.id} className="bg-card border border-border rounded-md p-3 flex flex-row items-center gap-3">
                   <div className="w-24 flex-shrink-0">
                     <img
                       src={item.image}
@@ -173,7 +173,7 @@ export default function Cart() {
                           onClick={() => removeFromCart(item.id)}
                           className="p-2"
                         > */}
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" onClick={() => removeFromCart(item.id)} />
                         {/* </Button> */}
                       </div>
                     </div>
@@ -234,7 +234,7 @@ export default function Cart() {
         <div className="w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Subtotal */}
             <div className="flex items-center justify-between w-full sm:w-auto gap-8">
-            <span className="text-lg text-muted-foreground">Subtotal</span>
+            <span className="text-lg font-bold text-black">Subtotal</span>
             <span className="font-heading font-bold text-md">₵{totalPrice().toFixed(2)}</span>
             </div>
 
