@@ -14,6 +14,21 @@ import NotFound from "./pages/NotFound";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 
+//admin
+
+import Dashboard from "./admin/pages/Dashboard";
+import Oorders from "./admin/pages/Orders";
+import Preorders from "./admin/pages/Preorders";
+import AdminProducts from "./admin/pages/Products";
+import Inventory from "./admin/pages/Inventory";
+import Customers from "./admin/pages/Customers";
+import Quotes from "./admin/pages/Quotes";
+import Payments from "./admin/pages/Payments";
+import CSRReports from "./admin/pages/CSRReports";
+import Analytics from "./admin/pages/Analytics";
+import Users from "./admin/pages/Users";
+import Settings from "./admin/pages/Settings";
+
 const queryClient = new QueryClient();
 
 function AnimatedRoutes() {
@@ -34,6 +49,22 @@ function AnimatedRoutes() {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="*" element={<NotFound />} />
         <Route path="orders" element={<Orders />} />
+
+
+                  
+          {/* Admin Routes */}
+          <Route path="/admin" element={<Dashboard />} />
+          <Route path="/admin/orders" element={<Oorders />} />
+          <Route path="/admin/preorders" element={<Preorders />} />
+          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/inventory" element={<Inventory />} />
+          <Route path="/admin/customers" element={<Customers />} />
+          <Route path="/admin/quotes" element={<Quotes />} />
+          <Route path="/admin/payments" element={<Payments />} />
+          <Route path="/admin/csr" element={<CSRReports />} />
+          <Route path="/admin/analytics" element={<Analytics />} />
+          <Route path="/admin/users" element={<Users />} />
+          <Route path="/admin/settings" element={<Settings />} />
       </Routes>
     </AnimatePresence>
   );

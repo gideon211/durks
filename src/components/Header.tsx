@@ -237,6 +237,15 @@ export const Header = () => {
                     >
                       Preorder Bulk
                     </Button>
+
+                                        <Button
+                      onClick={() => {
+                        navigate("/admin");
+                        
+                      }}
+                    >
+                      DashBoard
+                    </Button>
                   </div>
                 </div>
               </SheetContent>
