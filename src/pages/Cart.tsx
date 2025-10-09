@@ -183,7 +183,7 @@ export default function Cart() {
                         <Button
                           variant="outline"
                            className="rounded-none"
-                          size="sm"
+                          size="xs"
                           aria-label={`Decrease quantity for ${item.name}`}
                           onClick={() => updateQty(item.id, Math.max(1, item.qty - 1))}
                         >
@@ -192,7 +192,7 @@ export default function Cart() {
 
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="xs"
                            className="rounded-none"
                          
                          
@@ -203,7 +203,7 @@ export default function Cart() {
 
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="xs"
                            className="rounded-none"
                           aria-label={`Increase quantity for ${item.name}`}
                           onClick={() => updateQty(item.id, item.qty + 1)}
