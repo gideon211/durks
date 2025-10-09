@@ -99,12 +99,10 @@ export default function Products() {
     <AdminLayout>
       <div className="space-y-4 sm:space-y-6 p-3 sm:p-5">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex sm:flex-row sm:items-center sm:justify-between justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-heading font-bold">Products</h1>
-            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-              Manage your catalog and pricing
-            </p>
+            <h1 className="text-2xl sm:text-3xl font-heading font-semibold">Products</h1>
+
           </div>
           <div className="flex gap-2 justify-end">
             <Button

@@ -49,7 +49,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col w-full">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-30 bg-card border-b px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-30 bg-card border-b px-2 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
@@ -63,7 +63,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon">
             <Bell className="h-5 w-5" />
           </Button>
