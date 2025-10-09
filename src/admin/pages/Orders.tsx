@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, Download, Eye, Package } from "lucide-react";
+import { Search, Filter, Eye, Package } from "lucide-react";
 
 const orders = [
   {
@@ -66,7 +66,10 @@ export default function Orders() {
       key: "payment",
       label: "Payment",
       render: (value: string) => (
-        <Badge variant={value === "Paid" ? "default" : "destructive"}>
+        <Badge
+          variant={value === "Paid" ? "default" : "destructive"}
+          className="whitespace-nowrap"
+        >
           {value}
         </Badge>
       ),
@@ -83,7 +86,11 @@ export default function Orders() {
             : value === "Processing"
             ? "outline"
             : "destructive";
-        return <Badge variant={variant}>{value}</Badge>;
+        return (
+          <Badge variant={variant} className="whitespace-nowrap">
+            {value}
+          </Badge>
+        );
       },
     },
     { key: "date", label: "Date" },
@@ -91,7 +98,7 @@ export default function Orders() {
       key: "actions",
       label: "Actions",
       render: () => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 justify-center">
           <Button variant="ghost" size="sm">
             <Eye className="h-4 w-4" />
           </Button>
@@ -106,28 +113,32 @@ export default function Orders() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-heading font-bold">Orders</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl md:text-3xl font-heading font-bold">
+              Orders
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-base">
               Manage all customer orders and fulfillment
             </p>
           </div>
-          <Button variant="bulk">
-            <Download className="h-4 w-4 mr-2" />
-            Export Orders
-          </Button>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4">
-          <div className="relative flex-1 min-w-[300px]">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 px-8">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[220px] sm:min-w-[250px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search by order ID, customer..." className="pl-10" />
+            <Input
+              placeholder="Search by order ID or customer..."
+              className="pl-10 w-full"
+            />
           </div>
 
+          {/* Status Filter */}
           <Select defaultValue="all">
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px] flex-1 min-w-[160px]">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -140,8 +151,9 @@ export default function Orders() {
             </SelectContent>
           </Select>
 
+          {/* Payment Filter */}
           <Select defaultValue="all-payment">
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px] flex-1 min-w-[160px]">
               <SelectValue placeholder="Payment" />
             </SelectTrigger>
             <SelectContent>
@@ -151,8 +163,9 @@ export default function Orders() {
             </SelectContent>
           </Select>
 
+          {/* Date Filter */}
           <Select defaultValue="recent">
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px] flex-1 min-w-[160px]">
               <SelectValue placeholder="Date Range" />
             </SelectTrigger>
             <SelectContent>
@@ -164,11 +177,15 @@ export default function Orders() {
         </div>
 
         {/* Orders Table */}
-        <DataTable
-          columns={columns}
-          data={orders}
-          emptyMessage="No fresh orders yet — time for a juice break."
-        />
+        <div className="w-full overflow-x-auto rounded-md border bg-card">
+          <div className="min-w-[900px]">
+            <DataTable
+              columns={columns}
+              data={orders}
+              emptyMessage="No fresh orders yet — time for a juice break."
+            />
+          </div>
+        </div>
       </div>
     </AdminLayout>
   );

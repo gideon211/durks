@@ -1,166 +1,215 @@
+// src/admin/pages/Products.tsx
 import AdminLayout from "@/admin/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Copy, Grid3x3, List } from "lucide-react";
-import { useState } from "react";
+import { Plus, Edit, Copy, Grid3x3, List, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-const products = [
-  {
-    id: "PROD-001",
-    name: "Mango Sunrise",
-    category: "Pure Juice",
-    stock: 450,
-    price: "GH₵ 12",
-    status: "Active",
-    image: "/placeholder.svg",
-  },
-  {
-    id: "PROD-002",
-    name: "Green Detox",
-    category: "Cleanse Juice",
-    stock: 230,
-    price: "GH₵ 15",
-    status: "Active",
-    image: "/placeholder.svg",
-  },
-  {
-    id: "PROD-003",
-    name: "Berry Blast",
-    category: "Smoothies",
-    stock: 180,
-    price: "GH₵ 18",
-    status: "Active",
-    image: "/placeholder.svg",
-  },
-  {
-    id: "PROD-004",
-    name: "Tropical Mix",
-    category: "Cut Fruits",
-    stock: 85,
-    price: "GH₵ 10",
-    status: "Low Stock",
-    image: "/placeholder.svg",
-  },
-];
+interface Product {
+  id: string | number;
+  name: string;
+  category: string;
+  stock: number;
+  price: number;
+  status: string;
+  image: string;
+}
 
 export default function Products() {
+  const [products, setProducts] = useState<Product[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [openModal, setOpenModal] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    category: "",
+    stock: "",
+    price: "",
+    status: "Active",
+    image: "",
+  });
+
+  // Initialize with mock products
+  useEffect(() => {
+    setProducts([
+      {
+        id: 1,
+        name: "Mango Sunrise",
+        category: "Juice",
+        stock: 120,
+        price: 12,
+        status: "Active",
+        image: "/placeholder.svg",
+      },
+      {
+        id: 2,
+        name: "Berry Blast",
+        category: "Smoothies",
+        stock: 80,
+        price: 15,
+        status: "Active",
+        image: "/placeholder.svg",
+      },
+    ]);
+  }, []);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleAddProduct = () => {
+    if (!form.name || !form.category || !form.price || !form.stock) {
+      toast.error("All fields are required");
+      return;
+    }
+
+    const newProduct: Product = {
+      ...form,
+      id: Date.now(),
+      price: parseFloat(form.price),
+      stock: parseInt(form.stock),
+      image: form.image || "/placeholder.svg",
+    };
+
+    setProducts((prev) => [...prev, newProduct]);
+    toast.success("Product added");
+    setOpenModal(false);
+    setForm({
+      name: "",
+      category: "",
+      stock: "",
+      price: "",
+      status: "Active",
+      image: "",
+    });
+  };
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6 p-3 sm:p-5">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-heading font-bold">Products</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage your product catalog and pricing
+            <h1 className="text-2xl sm:text-3xl font-heading font-bold">Products</h1>
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+              Manage your catalog and pricing
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon" onClick={() => setViewMode("grid")}>
+          <div className="flex gap-2 justify-end">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setViewMode("grid")}
+              className={viewMode === "grid" ? "bg-muted" : ""}
+            >
               <Grid3x3 className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={() => setViewMode("list")}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setViewMode("list")}
+              className={viewMode === "list" ? "bg-muted" : ""}
+            >
               <List className="h-4 w-4" />
             </Button>
-            <Button variant="bulk">
+            <Button onClick={() => setOpenModal(true)} className="hidden sm:flex">
               <Plus className="h-4 w-4 mr-2" />
               Add Product
+            </Button>
+            <Button
+              onClick={() => setOpenModal(true)}
+              size="icon"
+              className="sm:hidden"
+            >
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
+        {/* Products View */}
         {viewMode === "grid" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-5">
             {products.map((product) => (
-              <Card key={product.id} className="hover-lift">
-                <CardContent className="p-4">
-                  <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center">
+              <Card
+                key={product.id}
+                className="hover:border-primary/40 border-2 transition-all duration-150"
+              >
+                <CardContent className="p-3 sm:p-4 flex flex-col">
+                  <div className="aspect-square bg-muted rounded-lg mb-3 overflow-hidden">
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-full object-cover rounded-lg"
+                      className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold">{product.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {product.category}
-                        </p>
-                      </div>
-                      <Badge
-                        variant={
-                          product.status === "Active" ? "default" : "destructive"
-                        }
-                      >
-                        {product.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold">{product.price}</span>
-                      <span className="text-sm text-muted-foreground">
-                        Stock: {product.stock}
-                      </span>
-                    </div>
-                    <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  <div className="flex flex-col flex-grow text-center">
+                    <Badge
+                      variant={product.status === "Active" ? "default" : "destructive"}
+                      className="mb-1 mx-auto text-xs"
+                    >
+                      {product.status}
+                    </Badge>
+                    <h3 className="font-semibold text-sm sm:text-base truncate">
+                      {product.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground truncate">{product.category}</p>
+                    <p className="font-bold text-base sm:text-lg mt-1">
+                      ₵{product.price.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Stock: {product.stock}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : (
-          <Card>
+          <Card className="w-full">
             <CardContent className="p-0">
               <div className="divide-y">
                 {products.map((product) => (
                   <div
                     key={product.id}
-                    className="p-4 flex items-center gap-4 hover:bg-muted/50"
+                    className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/50 w-full"
                   >
-                    <div className="w-16 h-16 bg-muted rounded-lg flex-shrink-0">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover rounded-lg"
+                        className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{product.name}</h3>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm sm:text-base truncate">{product.name}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
                         {product.category}
                       </p>
                     </div>
                     <Badge
-                      variant={
-                        product.status === "Active" ? "default" : "destructive"
-                      }
+                      variant={product.status === "Active" ? "default" : "destructive"}
+                      className="hidden sm:block"
                     >
                       {product.status}
                     </Badge>
-                    <div className="text-right">
-                      <p className="font-bold">{product.price}</p>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-bold text-sm sm:text-base">
+                        ₵{product.price.toFixed(2)}
+                      </p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Stock: {product.stock}
                       </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Copy className="h-4 w-4" />
-                      </Button>
                     </div>
                   </div>
                 ))}
@@ -168,6 +217,91 @@ export default function Products() {
             </CardContent>
           </Card>
         )}
+
+        {/* Add Product Modal */}
+        <Dialog open={openModal} onOpenChange={setOpenModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex justify-between items-center">
+                Add Product
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setOpenModal(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-3 mt-2">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  name="name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Product name"
+                />
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Input
+                  name="category"
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  placeholder="Category"
+                />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Label>Price (₵)</Label>
+                  <Input
+                    name="price"
+                    value={form.price}
+                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                    type="number"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label>Stock</Label>
+                  <Input
+                    name="stock"
+                    value={form.stock}
+                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                    type="number"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Image URL</Label>
+                <Input
+                  name="image"
+                  value={form.image}
+                  onChange={(e) => setForm({ ...form, image: e.target.value })}
+                  placeholder=""
+                />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <select
+                  name="status"
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  className="w-full border rounded px-2 py-1 text-sm"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Low Stock">Low Stock</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+
+              <Button onClick={handleAddProduct} className="w-full font-bold mt-2">
+                Add Product
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
