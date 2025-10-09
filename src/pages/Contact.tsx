@@ -111,22 +111,22 @@ export default function Contact() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
-                    <Input id="name" placeholder="Gideon Mensah" required />
+                    <Input id="name" placeholder="" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="you@company.com" required />
+                    <Input id="email" type="email" placeholder="" required />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="company">Company (Optional)</Label>
-                  <Input id="company" placeholder="Your company name" />
+                  <Input id="company" placeholder="" />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="subject">Subject</Label>
-                  <Input id="subject" placeholder="Bulk order inquiry" required />
+                  <Input id="subject" placeholder="" required />
                 </div>
 
                 <div className="space-y-2">

@@ -90,7 +90,7 @@ export const useCartStore = create<CartState>()(
               _local: true,
             };
             set({ cart: [...get().cart, localItem] });
-            toast.success(`${product.name} added to cart`);
+           
           } catch (fallbackErr) {
             console.error("Local fallback addToCart failed:", fallbackErr);
             toast.error("Failed to add to cart");
@@ -110,7 +110,7 @@ export const useCartStore = create<CartState>()(
 
           if (typeof cartItemId === "string" && String(cartItemId).startsWith("local-")) {
             set({ cart: current.filter((i) => i.id !== cartItemId) });
-            toast.success("Item removed");
+  
             return;
           }
 
@@ -122,7 +122,7 @@ export const useCartStore = create<CartState>()(
           console.warn("Remove from cart (server) failed, falling back to local remove:", err);
           // fallback: remove locally
           set({ cart: get().cart.filter((i) => i.id !== cartItemId) });
-          toast.success("Item removed from cart (local)");
+          toast.success("Item removed from cart");
         }
       },
 
