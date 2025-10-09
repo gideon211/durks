@@ -43,22 +43,22 @@ export default function BulkQuote() {
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name *</Label>
-                    <Input id="name" placeholder="Gideon Mensah" required />
+                    <Input id="name" placeholder="" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email *</Label>
-                    <Input id="email" type="email" placeholder="you@company.com" required />
+                    <Input id="email" type="email" placeholder="" required />
                   </div>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="company">Company Name *</Label>
-                    <Input id="company" placeholder="Your Company Ltd." required />
+                    <Input id="company" placeholder="" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number *</Label>
-                    <Input id="phone" type="tel" placeholder="+233 20 242 7880" required />
+                    <Input id="phone" type="tel" placeholder="" required />
                   </div>
                 </div>
 

@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus, Minus, Package, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -38,7 +37,6 @@ export default function Cart() {
         const parsed = JSON.parse(pendingCartRaw) as CartItem[] | undefined;
         if (Array.isArray(parsed) && parsed.length > 0) {
           if (typeof setCart === 'function') {
-            // Replace store cart with saved snapshot (you may prefer merge logic)
             setCart(parsed);
             toast.success('Restored your saved cart after signing in');
           } else {
@@ -60,7 +58,6 @@ export default function Cart() {
       const pending = localStorage.getItem('pendingCheckout');
       if (pending) {
         localStorage.removeItem('pendingCheckout');
-        // small delay for UX (optional)
         setTimeout(() => {
           navigate('/checkout');
         }, 250);
@@ -82,7 +79,7 @@ export default function Cart() {
       return;
     }
     toast.success('Proceeding to checkout...');
-    setTimeout(() => navigate('/checkout'), 800);
+    setTimeout(() => navigate('/checkout'), 400);
   };
 
   const handleBulkQuote = () => {
@@ -106,7 +103,7 @@ export default function Cart() {
       setIsLoading(false);
       setModalOpen(false);
       navigate('/auth', { state: { from: '/cart' } });
-    }, 800);
+    }, 600);
   };
 
   if (cartItems.length === 0) {
@@ -131,60 +128,61 @@ export default function Cart() {
             </Button>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
 
   return (
     <AnimatePresence>
+        <Header />
       <motion.div
-        className="min-h-screen flex flex-col"
+        className="min-h-screen flex flex-col pb-32" // bottom padding so content isn't hidden behind sticky card
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 100 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
-        <Header />
-        <main className="flex-1 container mx-auto px-4 py-2">
-          {/* <h1 className="font-heading font-semibold text-3xl md:text-4xl mb-6">Cart</h1> */}
+        
+
+        <main className="flex-1 container mx-auto px-4 py-6">
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-            <div className="lg:col-span-2 space-y-2">
+            <div className="lg:col-span-2 space-y-3">
               {cartItems.map((item: CartItem) => (
-                <div key={item.id} className="bg-card border border-border rounded-xl p-3 flex flex-row items-center gap-3">
+                <div key={item.id} className="bg-card border border-border rounded p-3 flex flex-row items-center gap-3">
                   <div className="w-24 flex-shrink-0">
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="w-full h-24 object-cover rounded-md border"
+                      className="w-full h-24 object-cover rounded border"
                     />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-sm truncate">{item.name}</h3>
+                        <h3 className="font-medium text-sm truncate">{item.name}</h3>
                         <p className="text-xs text-muted-foreground mt-0.5">₵{item.price.toFixed(2)} each</p>
                       </div>
 
                       <div className="flex items-start gap-1">
-                        <Button
+                        {/* <Button
                           variant="destructive"
-                          size="icon"
+                          size="sm"
                           aria-label={`Remove ${item.name}`}
                           onClick={() => removeFromCart(item.id)}
-                          className="p-1"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                          className="p-2"
+                        > */}
+                          <Trash2 className="h-4 w-4" />
+                        {/* </Button> */}
                       </div>
                     </div>
 
                     <div className="mt-2 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center ">
                         <Button
                           variant="outline"
+                           className="rounded-none"
                           size="sm"
                           aria-label={`Decrease quantity for ${item.name}`}
                           onClick={() => updateQty(item.id, Math.max(1, item.qty - 1))}
@@ -192,13 +190,21 @@ export default function Cart() {
                           <Minus />
                         </Button>
 
-                        <span className="px-2 py-2 rounded-md border border-border text-xs text-center min-w-[28px]">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                           className="rounded-none"
+                         
+                         
+                        >
                           {item.qty}
-                        </span>
+                        </Button>  
+                        
 
                         <Button
                           variant="outline"
                           size="sm"
+                           className="rounded-none"
                           aria-label={`Increase quantity for ${item.name}`}
                           onClick={() => updateQty(item.id, item.qty + 1)}
                         >
@@ -218,62 +224,28 @@ export default function Cart() {
               ))}
             </div>
 
-            <div className="mt-12">
-              <div className="bg-card border border-border rounded-xl p-6 lg:sticky lg:top-24">
-                <h2 className="font-heading font-semibold text-2xl mb-4">Order Summary</h2>
-
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-semibold">₵{totalPrice().toFixed(2)}</span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Bulk Discount</span>
-                    <span className="font-semibold text-accent">-₵0.00</span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Shipping</span>
-                    <span className="font-semibold">Calculated at checkout</span>
-                  </div>
-
-                  <div className="border-t border-border pt-3 flex justify-between items-center">
-                    <span className="font-heading font-bold text-lg">Total</span>
-                    <span className="font-heading font-bold text-xl">₵{totalPrice().toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Button className="w-full" size="md" onClick={handleCheckout}>
-                    Proceed to Checkout
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    size="md"
-                    onClick={() => {
-                      clearCart();
-                      try { localStorage.removeItem('pendingCart'); } catch (err) {}
-                      toast.success('Cart cleared');
-                    }}
-                  >
-                    Clear Cart
-                  </Button>
-
-
-                </div>
-              </div>
-
-              <div className="mt-4 text-xs text-muted-foreground">
-                Need bulk pricing? Use the bulk quote option for discounts on large orders.
-              </div>
-            </div>
+            {/* Right column is intentionally left empty so the sticky summary reads as its own block */}
+            <div className="hidden lg:block" />
           </div>
         </main>
-        <Footer />
 
+        {/* Sticky subtotal card at bottom */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center w-full bg-white backdrop-blur-md border-t border-border shadow-lg">
+        <div className="w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Subtotal */}
+            <div className="flex items-center justify-between w-full sm:w-auto gap-8">
+            <span className="text-lg text-muted-foreground">Subtotal</span>
+            <span className="font-heading font-bold text-md">₵{totalPrice().toFixed(2)}</span>
+            </div>
+
+            {/* Checkout Button */}
+            <Button size="md" onClick={handleCheckout} className="w-full sm:w-auto">
+            Proceed to Checkout
+            </Button>
+        </div>
+        </div>
+
+        {/* Modal for auth prompt */}
         <Modal
           isOpen={isModalOpen}
           title={pendingAction === 'checkout' ? 'Please sign in to continue to checkout' : 'Please sign in to request a bulk quote'}

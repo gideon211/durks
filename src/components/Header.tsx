@@ -137,9 +137,9 @@ export const Header = () => {
 
               <SheetContent
                 side="right"
-                className="w-[90vw] max-w-sm bg-card border-l border-border"
+                className="w-[60vw] max-w-sm bg-card border-l border-border"
               >
-                <div className="flex flex-col gap-6 mt-8 px-4">
+                <div className="flex flex-col gap-6 mt-4 ">
                   {/* Profile */}
                   <div className="flex items-center gap-4">
                     {user ? (
@@ -235,7 +235,7 @@ export const Header = () => {
                         setIsMenuOpen(false);
                       }}
                     >
-                      Get Bulk Quote
+                      Preorder Bulk
                     </Button>
                   </div>
                 </div>
