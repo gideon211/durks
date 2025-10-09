@@ -20,11 +20,12 @@ const buttonVariants = cva(
         cta: "bg-foreground text-background hover:bg-foreground/90 font-bold shadow-lg hover:shadow-xl",
       },
       size: {
-        default: "h-11 px-6 py-2",
-        sm: "h-9 rounded-md px-4 text-xs",
-        lg: "h-14 rounded-lg px-10 text-lg",
-        icon: "h-11 w-11",
-      },
+  default: "h-11 px-6 py-2",
+  sm: "h-9 rounded-md px-4 text-xs",
+  md: "h-12 px-8 text-sm", // add this line
+  lg: "h-14 rounded-lg px-10 text-lg",
+  icon: "h-11 w-11",
+},
     },
     defaultVariants: {
       variant: "default",
