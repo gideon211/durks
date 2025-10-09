@@ -3,7 +3,7 @@ import AdminLayout from "@/admin/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Copy, Grid3x3, List, X } from "lucide-react";
+import { Plus, Grid3x3, List, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
@@ -24,6 +24,15 @@ interface Product {
   status: string;
   image: string;
 }
+
+const categories = [
+  { id: "pure-juice", name: "Pure Juice", slug: "pure-juice" },
+  { id: "cleanse", name: "Cleanse Juices", slug: "cleanse" },
+  { id: "smoothies", name: "Smoothies", slug: "smoothies" },
+  { id: "cut-fruits", name: "Cut Fruits", slug: "cut-fruits" },
+  { id: "gift-packs", name: "Gift Packs", slug: "gift-packs" },
+  { id: "events", name: "Events", slug: "events" },
+];
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -62,12 +71,6 @@ export default function Products() {
     ]);
   }, []);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
   const handleAddProduct = () => {
     if (!form.name || !form.category || !form.price || !form.stock) {
       toast.error("All fields are required");
@@ -100,10 +103,8 @@ export default function Products() {
       <div className="space-y-4 sm:space-y-6 p-3 sm:p-5">
         {/* Header */}
         <div className="flex sm:flex-row sm:items-center sm:justify-between justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-heading font-semibold">Products</h1>
+          <h1 className="text-2xl sm:text-3xl font-heading font-semibold">Products</h1>
 
-          </div>
           <div className="flex gap-2 justify-end">
             <Button
               variant="outline"
@@ -218,17 +219,17 @@ export default function Products() {
 
         {/* Add Product Modal */}
         <Dialog open={openModal} onOpenChange={setOpenModal}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md rounded-md">
             <DialogHeader>
               <DialogTitle className="flex justify-between items-center">
                 Add Product
-                <Button
+                {/* <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setOpenModal(false)}
                 >
                   <X className="h-4 w-4" />
-                </Button>
+                </Button> */}
               </DialogTitle>
             </DialogHeader>
 
@@ -242,15 +243,24 @@ export default function Products() {
                   placeholder="Product name"
                 />
               </div>
+
               <div>
                 <Label>Category</Label>
-                <Input
+                <select
                   name="category"
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  placeholder="Category"
-                />
+                  className="w-full border rounded px-2 py-2 text-sm"
+                >
+                  <option value="">Select category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
               </div>
+
               <div className="flex gap-3">
                 <div className="flex-1">
                   <Label>Price (₵)</Label>
@@ -271,6 +281,7 @@ export default function Products() {
                   />
                 </div>
               </div>
+
               <div>
                 <Label>Image URL</Label>
                 <Input
@@ -280,13 +291,14 @@ export default function Products() {
                   placeholder=""
                 />
               </div>
+
               <div>
                 <Label>Status</Label>
                 <select
                   name="status"
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  className="w-full border rounded px-2 py-1 text-sm"
+                  className="w-full border rounded px-2 py-2 text-sm"
                 >
                   <option value="Active">Active</option>
                   <option value="Low Stock">Low Stock</option>
