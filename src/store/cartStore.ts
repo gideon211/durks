@@ -1,4 +1,3 @@
-// src/store/cartStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axiosInstance from "@/api/axios";
@@ -13,151 +12,125 @@ export interface Product {
 }
 
 export interface CartItem extends Product {
-  id: string | number; // backend cart item id OR local id like "local-<ts>"
-  drinkId: string | number; // original product id
-  qty: number;
-  _local?: boolean;
+  id: string | number; // backend cart item id
+  drinkId: string | number; // product id
+  quantity: number;
 }
 
-interface CartState {
+interface CartStore {
   cart: CartItem[];
-  fetchCart: () => Promise<void>;
-  addToCart: (product: Product, qty?: number) => Promise<void>;
+  isOnline: boolean;
+  setIsOnline: (status: boolean) => void;
+  addToCart: (product: Product) => Promise<void>;
   removeFromCart: (cartItemId: string | number) => Promise<void>;
-  updateQty: (cartItemId: string | number, qty: number) => Promise<void>;
-  clearCart: () => void;
-  totalQty: () => number;
-  totalPrice: () => number;
+  clearCart: () => Promise<void>;
   setCart: (items: CartItem[]) => void;
 }
 
-export const useCartStore = create<CartState>()(
+export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       cart: [],
+      isOnline: navigator.onLine,
 
-      setCart: (items: CartItem[]) => {
-        set({ cart: items });
-      },
+      setIsOnline: (status) => set({ isOnline: status }),
 
-      fetchCart: async () => {
-        try {
-          const res = await axiosInstance.get("/cart");
-          const items: CartItem[] = res.data.cartItems.map((item: any) => ({
-            id: item.id,
-            drinkId: item.drinkId,
-            name: item.Drink.name,
-            price: item.Drink.price,
-            image: item.Drink.image,
-            qty: item.quantity,
-          }));
-          set({ cart: items });
-        } catch (err) {
-          console.error("Fetch cart failed:", err);
-        }
-      },
+      setCart: (items) => set({ cart: items }),
 
-      addToCart: async (product: Product, qty = 1) => {
-        // Always delay 3 seconds before adding, regardless of online or offline
-        await new Promise((res) => setTimeout(res, 3000));
+      addToCart: async (product) => {
+        const { isOnline, cart } = get();
 
-        try {
-          const res = await axiosInstance.post("/cart", {
-            drinkId: product.id,
-            quantity: qty,
-          });
+        // Wait for 500ms before adding
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
-          const item = res.data.cartItem;
-          const newItem: CartItem = {
-            id: item.id,
-            drinkId: item.drinkId,
-            name: item.Drink.name,
-            price: item.Drink.price,
-            image: item.Drink.image,
-            qty: item.quantity,
-          };
+        if (isOnline) {
+          try {
+            const response = await axiosInstance.post("/cart", {
+              drinkId: product.id,
+              quantity: 1,
+            });
 
-          set({ cart: [...get().cart, newItem] });
-          toast.success(`${product.name} added to cart`);
-        } catch (err) {
-          console.warn("Add to cart (server) failed, using local fallback:", err);
+            const newItem = {
+              ...response.data,
+              drinkId: product.id,
+              quantity: 1,
+            };
 
-          const localItem: CartItem = {
-            id: `local-${Date.now()}`,
-            drinkId: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.image,
-            qty,
-            _local: true,
-          };
+            set({ cart: [...cart, newItem] });
+            toast.success(`${product.name} added to cart`);
+          } catch (error) {
+            console.error("Error adding to cart:", error);
+          }
+        } else {
+          const existingItem = cart.find(
+            (item) => item.drinkId === product.id
+          );
 
-          set({ cart: [...get().cart, localItem] });
-          toast.success(`${product.name} added to cart`);
-        }
-      },
-
-      removeFromCart: async (cartItemId: string | number) => {
-        try {
-          const current = get().cart;
-          const item = current.find((i) => i.id === cartItemId);
-          if (!item) return;
-
-          // if local item
-          if (typeof cartItemId === "string" && String(cartItemId).startsWith("local-")) {
-            set({ cart: current.filter((i) => i.id !== cartItemId) });
-            // toast.success(`${item.name} removed from cart`);
-            return;
+          if (existingItem) {
+            const updatedCart = cart.map((item) =>
+              item.drinkId === product.id
+                ? { ...item, quantity: item.quantity + 1 }
+                : item
+            );
+            set({ cart: updatedCart });
+          } else {
+            const newItem = {
+              id: Date.now(),
+              drinkId: product.id,
+              name: product.name,
+              price: product.price,
+              image: product.image,
+              category: product.category,
+              quantity: 1,
+            };
+            set({ cart: [...cart, newItem] });
           }
 
-          // try server delete
-          await axiosInstance.delete(`/cart/${cartItemId}`);
-          set({ cart: current.filter((i) => i.id !== cartItemId) });
-          // toast.success(`${item.name} removed from cart`);
-        } catch (err) {
-          console.warn("Remove from cart failed, removing locally:", err);
-          set({ cart: get().cart.filter((i) => i.id !== cartItemId) });
+          toast.success(`${product.name} added to cart`);
+        }
+      },
+
+      removeFromCart: async (cartItemId) => {
+        const { isOnline, cart } = get();
+
+        // Wait for 500ms before removing
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        if (isOnline) {
+          try {
+            await axiosInstance.delete(`/cart/${cartItemId}`);
+            set({
+              cart: cart.filter((item) => item.id !== cartItemId),
+            });
+            // toast.success("Item removed from cart");
+          } catch (error) {
+            console.error("Error removing from cart:", error);
+          }
+        } else {
+          set({
+            cart: cart.filter((item) => item.id !== cartItemId),
+          });
           // toast.success("Item removed from cart");
         }
       },
 
-      updateQty: async (cartItemId: string | number, qty: number) => {
-        if (qty <= 0) return;
-        try {
-          if (typeof cartItemId === "string" && String(cartItemId).startsWith("local-")) {
-            set({
-              cart: get().cart.map((item) =>
-                item.id === cartItemId ? { ...item, qty } : item
-              ),
-            });
-            return;
-          }
+      clearCart: async () => {
+        const { isOnline } = get();
 
-          await axiosInstance.put(`/cart/${cartItemId}`, { quantity: qty });
-          set({
-            cart: get().cart.map((item) =>
-              item.id === cartItemId ? { ...item, qty } : item
-            ),
-          });
-        } catch (err) {
-          console.warn("Update quantity failed, updating locally:", err);
-          set({
-            cart: get().cart.map((item) =>
-              item.id === cartItemId ? { ...item, qty } : item
-            ),
-          });
+        // Wait for 500ms before clearing
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        if (isOnline) {
+          try {
+            await axiosInstance.delete("/cart/clear");
+            set({ cart: [] });
+          } catch (error) {
+            console.error("Error clearing cart:", error);
+          }
+        } else {
+          set({ cart: [] });
         }
       },
-
-      clearCart: () => {
-        set({ cart: [] });
-        // toast.success("Cart cleared");
-      },
-
-      totalQty: () => get().cart.reduce((sum, item) => sum + item.qty, 0),
-
-      totalPrice: () =>
-        get().cart.reduce((sum, item) => sum + item.price * item.qty, 0),
     }),
     {
       name: "cart-storage",
