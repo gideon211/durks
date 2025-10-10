@@ -1,8 +1,14 @@
 // src/store/cartStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import axiosInstance from "@/api/axios"; // your axios.ts
+import axios from "axios";
 import { toast } from "sonner";
+
+// Axios instance with 3s timeout
+const axiosInstance = axios.create({
+  baseURL: "https://your-backend-url", // replace with your backend URL
+  timeout: 3000, // 3 seconds timeout
+});
 
 export interface Product {
   id: string | number;
@@ -13,11 +19,10 @@ export interface Product {
 }
 
 export interface CartItem extends Product {
-  id: string | number; // backend cart item id OR local id like "local-<ts>"
+  id: string | number; // backend cart id OR local id like "local-<timestamp>"
   drinkId: string | number; // original product id
   qty: number;
-  // optional flag to indicate it's only local (not synced to backend)
-  _local?: boolean;
+  _local?: boolean; // true if offline-only
 }
 
 interface CartState {
@@ -29,7 +34,8 @@ interface CartState {
   clearCart: () => void;
   totalQty: () => number;
   totalPrice: () => number;
-  setCart: (items: CartItem[]) => void; // setter to replace/restore cart
+  setCart: (items: CartItem[]) => void;
+  syncLocalItems: () => Promise<void>;
 }
 
 export const useCartStore = create<CartState>()(
@@ -37,10 +43,7 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       cart: [],
 
-      // replace/restore cart (used when restoring pendingCart after sign-in)
-      setCart: (items: CartItem[]) => {
-        set({ cart: items });
-      },
+      setCart: (items: CartItem[]) => set({ cart: items }),
 
       fetchCart: async () => {
         try {
@@ -56,14 +59,36 @@ export const useCartStore = create<CartState>()(
           set({ cart: items });
         } catch (err) {
           console.error("Fetch cart failed:", err);
-          // keep local cart if fetch fails (e.g. unauthenticated)
         }
       },
 
       addToCart: async (product: Product, qty = 1) => {
-        // optimistic handling: first try server, fall back to local-only item
+        const createLocalItem = () => {
+          const localItem: CartItem = {
+            id: `local-${Date.now()}`,
+            drinkId: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            qty,
+            _local: true,
+          };
+          set({ cart: [...get().cart, localItem] });
+          toast.success(`${product.name} added to cart (offline)`);
+        };
+
+        // if offline, skip backend
+        if (!navigator.onLine) {
+          createLocalItem();
+          return;
+        }
+
         try {
-          const res = await axiosInstance.post("/cart", { drinkId: product.id, quantity: qty });
+          const res = await axiosInstance.post("/cart", {
+            drinkId: product.id,
+            quantity: qty,
+          });
+
           const item = res.data.cartItem;
           const newItem: CartItem = {
             id: item.id,
@@ -77,84 +102,57 @@ export const useCartStore = create<CartState>()(
           set({ cart: [...get().cart, newItem] });
           toast.success(`${product.name} added to cart`);
         } catch (err) {
-          // fallback: create local-only cart item
-          console.warn("Add to cart (server) failed, using local fallback:", err);
-          try {
-            const localItem: CartItem = {
-              id: `local-${Date.now()}`,
-              drinkId: product.id,
-              name: product.name,
-              price: product.price,
-              image: product.image,
-              qty,
-              _local: true,
-            };
-            set({ cart: [...get().cart, localItem] });
-           
-          } catch (fallbackErr) {
-            console.error("Local fallback addToCart failed:", fallbackErr);
-            toast.error("Failed to add to cart");
-          }
+          console.warn("Add to cart failed, using local fallback:", err);
+          createLocalItem();
         }
       },
 
       removeFromCart: async (cartItemId: string | number) => {
-        // if item looks local (string starting with "local-"), just remove locally
+        const current = get().cart;
+        const item = current.find((i) => i.id === cartItemId);
+        if (!item) return;
+
+        // local-only removal
+        if (typeof cartItemId === "string" && cartItemId.startsWith("local-")) {
+          set({ cart: current.filter((i) => i.id !== cartItemId) });
+          toast.success("Item removed from cart");
+          return;
+        }
+
         try {
-          const current = get().cart;
-          const item = current.find((i) => i.id === cartItemId);
-
-          if (!item) {
-            return;
-          }
-
-          if (typeof cartItemId === "string" && String(cartItemId).startsWith("local-")) {
-            set({ cart: current.filter((i) => i.id !== cartItemId) });
-  
-            return;
-          }
-
-          // try server delete
           await axiosInstance.delete(`/cart/${cartItemId}`);
           set({ cart: current.filter((i) => i.id !== cartItemId) });
-          
-        } catch (err) {
-          console.warn("Remove from cart (server) failed, falling back to local remove:", err);
-          // fallback: remove locally
-          set({ cart: get().cart.filter((i) => i.id !== cartItemId) });
           toast.success("Item removed from cart");
+        } catch (err) {
+          console.warn("Remove failed, removing locally:", err);
+          set({ cart: current.filter((i) => i.id !== cartItemId) });
+          toast.success("Item removed from cart (offline)");
         }
       },
 
       updateQty: async (cartItemId: string | number, qty: number) => {
         if (qty <= 0) return;
-        try {
-          // if local item, only update locally
-          if (typeof cartItemId === "string" && String(cartItemId).startsWith("local-")) {
-            set({
-              cart: get().cart.map((item) =>
-                item.id === cartItemId ? { ...item, qty } : item
-              ),
-            });
-            return;
-          }
 
-          // try to update server
+        const updateLocal = () => {
+          set({
+            cart: get().cart.map((item) =>
+              item.id === cartItemId ? { ...item, qty } : item
+            ),
+          });
+        };
+
+        if (typeof cartItemId === "string" && cartItemId.startsWith("local-")) {
+          updateLocal();
+          return;
+        }
+
+        try {
           await axiosInstance.put(`/cart/${cartItemId}`, { quantity: qty });
-          set({
-            cart: get().cart.map((item) =>
-              item.id === cartItemId ? { ...item, qty } : item
-            ),
-          });
+          updateLocal();
         } catch (err) {
-          console.warn("Update quantity (server) failed, updating locally:", err);
-          // fallback: update local copy
-          set({
-            cart: get().cart.map((item) =>
-              item.id === cartItemId ? { ...item, qty } : item
-            ),
-          });
-          toast.error("Could not sync quantity ");
+          console.warn("Update failed, updating locally:", err);
+          updateLocal();
+          toast.error("Could not sync quantity");
         }
       },
 
@@ -163,13 +161,58 @@ export const useCartStore = create<CartState>()(
         toast.success("Cart cleared");
       },
 
-      totalQty: () => get().cart.reduce((sum, item) => sum + item.qty, 0),
+      totalQty: () =>
+        get().cart.reduce((sum, item) => sum + item.qty, 0),
 
       totalPrice: () =>
         get().cart.reduce((sum, item) => sum + item.price * item.qty, 0),
+
+      // Automatically sync offline items when back online
+      syncLocalItems: async () => {
+        const localItems = get().cart.filter((i) => i._local);
+        if (localItems.length === 0) return;
+
+        try {
+          for (const item of localItems) {
+            const res = await axiosInstance.post("/cart", {
+              drinkId: item.drinkId,
+              quantity: item.qty,
+            });
+
+            const saved = res.data.cartItem;
+            const syncedItem: CartItem = {
+              id: saved.id,
+              drinkId: saved.drinkId,
+              name: saved.Drink.name,
+              price: saved.Drink.price,
+              image: saved.Drink.image,
+              qty: saved.quantity,
+            };
+
+            // Replace local item with synced item
+            set({
+              cart: get().cart.map((i) =>
+                i.id === item.id ? syncedItem : i
+              ),
+            });
+          }
+
+          toast.success("Offline cart synced successfully");
+        } catch (err) {
+          console.warn("Failed to sync offline cart:", err);
+        }
+      },
     }),
     {
       name: "cart-storage",
     }
   )
 );
+
+// Automatically sync when user comes back online
+if (typeof window !== "undefined") {
+  window.addEventListener("online", async () => {
+    const store = useCartStore.getState();
+    await store.syncLocalItems();
+  });
+}
