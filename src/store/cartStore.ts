@@ -58,14 +58,15 @@ export const useCartStore = create<CartState>()(
       },
 
       addToCart: async (product: Product, qty = 1) => {
-        try {
-          // 3s delay before adding
-          await new Promise((res) => setTimeout(res, 3000));
+        // Always delay 3 seconds before adding, regardless of online or offline
+        await new Promise((res) => setTimeout(res, 3000));
 
+        try {
           const res = await axiosInstance.post("/cart", {
             drinkId: product.id,
             quantity: qty,
           });
+
           const item = res.data.cartItem;
           const newItem: CartItem = {
             id: item.id,
@@ -81,25 +82,18 @@ export const useCartStore = create<CartState>()(
         } catch (err) {
           console.warn("Add to cart (server) failed, using local fallback:", err);
 
-          // fallback after same 3s delay
-          await new Promise((res) => setTimeout(res, 3000));
+          const localItem: CartItem = {
+            id: `local-${Date.now()}`,
+            drinkId: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            qty,
+            _local: true,
+          };
 
-          try {
-            const localItem: CartItem = {
-              id: `local-${Date.now()}`,
-              drinkId: product.id,
-              name: product.name,
-              price: product.price,
-              image: product.image,
-              qty,
-              _local: true,
-            };
-            set({ cart: [...get().cart, localItem] });
-            toast.success(`${product.name} added to cart`);
-          } catch (fallbackErr) {
-            console.error("Local fallback addToCart failed:", fallbackErr);
-            toast.error("Failed to add to cart");
-          }
+          set({ cart: [...get().cart, localItem] });
+          toast.success(`${product.name} added to cart`);
         }
       },
 
