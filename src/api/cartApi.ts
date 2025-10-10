@@ -1,4 +1,4 @@
-import axiosInstance from "./axios"; 
+{/*import axiosInstance from "./axios"; 
 
 export const addToCart = async (drinkId: string, quantity: number = 1) => {
   const res = await axiosInstance.post("/cart", { drinkId, quantity });
@@ -14,3 +14,4 @@ export const removeFromCart = async (cartItemId: string) => {
   const res = await axiosInstance.delete(`/cart/${cartItemId}`);
   return res.data;
 };
+*/}
