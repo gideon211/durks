@@ -2,7 +2,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axios from "axios";
-import { toast } from "sonner";
+// import { toast } from "sonner"; // commented out to disable all toast
 
 // Axios instance with 3s timeout
 const axiosInstance = axios.create({
@@ -74,7 +74,7 @@ export const useCartStore = create<CartState>()(
             _local: true,
           };
           set({ cart: [...get().cart, localItem] });
-          toast.success(`${product.name} added to cart (offline)`);
+          // toast.success(`${product.name} added to cart (offline)`);
         };
 
         // if offline, skip backend
@@ -100,7 +100,7 @@ export const useCartStore = create<CartState>()(
           };
 
           set({ cart: [...get().cart, newItem] });
-          toast.success(`${product.name} added to cart`);
+          // toast.success(`${product.name} added to cart`);
         } catch (err) {
           console.warn("Add to cart failed, using local fallback:", err);
           createLocalItem();
@@ -115,18 +115,18 @@ export const useCartStore = create<CartState>()(
         // local-only removal
         if (typeof cartItemId === "string" && cartItemId.startsWith("local-")) {
           set({ cart: current.filter((i) => i.id !== cartItemId) });
-          toast.success("Item removed from cart");
+          // toast.success("Item removed from cart");
           return;
         }
 
         try {
           await axiosInstance.delete(`/cart/${cartItemId}`);
           set({ cart: current.filter((i) => i.id !== cartItemId) });
-          toast.success("Item removed from cart");
+          // toast.success("Item removed from cart");
         } catch (err) {
           console.warn("Remove failed, removing locally:", err);
           set({ cart: current.filter((i) => i.id !== cartItemId) });
-          toast.success("Item removed from cart (offline)");
+          // toast.success("Item removed from cart (offline)");
         }
       },
 
@@ -152,13 +152,13 @@ export const useCartStore = create<CartState>()(
         } catch (err) {
           console.warn("Update failed, updating locally:", err);
           updateLocal();
-          toast.error("Could not sync quantity");
+          // toast.error("Could not sync quantity");
         }
       },
 
       clearCart: () => {
         set({ cart: [] });
-        toast.success("Cart cleared");
+        // toast.success("Cart cleared");
       },
 
       totalQty: () =>
@@ -167,7 +167,6 @@ export const useCartStore = create<CartState>()(
       totalPrice: () =>
         get().cart.reduce((sum, item) => sum + item.price * item.qty, 0),
 
-      // Automatically sync offline items when back online
       syncLocalItems: async () => {
         const localItems = get().cart.filter((i) => i._local);
         if (localItems.length === 0) return;
@@ -197,7 +196,7 @@ export const useCartStore = create<CartState>()(
             });
           }
 
-          toast.success("Offline cart synced successfully");
+          // toast.success("Offline cart synced successfully");
         } catch (err) {
           console.warn("Failed to sync offline cart:", err);
         }
