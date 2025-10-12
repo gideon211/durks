@@ -10,13 +10,14 @@ import { TypeAnimation } from "react-type-animation";
 import heroImage from "@/assets/heroimg.jpg";
 
 const categories = [
-  { id: "all", name: "All Products", slug: "all" },
-  { id: "pure-juice", name: "Pure Juice", slug: "pure-juice" },
-  { id: "cleanse", name: "Cleanse Juices", slug: "cleanse" },
-  { id: "smoothies", name: "Smoothies", slug: "smoothies" },
-  { id: "cut-fruits", name: "Cut Fruits", slug: "cut-fruits" },
-  { id: "gift-packs", name: "Gift Packs", slug: "gift-packs" },
-  { id: "events", name: "Events", slug: "events" },
+  { id: "all", name: "ALL PRODUCTS", slug: "all" },
+  { id: "pure-juice", name: "PURE JUICES", slug: "pure-juice" },
+  { id: "cleanse", name: "CLEANSE JUICES ", slug: "cleanse" },
+  { id: "smoothies", name: "SMOOTHIES", slug: "smoothies" },
+  { id: "cut-fruits", name: "CUT FRUITS", slug: "cut-fruits" },
+  { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs" },
+  { id: "events", name: "EVENTS", slug: "events" },
+  { id: "WORKOUT", name: "WORKOUT SHOTS", slug: "shots" }
 ];
 
 export default function Products() {
@@ -141,10 +142,10 @@ export default function Products() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2, duration: 0.7 }}
               >
-                <Button variant="hero" size="md" onClick={handleShopClick}>
+                <Button variant="hero" size="lg" onClick={handleShopClick}>
                   Shop
                 </Button>
-                <Button variant="bulk" size="md" onClick={() => navigate("/bulk-quote")}>
+                <Button variant="bulk" size="lg" onClick={() => navigate("/bulk-quote")}>
                   Bulk Purchase
                 </Button>
               </motion.div>
