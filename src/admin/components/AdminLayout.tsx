@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
+
 interface AdminLayoutProps {
   children: ReactNode;
 }
@@ -45,6 +46,7 @@ const menuItems = [
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background flex flex-col w-full">
@@ -80,7 +82,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </div>
           </div>
 
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon"   onClick={() => navigate("/products")}>
             <LogOut className="h-5 w-5" />
           </Button>
         </div>

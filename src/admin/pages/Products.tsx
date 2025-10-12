@@ -223,13 +223,7 @@ export default function Products() {
             <DialogHeader>
               <DialogTitle className="flex justify-between items-center">
                 Add Product
-                {/* <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setOpenModal(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button> */}
+
               </DialogTitle>
             </DialogHeader>
 

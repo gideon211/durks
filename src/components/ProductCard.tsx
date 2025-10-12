@@ -1,5 +1,5 @@
 // src/components/ProductCard.tsx
-import { ShoppingCart, Plus, Minus, Loader2 } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { useCartStore } from "@/store/cartStore";
@@ -12,8 +12,9 @@ interface ProductCardProps {
   name: string;
   description?: string;
   image?: string;
-  price: number; // unit price
+  price: number;
   category?: string;
+  size?: string; // <--- new optional prop for drink size (e.g. "500ml", "Large")
 }
 
 export const ProductCard = ({
@@ -23,11 +24,13 @@ export const ProductCard = ({
   image,
   price,
   category,
+  size,
 }: ProductCardProps) => {
   const addToCart = useCartStore((state) => state.addToCart);
   const cart = useCartStore((state) => state.cart);
   const [quantity, setQuantity] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [addedMessage, setAddedMessage] = useState(false);
 
   const { user } = useAuth();
 
@@ -37,9 +40,9 @@ export const ProductCard = ({
 
     try {
       setIsLoading(true);
-      await addToCart({ id, name, price, image, category }, quantity);
+      await addToCart({ id, name, price, image, category, size }, quantity);
 
-      // If user is not signed in, persist a pendingCart snapshot (useful if you want separate key)
+      // Persist pending cart if user isn't logged in
       if (!user) {
         try {
           localStorage.setItem("pendingCart", JSON.stringify(cart));
@@ -47,6 +50,10 @@ export const ProductCard = ({
           console.warn("Could not persist pendingCart to localStorage", err);
         }
       }
+
+      // Show success message for 4 seconds
+      setAddedMessage(true);
+      setTimeout(() => setAddedMessage(false), 4000);
     } catch (err) {
       console.error("Add to cart failed", err);
       toast.error("Could not add to cart");
@@ -57,16 +64,35 @@ export const ProductCard = ({
 
   const increment = () => setQuantity((prev) => prev + 1);
   const decrement = () => setQuantity((prev) => Math.max(1, prev - 1));
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = Number(e.target.value);
     setQuantity(Number.isNaN(val) ? 1 : Math.max(1, val));
   };
 
+  // helper: fallback label when size missing
+  const sizeLabel = size ? size : "—";
+
   return (
-    <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-full ">
+    <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-full">
       <div className="relative aspect-square overflow-hidden bg-muted block">
-        <img src={image} alt={name} className="w-full h-full object-cover" />
+        {/* Image */}
+        <img
+          src={image}
+          alt={name}
+          className="w-full h-full object-cover"
+          // loading="lazy" // optionally enable lazy loading
+        />
+
+        {/* Bottom-left size banner */}
+        <div className="absolute left-2 bottom-2 flex items-center gap-2">
+          <span
+            className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold
+                       bg-black/70 text-white backdrop-blur-sm shadow"
+            aria-hidden="true"
+          >
+            {size}
+          </span>
+        </div>
       </div>
 
       <div className="p-4 flex flex-col flex-grow text-center">
@@ -77,7 +103,11 @@ export const ProductCard = ({
         )}
 
         <h3 className="font-heading font-semibold text-sm text-foreground">{name}</h3>
-        <p className="font-heading font-semibold text-sm text-foreground">
+
+        {/* show description if available */}
+        {/* {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>} */}
+
+        <p className="font-heading font-semibold text-sm text-foreground mt-2">
           ₵{(price * quantity).toFixed(2)}
         </p>
 
@@ -114,11 +144,22 @@ export const ProductCard = ({
           <Button
             size="sm"
             onClick={handleAddToCart}
-            className="w-full flex justify-center items-center gap-2 font-bold"
+            className={`w-full flex justify-center items-center gap-2 font-bold transition-colors ${
+              addedMessage ? "bg-green-500 hover:bg-green-600 text-white" : ""
+            }`}
             disabled={isLoading}
           >
-            {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : "Add to cart"}
-            <ShoppingCart className="h-4 w-4" />
+            {isLoading ? (
+              <Loader2 className="animate-spin h-4 w-4" />
+            ) : addedMessage ? (
+              <>
+                <CheckCircle2 className="h-4 w-4" /> Item added!
+              </>
+            ) : (
+              <>
+                Add to cart <ShoppingCart className="h-4 w-4" />
+              </>
+            )}
           </Button>
         </div>
       </div>

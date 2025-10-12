@@ -15,6 +15,7 @@ export interface Product {
   price: number;
   image?: string;
   category?: string;
+  size?: string
 }
 
 export interface CartItem extends Product {

@@ -1,5 +1,5 @@
 import AdminLayout from "@/admin/components/AdminLayout";
-import StatCard from "@/admin/components/StatCard";
+import StatCard from "@/admin/components/StatCArd";
 import DataTable from "@/admin/components/DataTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
