@@ -164,7 +164,7 @@ export const Header = () => {
                         }}
                       >
                         <UserIcon className="h-4 w-4" />
-                        Sign In
+                        Login In
                       </Button>
                     )}
                   </div>
