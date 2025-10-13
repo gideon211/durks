@@ -218,7 +218,7 @@ export const Header = () => {
                         onClick={() => {
                           logout();
                           setIsMenuOpen(false);
-                          navigate("/");
+                          navigate("/auth");
                         }}
                         className="px-4 py-3 rounded-md hover:bg-muted transition-colors text-left flex items-center gap-3"
                       >
