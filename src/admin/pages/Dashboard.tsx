@@ -101,9 +101,7 @@ export default function Dashboard() {
       key: "payment",
       label: "Payment",
       render: (value: string) => (
-        <Badge variant={value === "Paid" ? "default" : "destructive"}>
-          {value}
-        </Badge>
+        <Badge variant={value === "Paid" ? "default" : "destructive"}>{value}</Badge>
       ),
     },
     { key: "date", label: "Date" },
@@ -121,16 +119,16 @@ export default function Dashboard() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 px-4 sm:px-6 lg:px-8">
         <div>
-          <h1 className="text-3xl font-heading font-bold">Dashboard Overview</h1>
-          <p className="text-muted-foreground mt-1">
-            Welcome back! Here's what's happening with your juice business today.
-          </p>
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold py-2">
+            Dashboard Overview
+          </h1>
+
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Stats Grid - mobile-first: 2 cols on phones, expands to 4 on large */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <StatCard
             title="Total Orders"
             value="342"
@@ -140,15 +138,16 @@ export default function Dashboard() {
             color="text-mango-orange"
           />
           <StatCard
+            icon={Clock}
             title="Pending Preorders"
             value="28"
             change="+5 new today"
             changeType="positive"
-            icon={Clock}
+            
             color="text-ocean-teal"
           />
           <StatCard
-            title="Revenue (This Month)"
+            title="Revenue"
             value="GH₵ 142,500"
             change="+18% from last month"
             changeType="positive"
@@ -165,109 +164,106 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Alerts */}
-        <Card className="bg-tropical-pink/10 border-tropical-pink">
-          <CardContent className="p-4 flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-tropical-pink" />
-            <div className="flex-1">
-              <p className="font-medium">Low Stock Alert</p>
-              <p className="text-sm text-muted-foreground">
-                Mango Sunrise is running low — restock recommended
-              </p>
-            </div>
-            <Button variant="outline" size="sm">
-              View Inventory
-            </Button>
-          </CardContent>
-        </Card>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Charts - mobile-first: stacked, becomes 3-column layout on lg (sales spans 2 cols) */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
                 <TrendingUp className="h-5 w-5 text-fresh-lime" />
                 Sales Over Time
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" stroke="hsl(var(--foreground))" />
-                  <YAxis stroke="hsl(var(--foreground))" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="sales"
-                    stroke="#FF8C42"
-                    strokeWidth={2}
-                    dot={{ fill: "#FF8C42" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {/* smaller height on mobile for better fit */}
+              <div style={{ width: "100%", height: 240 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={salesData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" stroke="hsl(var(--foreground))" />
+                    <YAxis stroke="hsl(var(--foreground))" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="sales"
+                      stroke="#FF8C42"
+                      strokeWidth={2}
+                      dot={{ fill: "#FF8C42" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
                 <Heart className="h-5 w-5 text-tropical-pink" />
                 Category Performance
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(entry) => `${entry.name}: ${entry.value}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              <div style={{ width: "100%", height: 240 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(entry) => `${entry.name}: ${entry.value}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* CSR Impact */}
+        {/* CSR Impact - stacked on mobile, 3 columns on md+ */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
               <Heart className="h-5 w-5 text-tropical-pink" />
               CSR Impact Summary
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Total Donations</p>
-                <p className="text-2xl font-bold mt-1">GH₵ 12,450</p>
+                <p className="text-xs text-muted-foreground">Total Donations</p>
+                <p className="text-xl sm:text-2xl font-bold mt-1">GH₵ 12,450</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Bottles Recycled</p>
-                <p className="text-2xl font-bold mt-1">8,342</p>
+                <p className="text-xs text-muted-foreground">Bottles Recycled</p>
+                <p className="text-xl sm:text-2xl font-bold mt-1">8,342</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Communities Reached</p>
-                <p className="text-2xl font-bold mt-1">24</p>
+                <p className="text-xs text-muted-foreground">Communities Reached</p>
+                <p className="text-xl sm:text-2xl font-bold mt-1">24</p>
               </div>
             </div>
           </CardContent>
@@ -275,10 +271,13 @@ export default function Dashboard() {
 
         {/* Recent Orders */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-heading font-bold">Latest Orders</h2>
-            <Button variant="outline">View All Orders</Button>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg sm:text-xl font-heading font-bold">Latest Orders</h2>
+            <Button variant="outline" size="sm">
+              View All Orders
+            </Button>
           </div>
+
           <DataTable
             columns={columns}
             data={recentOrders}

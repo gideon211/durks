@@ -45,88 +45,61 @@ const topCustomers = [
 export default function Analytics() {
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 px-4 sm:px-6 lg:px-8">
         <div>
-          <h1 className="text-3xl font-heading font-bold">Analytics</h1>
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold">Analytics</h1>
           <p className="text-muted-foreground mt-1">
             Deep insights into your business performance
           </p>
         </div>
 
-        {/* Key Performance Indicators */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Key Performance Indicators - MOBILE FIRST */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Avg Order Value</p>
-              <h3 className="text-2xl font-bold mt-1">GH₵ 3,250</h3>
-              <p className="text-sm text-fresh-lime mt-1">+8% vs last month</p>
+            <CardContent className="p-4 sm:p-6">
+              <p className="text-xs sm:text-sm text-muted-foreground">Avg Order Value</p>
+              <h3 className="text-lg sm:text-2xl font-bold mt-1">GH₵ 3,250</h3>
+              <p className="text-xs sm:text-sm text-fresh-lime mt-1">+8% vs last month</p>
             </CardContent>
           </Card>
+
           <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Repeat Purchase Rate</p>
-              <h3 className="text-2xl font-bold mt-1">68%</h3>
-              <p className="text-sm text-fresh-lime mt-1">+5% vs last month</p>
+            <CardContent className="p-4 sm:p-6">
+              <p className="text-xs sm:text-sm text-muted-foreground">Repeat Purchase Rate</p>
+              <h3 className="text-lg sm:text-2xl font-bold mt-1">68%</h3>
+              <p className="text-xs sm:text-sm text-fresh-lime mt-1">+5% vs last month</p>
             </CardContent>
           </Card>
+
           <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Customer Lifetime Value</p>
-              <h3 className="text-2xl font-bold mt-1">GH₵ 18,450</h3>
-              <p className="text-sm text-fresh-lime mt-1">+12% vs last month</p>
+            <CardContent className="p-4 sm:p-6">
+              <p className="text-xs sm:text-sm text-muted-foreground">Customer Lifetime Value</p>
+              <h3 className="text-lg sm:text-2xl font-bold mt-1">GH₵ 18,450</h3>
+              <p className="text-xs sm:text-sm text-fresh-lime mt-1">+12% vs last month</p>
             </CardContent>
           </Card>
+
           <Card>
-            <CardContent className="p-6">
-              <p className="text-sm text-muted-foreground">Preorder Ratio</p>
-              <h3 className="text-2xl font-bold mt-1">32%</h3>
-              <p className="text-sm text-muted-foreground mt-1">Of total orders</p>
+            <CardContent className="p-4 sm:p-6">
+              <p className="text-xs sm:text-sm text-muted-foreground">Preorder Ratio</p>
+              <h3 className="text-lg sm:text-2xl font-bold mt-1">32%</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Of total orders</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Revenue Growth */}
+        {/* Revenue Growth (full width on mobile, side-by-side on large screens) */}
         <Card>
           <CardHeader>
             <CardTitle>Monthly Revenue Growth</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
-                <YAxis stroke="hsl(var(--foreground))" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#FF8C42"
-                  strokeWidth={3}
-                  dot={{ fill: "#FF8C42", r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Category Performance */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Sales by Category</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={categoryPerformance}>
+            {/* keep chart height reasonable on phones */}
+            <div style={{ width: "100%", height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={revenueData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="category" stroke="hsl(var(--foreground))" />
+                  <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
                   <YAxis stroke="hsl(var(--foreground))" />
                   <Tooltip
                     contentStyle={{
@@ -135,9 +108,45 @@ export default function Analytics() {
                       borderRadius: "8px",
                     }}
                   />
-                  <Bar dataKey="sales" fill="#00B3B8" />
-                </BarChart>
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#FF8C42"
+                    strokeWidth={3}
+                    dot={{ fill: "#FF8C42", r: 3 }}
+                  />
+                </LineChart>
               </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Two-column section: Sales by Category & Top Customers */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Category Performance */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Sales by Category</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div style={{ width: "100%", height: 260 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={categoryPerformance} margin={{ left: 0, right: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="category" stroke="hsl(var(--foreground))" tick={{ fontSize: 12 }} />
+                    <YAxis stroke="hsl(var(--foreground))" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Bar dataKey="sales" fill="#00B3B8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
@@ -147,24 +156,22 @@ export default function Analytics() {
               <CardTitle>Top 5 Customers by Volume</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {topCustomers.map((customer, index) => (
                   <div
                     key={customer.name}
                     className="flex items-center justify-between p-3 bg-muted rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
                         {index + 1}
                       </div>
                       <div>
-                        <p className="font-medium">{customer.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {customer.orders} orders
-                        </p>
+                        <p className="font-medium text-sm">{customer.name}</p>
+                        <p className="text-xs text-muted-foreground">{customer.orders} orders</p>
                       </div>
                     </div>
-                    <p className="font-bold text-lg">{customer.volume}</p>
+                    <p className="font-semibold text-sm">{customer.volume}</p>
                   </div>
                 ))}
               </div>

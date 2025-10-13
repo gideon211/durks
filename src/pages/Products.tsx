@@ -180,11 +180,11 @@ export default function Products() {
       </section>
 
       {/* Tabs */}
-      <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar">
+      <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar mx-auto">
         <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
           <TabsList className="inline-flex w-auto">
             {categories.map((cat) => (
-              <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap">
+              <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap font-semibold">
                 {cat.name}
               </TabsTrigger>
             ))}

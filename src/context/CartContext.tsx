@@ -43,9 +43,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCart((prev) => prev.filter((i) => i.id !== cartItemId));
   };
 
-  useEffect(() => {
-    refreshCart();
-  }, []);
+//   useEffect(() => {
+//     refreshCart();
+//   }, []);
 
   return (
     <CartContext.Provider value={{ cart, addToCart, removeFromCart, refreshCart }}>

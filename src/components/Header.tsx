@@ -228,25 +228,27 @@ export const Header = () => {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-3 pt-4 border-t border-border">
+                    <div className="flex flex-col gap-3 pt-4 border-t border-border">
                     <Button
-                      onClick={() => {
+                        onClick={() => {
                         navigate("/bulk-quote");
                         setIsMenuOpen(false);
-                      }}
+                        }}
                     >
-                      Preorder Bulk
+                        Preorder Bulk
                     </Button>
 
-                                        <Button
-                      onClick={() => {
-                        navigate("/admin");
-                        
-                      }}
-                    >
-                      DashBoard
-                    </Button>
-                  </div>
+                    {user?.role === "admin" && (
+                        <Button
+                        onClick={() => {
+                            navigate("/admin");
+                        }}
+                        >
+                        Dashboard
+                        </Button>
+                    )}
+                    </div>
+
                 </div>
               </SheetContent>
             </Sheet>

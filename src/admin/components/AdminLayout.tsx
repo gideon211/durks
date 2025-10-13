@@ -73,7 +73,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex items-center gap-3">
             <Avatar>
               <AvatarFallback className="bg-primary text-primary-foreground">
-                G
+                D
               </AvatarFallback>
             </Avatar>
             <div className="text-sm hidden sm:block">
@@ -103,13 +103,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         } w-64`}
       >
         <div className="flex items-center justify-between p-4 border-b">
-          <img src="/favicon.svg" alt="Logo" className="w-20 h-20" />
+            <h3 className="font-bold">MANAGEMENT</h3>
+          
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(false)}
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 " />
           </Button>
         </div>
 

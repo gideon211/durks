@@ -70,7 +70,7 @@ export const ProductCard = ({
   };
 
   // helper: fallback label when size missing
-  const sizeLabel = size ? size : "—";
+  const sizeLabel = size ? size : "";
 
   return (
     <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-full">

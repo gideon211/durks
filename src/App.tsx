@@ -13,6 +13,7 @@ import BulkQuote from "./pages/BulkQuote";
 import NotFound from "./pages/NotFound";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
+import Home from "./pages/Home"
 
 //admin
 
@@ -36,6 +37,7 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Home />} />
         <Route path="/" element={<Products />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/:category" element={<Products />} />
