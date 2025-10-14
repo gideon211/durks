@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, Search, User as UserIcon, Menu, Box, LogOut } from "lucide-react";
+import { ShoppingCart, Search, User as UserIcon, Menu, Box, LogOut, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import Logo from "../assets/logo.svg";
 import { useCartStore } from "@/store/cartStore";
 import { useAuth } from "../context/Authcontext";
+import { toast } from "sonner";
+
 
 export const Header = () => {
   const navigate = useNavigate();
@@ -13,6 +15,7 @@ export const Header = () => {
   const { user, logout } = useAuth();
   const totalQty = useCartStore((state) => state.totalQty());
   const userInitial = (user?.username ?? "U").charAt(0).toUpperCase();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-card border-b border-border shadow-sm transition-all duration-300">
@@ -79,16 +82,21 @@ export const Header = () => {
                     <Box className="h-4 w-4" />
                     <span className="text-sm">My Orders</span>
                   </button>
-                  <button
+                    <button
                     onClick={() => {
-                      logout();
-                      navigate("/");
+                        toast("Logging out...");
+                        logout();
+
+                        setTimeout(() => {
+                        navigate("/auth"); 
+                        }, 2000);
                     }}
                     className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted transition-colors"
-                  >
+                    >
                     <LogOut className="h-4 w-4" />
                     <span className="text-sm">Sign Out</span>
-                  </button>
+                    </button>
+
                 </div>
               </div>
             ) : (
@@ -148,7 +156,7 @@ export const Header = () => {
                           {userInitial}
                         </div>
                         <div>
-                          <div className="font-semibold">{user.username}</div>
+                          <div className="font-semibold">{user.username.split(" ")[0]}</div>
                           <div className="text-xs text-muted-foreground">
                             {user.email}
                           </div>
@@ -214,17 +222,23 @@ export const Header = () => {
                     </Link>
 
                     {user && (
-                      <button
-                        onClick={() => {
-                          logout();
-                          setIsMenuOpen(false);
-                          navigate("/auth");
-                        }}
-                        className="px-4 py-3 rounded-md hover:bg-muted transition-colors text-left flex items-center gap-3"
-                      >
+                    <button
+                    onClick={async () => {
+                        setIsLoggingOut(true);
+                        await logout();
+                        setIsLoggingOut(false);
+                        navigate("/auth");
+                    }}
+                    disabled={isLoggingOut}
+                    className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted transition-colors"
+                    >
+                    {isLoggingOut ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
                         <LogOut className="h-4 w-4" />
-                        Sign Out
-                      </button>
+                    )}
+                    <span className="text-sm">{isLoggingOut ? "Signing out..." : "Sign Out"}</span>
+                    </button>
                     )}
                   </div>
 

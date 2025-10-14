@@ -22,6 +22,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/context/Authcontext";
+
 
 
 interface AdminLayoutProps {
@@ -44,9 +46,12 @@ const menuItems = [
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { user, logout } = useAuth();
+    const userInitial = (user?.username ?? "U").charAt(0).toUpperCase();
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col w-full">
@@ -73,7 +78,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex items-center gap-3">
             <Avatar>
               <AvatarFallback className="bg-primary text-primary-foreground">
-                D
+                {userInitial}
               </AvatarFallback>
             </Avatar>
             <div className="text-sm hidden sm:block">

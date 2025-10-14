@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 import { getCartItems, addToCart as apiAddToCart, removeFromCart as apiRemoveFromCart } from "@/api/cartApi";
 
 interface CartItem {
@@ -43,9 +43,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCart((prev) => prev.filter((i) => i.id !== cartItemId));
   };
 
-//   useEffect(() => {
-//     refreshCart();
-//   }, []);
+
 
   return (
     <CartContext.Provider value={{ cart, addToCart, removeFromCart, refreshCart }}>

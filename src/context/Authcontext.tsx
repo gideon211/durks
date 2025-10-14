@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
-    navigate("/auth");
+    
   };
 
   const tryRefreshToken = async (): Promise<User | null> => {

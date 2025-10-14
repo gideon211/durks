@@ -59,7 +59,7 @@ export default function Auth() {
         refreshToken: data.refreshToken,
       } as any);
       toast.success("Welcome back!");
-      navigate("/products");
+      navigate("/");
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to sign in");
     } finally {
@@ -77,7 +77,7 @@ export default function Auth() {
     const company = (form.elements.namedItem("signup-company") as HTMLInputElement)?.value || "";
 
     try {
-      // Create account on backend
+  
       const data = await signUpUser({ fullName, email, password, company });
 
       // DO NOT auto-login. Instead:
@@ -87,7 +87,7 @@ export default function Auth() {
       setPrefillEmail(email);
       setActiveTab("signin");
 
-      // Optionally, clear the signup form fields by resetting the form element
+
       form.reset();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to create account");
@@ -96,7 +96,7 @@ export default function Auth() {
     }
   };
 
-  // Motion variants
+
   const containerVariants = {
     hidden: { opacity: 0, y: 18 },
     enter: { opacity: 1, y: 0, transition: { stiffness: 100, damping: 12 } },
@@ -114,7 +114,7 @@ export default function Auth() {
   };
 
   useEffect(() => {
-    // small visual: scroll to top upon mount
+  
     window.scrollTo({ top: 0 });
   }, []);
 
