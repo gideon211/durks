@@ -180,7 +180,7 @@ export default function Products() {
       </section>
 
       {/* Tabs */}
-      <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar mx-auto">
+      <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar">
         <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
           <TabsList className="inline-flex w-auto">
             {categories.map((cat) => (
