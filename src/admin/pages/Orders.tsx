@@ -112,9 +112,9 @@ export default function Orders() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 px-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-heading font-bold">
               Orders

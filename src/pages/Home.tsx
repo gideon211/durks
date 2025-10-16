@@ -4,7 +4,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Link } from "react-router-dom";
 import { Star, Leaf, Heart, Sparkles } from "lucide-react";
-import { Header } from "@/components/Header";
+import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import heroImage from "@/assets/hero-juice.jpg";
 import pureJuiceImage from "@/assets/pure-juice.jpg";
@@ -154,41 +154,71 @@ const tiktokLinks = [
 
 export default function Home() {
   return (
+    <div>
+    <Header  />
     <div className="min-h-screen bg-background">
-      <Header />
+      
       
       {/* Hero Section */}
-      <section className="relative h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden">
-        <img 
-          src={heroImage} 
-          alt="Fresh Organic Cold-Pressed Juice" 
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 via-neutral-charcoal/40 to-transparent flex items-end md:items-center justify-center">
-          <div className="container mx-auto px-4 pb-12 md:pb-0 text-center">
-            <div className="max-w-3xl mx-auto space-y-4 md:space-y-6 animate-fade-in">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white leading-tight tracking-tight">
-                Refresh Your Day with<br />
-                <span className="text-primary">100% Organic Juice</span>
-              </h1>
-              <p className="text-lg md:text-xl lg:text-2xl font-body text-white/90 max-w-2xl mx-auto">
-                Cold-pressed perfection. Zero additives. Maximum flavor.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                <Button asChild size="lg" variant="hero">
-                  <Link to="/products">Shop All Juices</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-foreground">
-                  <Link to="/products/cleanse">Start Your Cleanse</Link>
-                </Button>
-              </div>
-            </div>
+<section className="relative">
+  <div className="h-[500px] md:h-[600px] lg:h-[700px] w-full overflow-hidden">
+    <img 
+      src={heroImage} 
+      alt="Fresh Organic Cold-Pressed Juice" 
+      className="w-full h-full object-cover"
+    />
+
+    {/* Overlay only on desktop */}
+    <div className="hidden lg:flex absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 via-neutral-charcoal/40 to-transparent items-center justify-center">
+      <div className="container mx-auto px-4 text-left">
+        <div className="max-w-3xl space-y-4 animate-fade-in">
+          <h1 className="text-8xl lg:text-7xl font-heading font-bold text-white leading-wide tracking-wide " >
+            Fall Into <br />
+            <span className="text-primary">Wellness</span>
+          </h1>
+          <p className="text-xl lg:text-2xl text-white/90 max-w-2xl">
+            Cold-pressed perfection. Zero additives. Maximum flavor.
+          </p>
+          <div className="flex gap-4 pt-4">
+            <Button asChild size="md" variant="hero">
+              <Link to="/products">Shop All Juices</Link>
+            </Button>
+            <Button asChild size="md" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-foreground">
+              <Link to="/products/cleanse">Start Your Cleanse</Link>
+            </Button>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </div>
+
+  {/* Text below image on mobile */}
+  <div className="lg:hidden container py-6 text- space-y-4 mt-2">
+    
+    <h1
+    className="text-7xl sm:text-5xl font-heading font-bold text-neutral-900 leading-[1.1] tracking-wide"
+    style={{ fontFamily: "'Lobster', cursive" }}
+    >
+  Fall into<br />
+  <span className="text-primary leading-[1.1] tracking-wide ml-12">Wellness..</span>
+</h1>
+
+    <p className="text-lg sm:text-xl text-neutral-700 max-w-2xl mx-auto">
+      Cold-pressed perfection. Zero additives. Maximum flavor.
+    </p>
+    <div className="flex sm:flex-row gap-4">
+      <Button asChild size="md" variant="hero" className="rounded-lg sm:w-auto">
+        <Link to="/products">Shop Now</Link>
+      </Button>
+
+    </div>
+  </div>
+</section>
+
+
 
       {/* Health Benefits */}
-      <section className="py-12 md:py-20">
+      <section className="py-12 md:py-20 mt-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 md:mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Why Choose Duk's?</h2>
@@ -378,6 +408,7 @@ export default function Home() {
       </section>
 
       <Footer />
+    </div>
     </div>
   );
 }

@@ -87,7 +87,7 @@ export default function Users() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 px-4">
         <div>
           <h1 className="text-3xl font-heading font-bold">User Management</h1>
           <p className="text-muted-foreground mt-1">

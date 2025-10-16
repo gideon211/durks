@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Header } from '@/components/Header';
+import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus, Minus, Package, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -144,7 +144,7 @@ export default function Cart() {
       >
         
 
-        <main className="flex-1 container mx-auto px-2 py-4">
+        <main className="flex-1 container mx-auto px-2 py-4 mt-16">
 
           <div className="grid grid-cols-1 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-3">

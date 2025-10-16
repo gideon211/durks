@@ -120,6 +120,10 @@ All colors MUST be HSL.
     font-family: National2Condensed;
   }
 
+  .calendar-day.today {
+  background-color: transparent; 
+}
+
 
 }
 
@@ -165,6 +169,8 @@ All colors MUST be HSL.
   }
 
   /* Hover effects */
+
+  
   .hover-lift {
     transition: all 150ms ease-out;
   }

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,18 +9,15 @@ import { toast } from "sonner";
 import { useCartStore, CartItem } from "@/store/cartStore";
 import { CreditCard, Truck, CheckCircle, Phone } from "lucide-react";
 
-// Radix Select Imports
+// shadcn DatePicker & TimePicker
+import { DateTimePicker } from "@/components/ui/DateTimePicker";
+
+// Radix Select imports
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/**
- * Typed forwardRef components for Radix Select
- * - Uses React.ElementRef and React.ComponentPropsWithoutRef to infer correct props.
- */
-
-const Select = SelectPrimitive.Root;
-
+/** Radix Select Components */
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
@@ -81,7 +77,7 @@ const SelectItem = React.forwardRef<
 ));
 SelectItem.displayName = "SelectItem";
 
-/** Form types */
+/** Form Types */
 interface CheckoutFormData {
   fullName: string;
   email: string;
@@ -91,6 +87,8 @@ interface CheckoutFormData {
   country: string;
   orderType: string;
   paymentMethod: string;
+  deliveryDate?: Date;
+  deliveryTime?: string;
 }
 
 export default function Checkout(): JSX.Element {
@@ -100,6 +98,7 @@ export default function Checkout(): JSX.Element {
   const clearCart = useCartStore((state) => state.clearCart) as () => void;
 
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<CheckoutFormData>({
     fullName: "",
     email: "",
@@ -109,14 +108,13 @@ export default function Checkout(): JSX.Element {
     country: "",
     orderType: "delivery",
     paymentMethod: "card",
+    deliveryDate: undefined,
+    deliveryTime: "",
   });
 
   useEffect(() => {
-    if (cart.length === 0) {
-      navigate("/cart");
-    }
+    if (cart.length === 0) navigate("/cart");
     window.scrollTo({ top: 0, behavior: "smooth" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,12 +124,10 @@ export default function Checkout(): JSX.Element {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (!formData.fullName || !formData.email || !formData.address) {
       toast.error("Please fill all required fields");
       return;
     }
-
     toast.success("Processing order...");
     setTimeout(() => {
       setShowConfirmation(true);
@@ -157,86 +153,174 @@ export default function Checkout(): JSX.Element {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container py-8 mt-14">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* LEFT: Billing form */}
-          <form onSubmit={handleSubmit} className="lg:col-span-2 bg-card border border-border rounded-xl p-6 space-y-6">
-            <div>
-              <h2 className="font-heading text-2xl font-semibold mb-4">Checkout Details</h2>
+          {/* Billing Form */}
+          <form onSubmit={handleSubmit} className="lg:col-span-2 rounded space-y-6">
+            <h2 className="font-heading text-2xl font-semibold mb-4">Checkout</h2>
 
-              {/* Order Type using Radix Select */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-muted-foreground">Order Type</label>
-
-                <Select value={formData.orderType} onValueChange={(value: string) => setFormData((prev) => ({ ...prev, orderType: value }))}>
-                  <SelectTrigger>
-                    {/* The Value will render the selected label */}
-                    <SelectPrimitive.Value placeholder="Delivery" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    <SelectItem value="delivery">Delivery</SelectItem>
-                    <SelectItem value="pickup">Pickup</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Order Summary Dropdown */}
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div
+                className="cursor-pointer flex justify-between items-center"
+                onClick={() => setIsOpen(!isOpen)}
+              >
+                <h2 className="font-heading text-xl font-semibold">Order Slip</h2>
+                <span className="text-muted-foreground">{isOpen ? "▲" : "▼"}</span>
               </div>
-
-              {/* Form Inputs */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input id="fullName" name="fullName" value={formData.fullName} onChange={handleChange} required />
+              {isOpen && (
+                <div className="mt-4">
+                  <div className="border-t border-gray-300 w-full mb-4"></div>
+                  <div className="divide-y divide-border mb-6">
+                    {cart.map((item) => (
+                      <div key={item.id} className="py-3 flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-sm">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">Qty {item.qty}</p>
+                        </div>
+                        <p className="font-semibold text-sm">
+                          ₵{(item.price * item.qty).toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>₵{totalPrice().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Shipping</span>
+                      <span>₵15.00</span>
+                    </div>
+                    <div className="flex justify-between font-bold border-t border-border pt-3 text-lg">
+                      <span>Total:</span>
+                      <span>₵{(totalPrice() + 15).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div className="mt-6 text-xs text-muted-foreground text-center">
+                    You’ll receive an order confirmation email after payment.
+                  </div>
                 </div>
+              )}
+            </div>
 
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
-                </div>
+            {/* Order Type */}
+            <div className="space-y-2">
+              <Label>Order Type</Label>
+              <SelectPrimitive.Root
+                value={formData.orderType}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, orderType: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectPrimitive.Value placeholder="Delivery" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="delivery">Delivery</SelectItem>
+                  <SelectItem value="pickup">Pickup</SelectItem>
+                </SelectContent>
+              </SelectPrimitive.Root>
+            </div>
 
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} required />
-                </div>
-
-                <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" name="city" value={formData.city} onChange={handleChange} required />
-                </div>
+            {/* Form Inputs */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  required
+                />
               </div>
-
-              <div className="mt-4">
-                <Label htmlFor="address">Address</Label>
-                <Input id="address" name="address" placeholder="14 Mango Street, East Legon" value={formData.address} onChange={handleChange} required />
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="city">City</Label>
+                <Input
+                  id="city"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  required
+                />
               </div>
             </div>
 
-            {/* Payment Section */}
-            <div>
-              <h2 className="font-heading text-xl font-bold mb-4">Payment Method</h2>
+            <div className="mt-4">
+              <Label htmlFor="address">Address</Label>
+              <Input
+                id="address"
+                name="address"
+                placeholder="14 Mango Street, East Legon"
+                value={formData.address}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-              <RadioGroup value={formData.paymentMethod} onValueChange={(val: string) => setFormData((prev) => ({ ...prev, paymentMethod: val }))} className="space-y-3">
+            {/* Delivery Date & Time */}
+            {formData.orderType === "delivery" && (
+              <DateTimePicker
+                date={formData.deliveryDate}
+                time={formData.deliveryTime || ""}
+                onDateChange={(date) =>
+                  setFormData((prev) => ({ ...prev, deliveryDate: date }))
+                }
+                onTimeChange={(time) =>
+                  setFormData((prev) => ({ ...prev, deliveryTime: time }))
+                }
+              />
+            )}
+
+            {/* Payment Section */}
+            <div className="mt-6">
+              <h2 className="font-heading text-xl font-bold mb-4">Payment Method</h2>
+              <RadioGroup
+                value={formData.paymentMethod}
+                onValueChange={(val) =>
+                  setFormData((prev) => ({ ...prev, paymentMethod: val }))
+                }
+                className="space-y-3"
+              >
                 <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer">
                   <RadioGroupItem value="card" id="card" />
                   <Label htmlFor="card" className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Credit/Debit Card
+                    <CreditCard className="h-4 w-4" /> Credit/Debit Card
                   </Label>
                 </div>
-
                 <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer">
                   <RadioGroupItem value="mobile" id="mobile" />
                   <Label htmlFor="mobile" className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    Mobile Money (MTN, AirtelTigo, Vodafone)
+                    <Phone className="h-4 w-4" /> Mobile Money
                   </Label>
                 </div>
-
                 <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer">
                   <RadioGroupItem value="delivery" id="delivery" />
                   <Label htmlFor="delivery" className="flex items-center gap-2">
-                    <Truck className="h-4 w-4" />
-                    Pay on Delivery
+                    <Truck className="h-4 w-4" /> Pay on Delivery
                   </Label>
                 </div>
               </RadioGroup>
@@ -246,48 +330,9 @@ export default function Checkout(): JSX.Element {
               Confirm & Place Order
             </Button>
           </form>
-
-          {/* RIGHT: Order Summary */}
-          <div className="bg-card border border-border rounded-xl p-6">
-            <h2 className="font-heading text-xl font-semibold mb-4 text-center">Order Slip</h2>
-
-            <div className="border-t border-gray-300 w-full"></div>
-
-            <div className="divide-y divide-border mb-6">
-              {cart.map((item: CartItem) => (
-                <div key={item.id} className="py-3 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">Qty {item.qty}</p>
-                  </div>
-                  <p className="font-semibold text-sm">₵{(item.price * item.qty).toFixed(2)}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>₵{totalPrice().toFixed(2)}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Shipping</span>
-                <span>₵15.00</span>
-              </div>
-
-              <div className="flex justify-between font-bold border-t border-border pt-3 text-lg">
-                <span>Total:</span>
-                <span>₵{(totalPrice() + 15).toFixed(2)}</span>
-              </div>
-            </div>
-
-            <div className="mt-6 text-xs text-muted-foreground text-center">You’ll receive an order confirmation email after payment.</div>
-          </div>
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

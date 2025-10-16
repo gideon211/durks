@@ -1,7 +1,7 @@
 // src/pages/Orders.jsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
+import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Package } from "lucide-react";

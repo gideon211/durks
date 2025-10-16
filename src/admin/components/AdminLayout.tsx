@@ -33,14 +33,10 @@ interface AdminLayoutProps {
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
   { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
-  { icon: Clock, label: "Preorders", path: "/admin/preorders" },
   { icon: Package, label: "Products", path: "/admin/products" },
-  { icon: Warehouse, label: "Inventory", path: "/admin/inventory" },
   { icon: Users, label: "Customers", path: "/admin/customers" },
-  { icon: FileText, label: "Quotes", path: "/admin/quotes" },
   { icon: CreditCard, label: "Payments", path: "/admin/payments" },
   { icon: Heart, label: "CSR Reports", path: "/admin/csr" },
-  { icon: BarChart3, label: "Analytics", path: "/admin/analytics" },
   { icon: UserCog, label: "Users", path: "/admin/users" },
   { icon: SettingsIcon, label: "Settings", path: "/admin/settings" },
 ];

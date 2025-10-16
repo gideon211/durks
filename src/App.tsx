@@ -55,10 +55,11 @@ function AnimatedRoutes() {
 
                   
           {/* Admin Routes */}
-          <Route path="/admin" element={<Dashboard />} />
+          <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/admin/orders" element={<Oorders />} />
           <Route path="/admin/preorders" element={<Preorders />} />
-          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin" element={<AdminProducts />} />
+          {/* <Route path="/admin/products" element={<AdminProducts />} /> */}
           <Route path="/admin/inventory" element={<Inventory />} />
           <Route path="/admin/customers" element={<Customers />} />
           <Route path="/admin/quotes" element={<Quotes />} />

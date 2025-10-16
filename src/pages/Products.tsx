@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { Header } from "@/components/Header";
+import  Header  from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
