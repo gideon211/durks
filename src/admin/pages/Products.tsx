@@ -241,7 +241,7 @@ export default function Products() {
             <div className="aspect-square bg-muted rounded-lg mb-3 overflow-hidden relative w-full">
             {product.imageUrl ? (
             <img
-                src={`${API_BASE}${product.imageUrl}`}
+                src={product.imageUrl}
                 alt={product.name ?? "Product image"}
                 className="w-full h-full object-cover"
             />
