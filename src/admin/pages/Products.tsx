@@ -32,12 +32,14 @@ interface Product {
 }
 
 const categories = [
-  { id: "pure-juice", name: "Pure Juice", slug: "pure-juice" },
-  { id: "cleanse", name: "Cleanse Juices", slug: "cleanse" },
-  { id: "smoothies", name: "Smoothies", slug: "smoothies" },
-  { id: "cut-fruits", name: "Cut Fruits", slug: "cut-fruits" },
-  { id: "gift-packs", name: "Gift Packs", slug: "gift-packs" },
-  { id: "events", name: "Events", slug: "events" },
+  { id: "all", name: "ALL PRODUCTS", slug: "all" },
+  { id: "pure-juice", name: "PURE JUICES", slug: "pure-juice" },
+  { id: "cleanse", name: "CLEANSE JUICES ", slug: "cleanse" },
+  { id: "smoothies", name: "SMOOTHIES", slug: "smoothies" },
+  { id: "cut-fruits", name: "CUT FRUITS", slug: "cut-fruits" },
+  { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs" },
+  { id: "events", name: "EVENTS", slug: "events" },
+  { id: "WORKOUT", name: "WORKOUT SHOTS", slug: "shots" }
 ];
 
 const API_BASE = "https://duksshopbackend1-0.onrender.com/api/drinks";

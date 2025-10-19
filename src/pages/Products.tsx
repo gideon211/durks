@@ -20,6 +20,8 @@ const categories = [
   { id: "WORKOUT", name: "WORKOUT SHOTS", slug: "shots" }
 ];
 
+
+
 export default function Products() {
   const { category: urlCategory } = useParams<{ category?: string }>();
   const navigate = useNavigate();
