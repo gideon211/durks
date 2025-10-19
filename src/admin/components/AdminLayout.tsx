@@ -31,9 +31,9 @@ interface AdminLayoutProps {
 }
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
   { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
-  { icon: Package, label: "Products", path: "/admin/products" },
+  { icon: Package, label: "Products", path: "/admin" },
   { icon: Users, label: "Customers", path: "/admin/customers" },
   { icon: CreditCard, label: "Payments", path: "/admin/payments" },
   { icon: Heart, label: "CSR Reports", path: "/admin/csr" },
