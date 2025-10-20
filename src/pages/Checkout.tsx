@@ -1,104 +1,183 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { toast } from "sonner";
-import { useCartStore, CartItem } from "@/store/cartStore";
-import { CreditCard, Truck, CheckCircle, Phone } from "lucide-react";
+"use client"
 
-// shadcn DatePicker & TimePicker
-import { DateTimePicker } from "@/components/ui/DateTimePicker";
+import React, { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import axios from "axios"
+import Header from "@/components/Header"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { toast } from "sonner"
+import { useCartStore, CartItem } from "@/store/cartStore"
+import { CreditCard, Truck, CheckCircle, Phone } from "lucide-react"
+import * as SelectPrimitive from "@radix-ui/react-select"
+import { ChevronDown, Check } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ChevronDownIcon } from "lucide-react"
 
-// Radix Select imports
-import * as SelectPrimitive from "@radix-ui/react-select";
-import { ChevronDown, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+// ----------------------
+// Calendar24 Component
+// ----------------------
+interface Calendar24Props {
+  date?: Date
+  time?: string
+  onDateChange?: (date: Date) => void
+  onTimeChange?: (time: string) => void
+}
 
-/** Radix Select Components */
-const SelectTrigger = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      "flex w-full items-center justify-between rounded-lg border border-border bg-card p-3 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary hover:border-primary hover:bg-muted/50 transition-all",
-      className
-    )}
-    {...props}
-  >
-    {children}
-    <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-    </SelectPrimitive.Icon>
-  </SelectPrimitive.Trigger>
-));
-SelectTrigger.displayName = "SelectTrigger";
+export function Calendar24({ date: propDate, time: propTime, onDateChange, onTimeChange }: Calendar24Props) {
+  const [open, setOpen] = useState(false)
+  const [date, setDate] = useState<Date | undefined>(propDate)
+  const [time, setTime] = useState<string>(propTime || "")
 
-const SelectContent = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Portal>
-    <SelectPrimitive.Content
+  useEffect(() => {
+    setDate(propDate)
+  }, [propDate])
+
+  useEffect(() => {
+    setTime(propTime || "10:30:00")
+  }, [propTime])
+
+  return (
+    <div className="flex gap-4 mt-4">
+      <div className="flex flex-col gap-3">
+        <Label htmlFor="date-picker" className="px-1">
+          Date
+        </Label>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              id="date-picker"
+              className="w-32 justify-between font-normal "
+            >
+              {date ? date.toLocaleDateString() : "Select date"}
+              <ChevronDownIcon />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto overflow-hidden p-0" align="center">
+            <Calendar
+              mode="single"
+              selected={date}
+              captionLayout="dropdown"
+              onSelect={(selectedDate) => {
+                setDate(selectedDate)
+                onDateChange?.(selectedDate)
+                setOpen(false)
+              }}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+      <div className="flex flex-col gap-3">
+        <Label htmlFor="time-picker" className="px-1">
+          Time
+        </Label>
+        <Input
+          type="time"
+          id="time-picker"
+          step="1"
+          value={time}
+          onChange={(e) => {
+            setTime(e.target.value)
+            onTimeChange?.(e.target.value)
+          }}
+          className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+        />
+      </div>
+    </div>
+  )
+}
+
+// ----------------------
+// Radix Select Components
+// ----------------------
+const SelectTrigger = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Trigger>, React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>>(
+  ({ className, children, ...props }, ref) => (
+    <SelectPrimitive.Trigger
       ref={ref}
       className={cn(
-        "z-50 min-w-[8rem] overflow-hidden rounded-lg border border-border bg-popover shadow-md animate-in fade-in-0 zoom-in-95",
+        "flex w-full items-center justify-between rounded-lg border border-border bg-card p-3 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary hover:border-primary hover:bg-muted/50 transition-all",
         className
       )}
       {...props}
     >
-      <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
-    </SelectPrimitive.Content>
-  </SelectPrimitive.Portal>
-));
-SelectContent.displayName = "SelectContent";
+      {children}
+      <SelectPrimitive.Icon asChild>
+        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+      </SelectPrimitive.Icon>
+    </SelectPrimitive.Trigger>
+  )
+)
+SelectTrigger.displayName = "SelectTrigger"
 
-const SelectItem = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex w-full cursor-pointer select-none items-center rounded-md px-3 py-2 text-sm outline-none focus:bg-muted focus:text-foreground data-[state=checked]:font-semibold",
-      className
-    )}
-    {...props}
-  >
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-    <SelectPrimitive.ItemIndicator className="absolute right-2 flex items-center">
-      <Check className="h-4 w-4" />
-    </SelectPrimitive.ItemIndicator>
-  </SelectPrimitive.Item>
-));
-SelectItem.displayName = "SelectItem";
+const SelectContent = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Content>, React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>>(
+  ({ className, children, ...props }, ref) => (
+    <SelectPrimitive.Portal>
+      <SelectPrimitive.Content
+        ref={ref}
+        className={cn(
+          "z-50 min-w-[8rem] overflow-hidden rounded-lg border border-border bg-popover shadow-md animate-in fade-in-0 zoom-in-95",
+          className
+        )}
+        {...props}
+      >
+        <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
+      </SelectPrimitive.Content>
+    </SelectPrimitive.Portal>
+  )
+)
+SelectContent.displayName = "SelectContent"
 
-/** Form Types */
+const SelectItem = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item>, React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>>(
+  ({ className, children, ...props }, ref) => (
+    <SelectPrimitive.Item
+      ref={ref}
+      className={cn(
+        "relative flex w-full cursor-pointer select-none items-center rounded-md px-3 py-2 text-sm outline-none focus:bg-muted focus:text-foreground data-[state=checked]:font-semibold",
+        className
+      )}
+      {...props}
+    >
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemIndicator className="absolute right-2 flex items-center">
+        <Check className="h-4 w-4" />
+      </SelectPrimitive.ItemIndicator>
+    </SelectPrimitive.Item>
+  )
+)
+SelectItem.displayName = "SelectItem"
+
+// ----------------------
+// Checkout Form Types
+// ----------------------
 interface CheckoutFormData {
-  fullName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  country: string;
-  orderType: string;
-  paymentMethod: string;
-  deliveryDate?: Date;
-  deliveryTime?: string;
+  fullName: string
+  email: string
+  phone: string
+  address: string
+  city: string
+  country: string
+  orderType: string
+  paymentMethod: string
+  deliveryDate?: Date
+  deliveryTime?: string
 }
 
+// ----------------------
+// Checkout Component
+// ----------------------
 export default function Checkout(): JSX.Element {
-  const navigate = useNavigate();
-  const cart = useCartStore((state) => state.cart) as CartItem[];
-  const totalPrice = useCartStore((state) => state.totalPrice) as () => number;
-  const clearCart = useCartStore((state) => state.clearCart) as () => void;
+  const navigate = useNavigate()
+  const cart = useCartStore((state) => state.cart) as CartItem[]
+  const totalPrice = useCartStore((state) => state.totalPrice) as () => number
+  const clearCart = useCartStore((state) => state.clearCart) as () => void
 
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [formData, setFormData] = useState<CheckoutFormData>({
     fullName: "",
     email: "",
@@ -110,30 +189,60 @@ export default function Checkout(): JSX.Element {
     paymentMethod: "card",
     deliveryDate: undefined,
     deliveryTime: "",
-  });
+  })
 
   useEffect(() => {
-    if (cart.length === 0) navigate("/cart");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [cart, navigate]);
+    if (cart.length === 0) navigate("/cart")
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [cart, navigate])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const generateOrderId = () => {
+    return "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase()
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
     if (!formData.fullName || !formData.email || !formData.address) {
-      toast.error("Please fill all required fields");
-      return;
+      toast.error("Please fill all required fields")
+      return
     }
-    toast.success("Processing order...");
-    setTimeout(() => {
-      setShowConfirmation(true);
-      clearCart();
-    }, 1200);
-  };
+
+    if (formData.paymentMethod === "delivery") {
+      try {
+        await axios.post("http://localhost:5000/api/orders", {
+          cart,
+          total: totalPrice() + 15,
+          customer: formData,
+          orderId: generateOrderId(),
+          paymentMethod: "Pay on Delivery",
+        })
+        setShowConfirmation(true)
+        clearCart()
+      } catch (err) {
+        console.error(err)
+        toast.error("Failed to save order")
+      }
+      return
+    }
+
+    try {
+      const { data } = await axios.post("http://localhost:5000/api/paystack/init", {
+        amount: (totalPrice() + 15) * 100,
+        email: formData.email,
+        orderId: generateOrderId(),
+      })
+      window.location.href = data.authorization_url
+    } catch (err) {
+      console.error(err)
+      toast.error("Payment initialization failed")
+    }
+  }
 
   if (showConfirmation) {
     return (
@@ -147,7 +256,7 @@ export default function Checkout(): JSX.Element {
           Continue Shopping
         </Button>
       </div>
-    );
+    )
   }
 
   return (
@@ -155,55 +264,8 @@ export default function Checkout(): JSX.Element {
       <Header />
       <main className="flex-1 container py-8 mt-14">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Billing Form */}
           <form onSubmit={handleSubmit} className="lg:col-span-2 rounded space-y-6">
             <h2 className="font-heading text-2xl font-semibold mb-4">Checkout</h2>
-
-            {/* Order Summary Dropdown */}
-            <div className="bg-card border border-border rounded-xl p-4">
-              <div
-                className="cursor-pointer flex justify-between items-center"
-                onClick={() => setIsOpen(!isOpen)}
-              >
-                <h2 className="font-heading text-xl font-semibold">Order Slip</h2>
-                <span className="text-muted-foreground">{isOpen ? "▲" : "▼"}</span>
-              </div>
-              {isOpen && (
-                <div className="mt-4">
-                  <div className="border-t border-gray-300 w-full mb-4"></div>
-                  <div className="divide-y divide-border mb-6">
-                    {cart.map((item) => (
-                      <div key={item.id} className="py-3 flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-sm">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">Qty {item.qty}</p>
-                        </div>
-                        <p className="font-semibold text-sm">
-                          ₵{(item.price * item.qty).toFixed(2)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span>₵{totalPrice().toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Shipping</span>
-                      <span>₵15.00</span>
-                    </div>
-                    <div className="flex justify-between font-bold border-t border-border pt-3 text-lg">
-                      <span>Total:</span>
-                      <span>₵{(totalPrice() + 15).toFixed(2)}</span>
-                    </div>
-                  </div>
-                  <div className="mt-6 text-xs text-muted-foreground text-center">
-                    You’ll receive an order confirmation email after payment.
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* Order Type */}
             <div className="space-y-2">
@@ -283,9 +345,9 @@ export default function Checkout(): JSX.Element {
 
             {/* Delivery Date & Time */}
             {formData.orderType === "delivery" && (
-              <DateTimePicker
+              <Calendar24
                 date={formData.deliveryDate}
-                time={formData.deliveryTime || ""}
+                time={formData.deliveryTime}
                 onDateChange={(date) =>
                   setFormData((prev) => ({ ...prev, deliveryDate: date }))
                 }
@@ -332,7 +394,6 @@ export default function Checkout(): JSX.Element {
           </form>
         </div>
       </main>
-
     </div>
-  );
+  )
 }

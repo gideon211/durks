@@ -40,6 +40,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
+  
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
