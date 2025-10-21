@@ -39,7 +39,8 @@ const categories = [
   { id: "cut-fruits", name: "CUT FRUITS", slug: "cut-fruits" },
   { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs" },
   { id: "events", name: "EVENTS", slug: "events" },
-  { id: "WORKOUT", name: "WORKOUT SHOTS", slug: "shots" }
+  { id: "WELLNESS", name: "WELLNESS SHOTS", slug: "shots" },
+  { id: "", name: "WELLNESS SHOTS", slug: "shots" }
 ];
 
 const API_BASE = "https://duksshopbackend1-0.onrender.com/api/drinks";
