@@ -14,6 +14,7 @@ export default function Cart() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Zustand cart store hooks
   const cartItems = useCartStore((state) => state.cart);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const updateQty = useCartStore((state) => state.updateQty);
@@ -21,15 +22,17 @@ export default function Cart() {
   const totalPrice = useCartStore((state) => state.totalPrice);
   const setCart = useCartStore((state) => state.setCart);
 
+  // Modal & loading states
   const [isModalOpen, setModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState<'checkout' | 'bulk' | null>(null);
 
+  // Scroll to top on page load
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Restore pendingCart snapshot after sign-in
+  // Restore pendingCart from localStorage after sign-in
   useEffect(() => {
     try {
       const pendingCartRaw = localStorage.getItem('pendingCart');
@@ -48,6 +51,7 @@ export default function Cart() {
     }
   }, [user, setCart]);
 
+  // Handle pending checkout after login
   useEffect(() => {
     if (!user) return;
     try {
@@ -63,11 +67,13 @@ export default function Cart() {
     }
   }, [user, navigate]);
 
+  // Open auth modal if user is not signed in
   const openAuthModal = (action: 'checkout' | 'bulk') => {
     setPendingAction(action);
     setModalOpen(true);
   };
 
+  // Checkout button click
   const handleCheckout = () => {
     if (!user) {
       openAuthModal('checkout');
@@ -77,6 +83,7 @@ export default function Cart() {
     setTimeout(() => navigate('/checkout'), 400);
   };
 
+  // Bulk quote button click
   const handleBulkQuote = () => {
     if (!user) {
       openAuthModal('bulk');
@@ -86,6 +93,7 @@ export default function Cart() {
     navigate('/bulk-quote');
   };
 
+  // Handle sign-in from modal
   const handleSignInFromModal = () => {
     try {
       setIsLoading(true);
@@ -104,6 +112,7 @@ export default function Cart() {
     }, 600);
   };
 
+  // Empty cart view
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -150,6 +159,7 @@ export default function Cart() {
                   key={item.id}
                   className="bg-card border border-border rounded-md p-3 flex flex-row items-center gap-3"
                 >
+                  {/* Product image */}
                   <div className="w-24 flex-shrink-0">
                     <img
                       src={item.image}
@@ -158,6 +168,7 @@ export default function Cart() {
                     />
                   </div>
 
+                  {/* Product info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
@@ -172,6 +183,7 @@ export default function Cart() {
                       />
                     </div>
 
+                    {/* Pack & qty controls */}
                     <div className="mt-2 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         {/* Pack size dropdown */}
@@ -186,12 +198,13 @@ export default function Cart() {
                             setCart(updated);
                           }}
                         >
+                          <option value={6}>6</option>
                           <option value={12}>12</option>
                           <option value={24}>24</option>
                         </select>
 
                         {/* Number of packs input */}
-                        <p className='text-xs'>qty:</p>
+                        <p className="text-xs">qty:</p>
                         <input
                           type="number"
                           min={1}
@@ -204,7 +217,7 @@ export default function Cart() {
                         />
                       </div>
 
-                      {/* Total price */}
+                      {/* Total price per item */}
                       <div className="text-right min-w-[80px]">
                         <div className="text-xs text-muted-foreground">Total</div>
                         <div className="font-heading font-semibold text-sm">
@@ -225,7 +238,7 @@ export default function Cart() {
           <div className="w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center justify-between w-full sm:w-auto gap-8">
               <span className="text-lg font-heading font-extrabold text-black text-pretty">
-                subtotal
+                Subtotal
               </span>
               <span className="font-heading font-bold text-md">
                 ₵{totalPrice().toFixed(2)}

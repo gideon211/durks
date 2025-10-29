@@ -16,7 +16,6 @@ export interface Product {
   image?: string;
   category?: string;
   size?: string;
-  
 }
 
 export interface CartItem extends Product {
@@ -194,10 +193,8 @@ export const useCartStore = create<CartState>()(
         set({ cart: [] });
       },
 
-      // FIXED: Badge should count "packs" only, not total units
       totalQty: () => get().cart.reduce((sum, item) => sum + item.qty, 0),
 
-      // Total price still multiplies packs * qty * price
       totalPrice: () =>
         get().cart.reduce((sum, item) => sum + item.price * item.qty * item.pack, 0),
 
