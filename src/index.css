@@ -189,6 +189,14 @@ All colors MUST be HSL.
     -webkit-overflow-scrolling: touch; /* iOS smooth scroll */
   }
 
+    select {
+    /* -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none; */
+    background-color: white;
+    }
+
+
 
 
 }
