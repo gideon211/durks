@@ -5,8 +5,8 @@ import axios from "axios";
 
 // Axios instance with 3s timeout
 const axiosInstance = axios.create({
-  baseURL: "https://your-backend-url", // replace with your backend URL
-  timeout: 3000, // 3 seconds timeout
+  baseURL: "https://your-backend-url",
+  timeout: 3000,
 });
 
 export interface Product {
@@ -15,20 +15,22 @@ export interface Product {
   price: number;
   image?: string;
   category?: string;
-  size?: string
+  size?: string;
+  
 }
 
 export interface CartItem extends Product {
-  id: string | number; // backend cart id OR local id like "local-<timestamp>"
-  drinkId: string | number; // original product id
-  qty: number;
-  _local?: boolean; // true if offline-only
+  id: string | number;
+  drinkId: string | number;
+  pack: number; // number of items per pack
+  qty: number; // number of packs
+  _local?: boolean;
 }
 
 interface CartState {
   cart: CartItem[];
   fetchCart: () => Promise<void>;
-  addToCart: (product: Product, qty?: number) => Promise<void>;
+  addToCart: (product: Product, pack?: number, qty?: number) => Promise<void>;
   removeFromCart: (cartItemId: string | number) => Promise<void>;
   updateQty: (cartItemId: string | number, qty: number) => Promise<void>;
   clearCart: () => void;
@@ -55,6 +57,7 @@ export const useCartStore = create<CartState>()(
             price: item.Drink.price,
             image: item.Drink.image,
             qty: item.quantity,
+            pack: item.pack || 12, // default pack if backend doesn't return
           }));
           set({ cart: items });
         } catch (err) {
@@ -62,15 +65,16 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      addToCart: async (product: Product, qty = 1) => {
-        const existingItem = get().cart.find(i => i.drinkId === product.id);
+      addToCart: async (product: Product, pack = 12, qty = 1) => {
+        const existingItem = get().cart.find(
+          (i) => i.drinkId === product.id && i.pack === pack
+        );
 
         const createLocalItem = () => {
           if (existingItem) {
-            // increase quantity if exists locally
             set({
-              cart: get().cart.map(item =>
-                item.drinkId === product.id
+              cart: get().cart.map((item) =>
+                item.drinkId === product.id && item.pack === pack
                   ? { ...item, qty: item.qty + qty }
                   : item
               ),
@@ -82,6 +86,7 @@ export const useCartStore = create<CartState>()(
               name: product.name,
               price: product.price,
               image: product.image,
+              pack,
               qty,
               _local: true,
             };
@@ -96,13 +101,13 @@ export const useCartStore = create<CartState>()(
 
         try {
           if (existingItem && !existingItem._local) {
-            // update quantity if exists on backend
             await axiosInstance.put(`/cart/${existingItem.id}`, {
               quantity: existingItem.qty + qty,
+              pack,
             });
             set({
-              cart: get().cart.map(item =>
-                item.drinkId === product.id
+              cart: get().cart.map((item) =>
+                item.drinkId === product.id && item.pack === pack
                   ? { ...item, qty: item.qty + qty }
                   : item
               ),
@@ -111,6 +116,7 @@ export const useCartStore = create<CartState>()(
             const res = await axiosInstance.post("/cart", {
               drinkId: product.id,
               quantity: qty,
+              pack,
             });
 
             const item = res.data.cartItem;
@@ -120,13 +126,16 @@ export const useCartStore = create<CartState>()(
               name: item.Drink.name,
               price: item.Drink.price,
               image: item.Drink.image,
+              pack: item.pack || pack,
               qty: item.quantity,
             };
 
             set({
               cart: existingItem
-                ? get().cart.map(i =>
-                    i.drinkId === product.id ? { ...i, qty: i.qty + qty } : i
+                ? get().cart.map((i) =>
+                    i.drinkId === product.id && i.pack === pack
+                      ? { ...i, qty: i.qty + qty }
+                      : i
                   )
                 : [...get().cart, newItem],
             });
@@ -185,11 +194,12 @@ export const useCartStore = create<CartState>()(
         set({ cart: [] });
       },
 
-      totalQty: () =>
-        get().cart.reduce((sum, item) => sum + item.qty, 0),
+      // FIXED: Badge should count "packs" only, not total units
+      totalQty: () => get().cart.reduce((sum, item) => sum + item.qty, 0),
 
+      // Total price still multiplies packs * qty * price
       totalPrice: () =>
-        get().cart.reduce((sum, item) => sum + item.price * item.qty, 0),
+        get().cart.reduce((sum, item) => sum + item.price * item.qty * item.pack, 0),
 
       syncLocalItems: async () => {
         const localItems = get().cart.filter((i) => i._local);
@@ -200,6 +210,7 @@ export const useCartStore = create<CartState>()(
             const res = await axiosInstance.post("/cart", {
               drinkId: item.drinkId,
               quantity: item.qty,
+              pack: item.pack,
             });
 
             const saved = res.data.cartItem;
@@ -209,13 +220,12 @@ export const useCartStore = create<CartState>()(
               name: saved.Drink.name,
               price: saved.Drink.price,
               image: saved.Drink.image,
+              pack: saved.pack || item.pack,
               qty: saved.quantity,
             };
 
             set({
-              cart: get().cart.map((i) =>
-                i.id === item.id ? syncedItem : i
-              ),
+              cart: get().cart.map((i) => (i.id === item.id ? syncedItem : i)),
             });
           }
         } catch (err) {
@@ -229,7 +239,7 @@ export const useCartStore = create<CartState>()(
   )
 );
 
-// Automatically sync when user comes back online
+// Sync offline cart when back online
 if (typeof window !== "undefined") {
   window.addEventListener("online", async () => {
     const store = useCartStore.getState();

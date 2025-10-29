@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { Trash2, Plus, Minus, Package, Loader2 } from 'lucide-react';
+import { Trash2, Package, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCartStore, CartItem } from '@/store/cartStore';
 import { useAuth } from '@/context/Authcontext';
@@ -39,8 +39,6 @@ export default function Cart() {
           if (typeof setCart === 'function') {
             setCart(parsed);
             toast.success('Restored your saved cart after signing in');
-          } else {
-            console.warn('setCart not available on cart store — pendingCart not restored automatically.');
           }
         }
         localStorage.removeItem('pendingCart');
@@ -48,10 +46,8 @@ export default function Cart() {
     } catch (err) {
       console.warn('Error restoring pendingCart', err);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, setCart]);
 
-  // Auto-redirect to checkout if user becomes authenticated and pendingCheckout exists.
   useEffect(() => {
     if (!user) return;
     try {
@@ -65,8 +61,7 @@ export default function Cart() {
     } catch (err) {
       console.warn('Error handling pendingCheckout', err);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, navigate]);
 
   const openAuthModal = (action: 'checkout' | 'bulk') => {
     setPendingAction(action);
@@ -94,7 +89,10 @@ export default function Cart() {
   const handleSignInFromModal = () => {
     try {
       setIsLoading(true);
-      localStorage.setItem('pendingCheckout', JSON.stringify({ from: '/cart', action: pendingAction ?? 'checkout' }));
+      localStorage.setItem(
+        'pendingCheckout',
+        JSON.stringify({ from: '/cart', action: pendingAction ?? 'checkout' })
+      );
     } catch (err) {
       console.warn('Could not persist pendingCheckout', err);
     }
@@ -122,7 +120,9 @@ export default function Cart() {
             <Button
               variant="hero"
               size="lg"
-              onClick={() => navigate('/products', { state: { skipHero: true, scrollToTabs: true } })}
+              onClick={() =>
+                navigate('/products', { state: { skipHero: true, scrollToTabs: true } })
+              }
             >
               Browse Products
             </Button>
@@ -134,22 +134,22 @@ export default function Cart() {
 
   return (
     <AnimatePresence>
-        <Header />
+      <Header />
       <motion.div
-        className="min-h-screen flex flex-col pb-32" 
+        className="min-h-screen flex flex-col pb-32"
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 100 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
-        
-
         <main className="flex-1 container mx-auto px-2 py-4 mt-16">
-
           <div className="grid grid-cols-1 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-3">
               {cartItems.map((item: CartItem) => (
-                <div key={item.id} className="bg-card border border-border rounded-md p-3 flex flex-row items-center gap-3">
+                <div
+                  key={item.id}
+                  className="bg-card border border-border rounded-md p-3 flex flex-row items-center gap-3"
+                >
                   <div className="w-24 flex-shrink-0">
                     <img
                       src={item.image}
@@ -162,60 +162,53 @@ export default function Cart() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <h3 className="font-medium text-sm truncate">{item.name}</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">₵{item.price.toFixed(2)} each</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          ₵{item.price.toFixed(2)} each
+                        </p>
                       </div>
-
-                      <div className="flex items-start gap-1">
-                        {/* <Button
-                          variant="destructive"
-                          size="sm"
-                          aria-label={`Remove ${item.name}`}
-                          onClick={() => removeFromCart(item.id)}
-                          className="p-2"
-                        > */}
-                          <Trash2 className="h-4 w-4" onClick={() => removeFromCart(item.id)} />
-                        {/* </Button> */}
-                      </div>
+                      <Trash2
+                        className="h-4 w-4 cursor-pointer"
+                        onClick={() => removeFromCart(item.id)}
+                      />
                     </div>
 
                     <div className="mt-2 flex items-center justify-between gap-2">
-                      <div className="flex items-center ">
-                        <Button
-                          variant="outline"
-                           className="rounded-none"
-                          size="xs"
-                          aria-label={`Decrease quantity for ${item.name}`}
-                          onClick={() => updateQty(item.id, Math.max(1, item.qty - 1))}
+                      <div className="flex items-center gap-2">
+                        {/* Pack size dropdown */}
+                        <select
+                          className="border rounded px-2 py-1 text-sm"
+                          value={item.pack || 12}
+                          onChange={(e) => {
+                            const newPack = Number(e.target.value);
+                            const updated = cartItems.map((c) =>
+                              c.id === item.id ? { ...c, pack: newPack } : c
+                            );
+                            setCart(updated);
+                          }}
                         >
-                          <Minus />
-                        </Button>
+                          <option value={12}>12</option>
+                          <option value={24}>24</option>
+                        </select>
 
-                        <Button
-                          variant="outline"
-                          size="xs"
-                           className="rounded-none border px-4 font-bold"
-                         
-                         
-                        >
-                          {item.qty}
-                        </Button>  
-                        
-
-                        <Button
-                          variant="outline"
-                          size="xs"
-                           className="rounded-none"
-                          aria-label={`Increase quantity for ${item.name}`}
-                          onClick={() => updateQty(item.id, item.qty + 1)}
-                        >
-                          <Plus />
-                        </Button>
+                        {/* Number of packs input */}
+                        <p className='text-xs'>qty:</p>
+                        <input
+                          type="number"
+                          min={1}
+                          value={item.qty}
+                          onChange={(e) => {
+                            const newQty = Math.max(1, Number(e.target.value));
+                            updateQty(item.id, newQty);
+                          }}
+                          className="border px-2 py-1 w-16 text-center rounded text-sm"
+                        />
                       </div>
 
-                      <div className="text-right min-w-[70px]">
+                      {/* Total price */}
+                      <div className="text-right min-w-[80px]">
                         <div className="text-xs text-muted-foreground">Total</div>
                         <div className="font-heading font-semibold text-sm">
-                          ₵{(item.price * item.qty).toFixed(2)}
+                          ₵{((item.price || 0) * (item.pack || 12) * (item.qty || 1)).toFixed(2)}
                         </div>
                       </div>
                     </div>
@@ -223,40 +216,42 @@ export default function Cart() {
                 </div>
               ))}
             </div>
-
-            {/* Right column is intentionally left empty so the sticky summary reads as its own block */}
             <div className="hidden lg:block" />
           </div>
         </main>
 
         {/* Sticky subtotal card at bottom */}
         <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center w-full bg-white backdrop-blur-md border-t border-border shadow-lg">
-        <div className="w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Subtotal */}
+          <div className="w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center justify-between w-full sm:w-auto gap-8">
-            <span className="text-lg font-heading font-extrabold text-black text-pretty">subtotal</span>
-            <span className="font-heading font-bold text-md">₵{totalPrice().toFixed(2)}</span>
+              <span className="text-lg font-heading font-extrabold text-black text-pretty">
+                subtotal
+              </span>
+              <span className="font-heading font-bold text-md">
+                ₵{totalPrice().toFixed(2)}
+              </span>
             </div>
-
-            {/* Checkout Button */}
             <Button size="md" onClick={handleCheckout} className="w-full sm:w-auto">
-            Proceed to Checkout
+              Proceed to Checkout
             </Button>
-        </div>
+          </div>
         </div>
 
         {/* Modal for auth prompt */}
         <Modal
           isOpen={isModalOpen}
-          title={pendingAction === 'checkout' ? 'Please sign in to continue to checkout' : 'Please sign in to request a bulk quote'}
+          title={
+            pendingAction === 'checkout'
+              ? 'Please sign in to continue to checkout'
+              : 'Please sign in to request a bulk quote'
+          }
           onClose={() => setModalOpen(false)}
           footer={
             <>
-              <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
-              <Button
-                onClick={handleSignInFromModal}
-                disabled={isLoading}
-              >
+              <Button variant="outline" onClick={() => setModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSignInFromModal} disabled={isLoading}>
                 {isLoading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
                 {isLoading ? 'Redirecting...' : 'Sign In'}
               </Button>
@@ -264,7 +259,11 @@ export default function Cart() {
           }
         >
           <p className="text-sm">
-            You need to be signed in to {pendingAction === 'checkout' ? 'complete checkout' : 'request a bulk quote'}. Signing in lets you save orders, view order history and manage shipping/payment details.
+            You need to be signed in to{' '}
+            {pendingAction === 'checkout'
+              ? 'complete checkout'
+              : 'request a bulk quote'}
+            . Signing in lets you save orders, view order history and manage shipping/payment details.
           </p>
         </Modal>
       </motion.div>

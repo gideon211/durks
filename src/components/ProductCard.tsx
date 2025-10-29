@@ -1,5 +1,5 @@
 // src/components/ProductCard.tsx
-import { ShoppingCart, Plus, Minus, Loader2, CheckCircle2 } from "lucide-react";
+import { ShoppingCart, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { useCartStore } from "@/store/cartStore";
@@ -12,9 +12,22 @@ interface ProductCardProps {
   name: string;
   description?: string;
   image?: string;
-  price: number;
+  price?: number; // fallback price
   category?: string;
-  size?: string; // <--- new optional prop for drink size (e.g. "500ml", "Large")
+  size?: string;
+  // Dynamic packs from backend: array of pack sizes and their prices
+  packs?: { pack: number; price: number }[];
+}
+
+// Extend Product type in cart store if necessary
+interface CartProduct {
+  id: string | number;
+  name: string;
+  price: number;
+  image?: string;
+  category?: string;
+  size?: string;
+  pack?: number;
 }
 
 export const ProductCard = ({
@@ -22,13 +35,15 @@ export const ProductCard = ({
   name,
   description,
   image,
-  price,
+  price = 0,
   category,
   size,
+  packs = [{ pack: 12, price: price }], // default pack
 }: ProductCardProps) => {
   const addToCart = useCartStore((state) => state.addToCart);
   const cart = useCartStore((state) => state.cart);
-  const [quantity, setQuantity] = useState<number>(1);
+  const [selectedPack, setSelectedPack] = useState<number>(packs[0].pack);
+  const [selectedPrice, setSelectedPrice] = useState<number>(packs[0].price);
   const [isLoading, setIsLoading] = useState(false);
   const [addedMessage, setAddedMessage] = useState(false);
 
@@ -36,11 +51,21 @@ export const ProductCard = ({
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (quantity < 1) return;
-
     try {
       setIsLoading(true);
-      await addToCart({ id, name, price, image, category, size }, quantity);
+
+      // Create a product object compatible with cart store
+      const productToAdd: CartProduct = {
+        id,
+        name,
+        price: selectedPrice,
+        image,
+        category,
+        size,
+        pack: selectedPack,
+      };
+
+      await addToCart(productToAdd, selectedPack);
 
       // Persist pending cart if user isn't logged in
       if (!user) {
@@ -51,7 +76,6 @@ export const ProductCard = ({
         }
       }
 
-      // Show success message for 4 seconds
       setAddedMessage(true);
       setTimeout(() => setAddedMessage(false), 4000);
     } catch (err) {
@@ -62,37 +86,38 @@ export const ProductCard = ({
     }
   };
 
-  const increment = () => setQuantity((prev) => prev + 1);
-  const decrement = () => setQuantity((prev) => Math.max(1, prev - 1));
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Number(e.target.value);
-    setQuantity(Number.isNaN(val) ? 1 : Math.max(1, val));
+  const handlePackChange = (pack: number) => {
+    setSelectedPack(pack);
+    const packObj = packs.find((p) => p.pack === pack);
+    if (packObj) setSelectedPrice(packObj.price);
   };
 
-  // helper: fallback label when size missing
   const sizeLabel = size ? size : "";
 
   return (
     <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-full">
       <div className="relative aspect-square overflow-hidden bg-muted block">
         {/* Image */}
-        <img
-          src={image}
-          alt={name}
-          className="w-full h-full object-cover"
-          // loading="lazy" // optionally enable lazy loading
-        />
+        {image ? (
+          <img src={image} alt={name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            No Image
+          </div>
+        )}
 
-        {/* Bottom-left size banner */}
-        <div className="absolute left-2 bottom-2 flex items-center gap-2">
-          <span
-            className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold
-                       bg-black/70 text-white backdrop-blur-sm shadow"
-            aria-hidden="true"
-          >
-            {size}
-          </span>
-        </div>
+        {/* Size badge */}
+        {sizeLabel && (
+          <div className="absolute left-2 bottom-2 flex items-center gap-2">
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold
+                         bg-black/70 text-white backdrop-blur-sm shadow"
+              aria-hidden="true"
+            >
+              {sizeLabel}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="p-4 flex flex-col flex-grow text-center">
@@ -104,42 +129,24 @@ export const ProductCard = ({
 
         <h3 className="font-heading font-semibold text-sm text-foreground">{name}</h3>
 
-        {/* show description if available */}
-        {/* {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>} */}
-
+        {/* Price */}
         <p className="font-heading font-semibold text-sm text-foreground mt-2">
-          ₵{(price * quantity).toFixed(2)}
+          ₵{selectedPrice.toFixed(2)}
         </p>
 
         <div className="flex flex-col gap-2 mt-1.5">
-          <div className="flex items-center justify-center gap-2">
-            <button
-              type="button"
-              onClick={decrement}
-              className="p-1 border rounded hover:bg-gray-100"
-              aria-label={`Decrease ${name} quantity`}
-            >
-              <Minus className="h-4 w-4" />
-            </button>
-
-            <input
-              type="number"
-              min={1}
-              value={quantity}
-              onChange={handleInputChange}
-              className="w-16 text-center border rounded px-1 py-1 focus:outline-none focus:ring-1 focus:ring-primary font-bold"
-              aria-label={`${name} quantity`}
-            />
-
-            <button
-              type="button"
-              onClick={increment}
-              className="p-1 border rounded hover:bg-gray-100"
-              aria-label={`Increase ${name} quantity`}
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
+          {/* Pack dropdown */}
+          <select
+            value={selectedPack}
+            onChange={(e) => handlePackChange(Number(e.target.value))}
+            className="w-full border rounded px-2 py-1 text-center focus:outline-none focus:ring-1 focus:ring-primary font-bold"
+          >
+            {packs.map((p) => (
+              <option key={p.pack} value={p.pack}>
+                {p.pack}
+              </option>
+            ))}
+          </select>
 
           <Button
             size="sm"

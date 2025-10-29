@@ -40,7 +40,7 @@ import Logo from "@/assets/logo.svg";
 const Header = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const totalQty = useCartStore((state) => state.totalQty?.() || 0);
+
 
   // Derive first letter of username for user icon
   const userInitial = (user?.username ?? "U").charAt(0).toUpperCase();
@@ -55,6 +55,8 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+  const totalQtyValue = useCartStore((state) => state.totalQty());
+
 
   /**
    * Scroll Effect
@@ -160,11 +162,13 @@ const Header = () => {
             aria-label="Cart"
           >
             <ShoppingCart className="h-5 w-5" />
-            {totalQty > 0 && (
-              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {totalQty > 9 ? "9+" : totalQty}
-              </span>
+            {totalQtyValue > 0 && (
+            <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {totalQtyValue > 9 ? "9+" : totalQtyValue}
+            </span>
             )}
+
+
           </Button>
 
           {/* User menu dropdown (desktop) */}

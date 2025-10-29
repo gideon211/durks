@@ -101,7 +101,7 @@ export default function Products() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative bg-soft-sand overflow-hidden">
+      {/* <section className="relative bg-soft-sand overflow-hidden">
         <div className="container mx-auto px-4 py-16 md:py-24">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -179,10 +179,10 @@ export default function Products() {
           animate={{ y: [0, 20, 0] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
-      </section>
+      </section> */}
 
       {/* Tabs */}
-      <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar">
+      <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar mt-24 sticky top-16 z-50 lg:mx-auto">
         <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
           <TabsList className="inline-flex w-auto">
             {categories.map((cat) => (
