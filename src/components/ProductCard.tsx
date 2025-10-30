@@ -7,12 +7,13 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/Authcontext";
 
+
 interface ProductCardProps {
   id: string | number;
   name: string;
   description?: string;
   image?: string;
-  price?: number; // fallback price
+  price?: number; 
   category?: string;
   size?: string;
   // Dynamic packs from backend: array of pack sizes and their prices

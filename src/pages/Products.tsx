@@ -183,15 +183,15 @@ export default function Products() {
 
       {/* Tabs */}
       <div ref={tabsRef} className="mb-8 overflow-x-auto no-scrollbar mt-24 sticky top-16 z-50 lg:mx-auto">
-        <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
-          <TabsList className="inline-flex w-auto">
-            {categories.map((cat) => (
-              <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap font-semibold">
-                {cat.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+            <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
+            <TabsList className="inline-flex w-auto">
+                {categories.map((cat) => (
+                <TabsTrigger key={cat.id} value={cat.slug} className="whitespace-nowrap font-semibold">
+                    {cat.name}
+                </TabsTrigger>
+                ))}
+            </TabsList>
+            </Tabs>
       </div>
 
       {/* Products Grid */}

@@ -41,11 +41,12 @@ const categories = [
   { id: "WELLNESS", name: "WELLNESS SHOTS", slug: "shots" },
 ];
 
-const API_BASE = "https://duksshopbackend1-0.onrender.com/api/drinks";
+const API_BASE = "https://duksshopback-end2-0.onrender.com/api";
+const DRINKS_BASE = `${API_BASE}/drinks`;
 
 export default function Products() {
-  const { user } = useAuth();
-  const token = user?.token;
+  // include logout + login to persist refreshed token
+  const { user, login, tryRefreshToken, logout } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [openModal, setOpenModal] = useState(false);
@@ -64,25 +65,232 @@ export default function Products() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  if (!token) toast.error("No token found. Please login again.");
+  // Helper: safe read of stored user object (local copy)
+  const getStoredUser = () => user ?? (() => {
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
 
+  // Get token; if expired try tryRefreshToken (keeps backwards compatibility)
+  const getToken = async (): Promise<string | null> => {
+    const u = getStoredUser();
+    if (!u) return null;
+    if (!u.token) {
+      // try context refresh if available
+      try {
+        const refreshed = await tryRefreshToken();
+        return refreshed?.token ?? null;
+      } catch {
+        return null;
+      }
+    }
+
+    // try decode exp
+    try {
+      const parts = u.token.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        const exp = payload?.exp;
+        const now = Math.floor(Date.now() / 1000);
+        if (exp && exp < now) {
+          // expired -> try context refresh
+          try {
+            const refreshed = await tryRefreshToken();
+            return refreshed?.token ?? null;
+          } catch {
+            return null;
+          }
+        }
+      }
+    } catch {
+      // decode failed -> attempt refresh
+      try {
+        const refreshed = await tryRefreshToken();
+        return refreshed?.token ?? null;
+      } catch {
+        return null;
+      }
+    }
+
+    return u.token;
+  };
+
+  // Build headers merging simple shapes
+  const mergeHeaders = (base?: RequestInit["headers"]) => {
+    const headers: Record<string, string> = {};
+    if (!base) return headers;
+    if (base instanceof Headers) {
+      base.forEach((v, k) => (headers[k] = v));
+      return headers;
+    }
+    if (Array.isArray(base)) {
+      (base as Array<[string, string]>).forEach(([k, v]) => (headers[k] = v));
+      return headers;
+    }
+    Object.assign(headers, base as Record<string, string>);
+    return headers;
+  };
+
+  // IMPORTANT: direct refresh call used here so we control request shape and persist token immediately
+  const callRefreshEndpoint = async () => {
+    const u = getStoredUser();
+    if (!u?.refreshToken) return null;
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // many backends expect { refreshToken } in body — change if your backend expects something else
+        body: JSON.stringify({ refreshToken: u.refreshToken }),
+      });
+
+      const text = await res.text();
+      let data: any = null;
+      try { data = JSON.parse(text); } catch { data = text; }
+
+      console.log("callRefreshEndpoint response:", res.status, data);
+
+      if (!res.ok) {
+        return null;
+      }
+
+      // Determine where token lives in response
+      // Common shapes: { token }, { accessToken }, { data: { token } }
+      let newToken: string | undefined;
+      if (data?.token) newToken = data.token;
+      else if (data?.accessToken) newToken = data.accessToken;
+      else if (data?.data?.token) newToken = data.data.token;
+      else if (typeof data === "string") {
+        // backend might return plain token string (rare)
+        newToken = data;
+      }
+
+      if (!newToken) {
+        console.warn("callRefreshEndpoint: refresh returned 200 but no token found", data);
+        return null;
+      }
+
+      // persist new token in context (and localStorage) using login()
+      try {
+        // Preserve other user fields and update token
+        const updatedUser = { ...(u as any), token: newToken };
+        login(updatedUser);
+        return updatedUser;
+      } catch (e) {
+        console.error("callRefreshEndpoint: failed to persist refreshed token", e);
+        return null;
+      }
+    } catch (err) {
+      console.error("callRefreshEndpoint error:", err);
+      return null;
+    }
+  };
+
+  // fetch wrapper that injects Authorization header and retries once on 401/403
+  const fetchWithAuth = async (input: RequestInfo | URL, init: RequestInit = {}) => {
+    // Get token (may trigger tryRefreshToken)
+    let token = await getToken();
+    if (!token) throw new Error("No active token. Please login.");
+
+    // Build headers for initial request
+    const headers = mergeHeaders(init.headers);
+    headers["Authorization"] = `Bearer ${token}`;
+
+    const initToSend: RequestInit = { ...init, headers };
+
+    let res = await fetch(input, initToSend);
+
+    // If initial unauthorized, attempt refresh via dedicated call then retry once
+    if (res.status === 401 || res.status === 403) {
+      // attempt to read server message for debugging
+      try {
+        const t = await res.text();
+        console.warn("fetchWithAuth: initial request unauthorized. response body:", t);
+      } catch (e) {
+        console.warn("fetchWithAuth: couldn't read initial 401 body", e);
+      }
+
+      // Call our refresh endpoint directly and persist token
+      const refreshedUser = await callRefreshEndpoint();
+      if (!refreshedUser || !refreshedUser.token) {
+        // refresh failed -> force logout and throw
+        try { logout(); } catch {}
+        throw new Error("Session expired. Please login again.");
+      }
+
+      // Retry original request with refreshed token
+      const retryHeaders = mergeHeaders(init.headers);
+      retryHeaders["Authorization"] = `Bearer ${refreshedUser.token}`;
+      const retryInit: RequestInit = { ...init, headers: retryHeaders };
+
+      const retryRes = await fetch(input, retryInit);
+
+      if (retryRes.status === 401 || retryRes.status === 403) {
+        // read body to show server message
+        let body = "Unauthorized";
+        try {
+          const t = await retryRes.text();
+          try { body = JSON.parse(t).message ?? t; } catch { body = t; }
+        } catch {}
+        try { logout(); } catch {}
+        throw new Error(body || "Session expired. Please login again.");
+      }
+
+      return retryRes;
+    }
+
+    return res;
+  };
+
+  // Initial fetch
   useEffect(() => {
-    fetchProducts();
+    let mounted = true;
+    const fetchInitial = async () => {
+      try {
+        setLoading(true);
+        
+        const res = await fetchWithAuth(`${DRINKS_BASE}/`);
+        if (!mounted) return;
+        if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+        const data = await res.json();
+        setProducts(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("fetchInitial error:", err);
+        toast.error("Could not load products. Check backend connection or login.");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    (async () => {
+      try {
+        await fetchInitial();
+      } catch (e) {
+        // handled above
+      }
+    })();
+
     return () => {
+      mounted = false;
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetchWithAuth(`${DRINKS_BASE}/`);
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
       const data = await res.json();
       setProducts(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error(err);
-      toast.error("Could not load products. Check backend connection.");
+      console.error("fetchProducts error:", err);
+      toast.error("Could not load products. Check backend connection or login.");
     } finally {
       setLoading(false);
     }
@@ -132,7 +340,6 @@ export default function Products() {
   };
 
   const handleSaveProduct = async () => {
-    if (!token) return;
     if (!form.name.trim() || !form.category || form.packs.length === 0) {
       toast.error("Please fill name, category, and at least one pack.");
       return;
@@ -146,49 +353,53 @@ export default function Products() {
       fd.append("description", form.description || "");
       fd.append("status", form.status);
       if (selectedFile) fd.append("image", selectedFile);
-
-      // Convert prices to numbers before sending
       const packsToSend = form.packs.map(p => ({ pack: p.pack, price: parseFloat(p.price) }));
       fd.append("packs", JSON.stringify(packsToSend));
 
-      let res;
+      let res: Response;
       if (editingId) {
-        res = await fetch(`${API_BASE}/${editingId}`, {
+        res = await fetchWithAuth(`${DRINKS_BASE}/${editingId}`, {
           method: "PUT",
           body: fd,
-          headers: { Authorization: `Bearer ${token}` },
         });
       } else {
-        res = await fetch(`${API_BASE}/add`, {
+        res = await fetchWithAuth(`${DRINKS_BASE}/add`, {
           method: "POST",
           body: fd,
-          headers: { Authorization: `Bearer ${token}` },
         });
       }
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        let text = await res.text();
+        try {
+          const parsed = JSON.parse(text);
+          text = parsed?.message ?? text;
+        } catch {}
+        throw new Error(text || `Save failed: ${res.status}`);
+      }
+
       toast.success("Product saved successfully");
       setOpenModal(false);
-      fetchProducts();
+      await fetchProducts();
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to save product. Check backend and token.");
+      console.error("handleSaveProduct error:", err);
+      toast.error((err as Error).message || "Failed to save product. Check backend and token.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string | number) => {
-    if (!token) return;
     const ok = window.confirm("Delete this product? This action cannot be undone.");
     if (!ok) return;
+
     try {
-      const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetchWithAuth(`${DRINKS_BASE}/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+      setProducts(prev => prev.filter(p => p.id !== id));
       toast.success("Product deleted");
     } catch (err) {
-      console.error(err);
+      console.error("handleDelete error:", err);
       toast.error("Failed to delete product. Check backend.");
     }
   };
@@ -217,10 +428,9 @@ export default function Products() {
         {loading && <div className="p-6 bg-muted/30 rounded text-center w-full">Loading products...</div>}
         {!loading && products.length === 0 && <div className="p-6 bg-muted/30 rounded text-center w-full">No products found. Click Add Product to seed your catalog.</div>}
 
-        {/* Grid view */}
         {viewMode === "grid" && products.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 w-full">
-            {products.map((product) => (
+            {products.map(product => (
               <Card key={product.id} className="hover:border-primary/40 border-2 transition-all duration-150 relative flex flex-col">
                 <CardContent className="p-3 sm:p-4 flex flex-col h-full">
                   <div className="aspect-square bg-muted rounded-lg mb-3 overflow-hidden relative w-full">
@@ -261,151 +471,78 @@ export default function Products() {
           </div>
         )}
 
-        {/* Add/Edit Modal */}
-        <Dialog open={openModal} onOpenChange={(v) => setOpenModal(v)}>
-          <DialogContent 
-          className="w-full rounded-md px-6 max-w-lg overflow-y-auto"
-          style={{ maxHeight: '90vh' }}>
+        <Dialog open={openModal} onOpenChange={setOpenModal}>
+          <DialogContent className="w-full rounded-md px-6 max-w-lg overflow-y-auto" style={{ maxHeight: '90vh' }}>
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between text-base sm:text-lg font-semibold">
                 {editingId ? "Edit Product" : "Add Product"}
               </DialogTitle>
             </DialogHeader>
 
-<form className="space-y-2" onSubmit={(e) => { e.preventDefault(); handleSaveProduct(); }}>
-  {/* NAME */}
-  <div>
-    <Label htmlFor="name" className="text-sm font-medium">Name</Label>
-    <Input
-      id="name"
-      value={form.name}
-      onChange={(e) => setForm({ ...form, name: e.target.value })}
-      placeholder="Drink name"
-      className="mt-1 w-full"
-      required
-    />
-  </div>
+            <form className="space-y-2" onSubmit={e => { e.preventDefault(); handleSaveProduct(); }}>
+              {/* NAME */}
+              <div>
+                <Label htmlFor="name" className="text-sm font-medium">Name</Label>
+                <Input id="name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Drink name" className="mt-1 w-full" required />
+              </div>
 
-  {/* SIZE + CATEGORY */}
-  <div className="flex sm:gap-3 flex-col sm:flex-row">
-    <div className="flex-1">
-      <Label htmlFor="size" className="text-sm font-medium">Size</Label>
-      <Input
-        id="size"
-        placeholder="e.g. 300ml / Small"
-        value={form.size}
-        onChange={(e) => setForm({ ...form, size: e.target.value })}
-        className="mt-1 w-full"
-      />
-    </div>
+              {/* SIZE + CATEGORY */}
+              <div className="flex sm:gap-3 flex-col sm:flex-row">
+                <div className="flex-1">
+                  <Label htmlFor="size" className="text-sm font-medium">Size</Label>
+                  <Input id="size" placeholder="e.g. 300ml / Small" value={form.size} onChange={e => setForm({ ...form, size: e.target.value })} className="mt-1 w-full" />
+                </div>
 
-    <div className="flex-1">
-      <Label htmlFor="category" className="text-sm font-medium">Category</Label>
-      <select
-        id="category"
-        value={form.category}
-        onChange={(e) => setForm({ ...form, category: e.target.value })}
-        className="mt-1 w-full rounded-md border px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        required
-      >
-        <option value="">Select category</option>
-        {categories.map((c) => (
-          <option key={c.id} value={c.slug}>{c.name}</option>
-        ))}
-      </select>
-    </div>
-  </div>
+                <div className="flex-1">
+                  <Label htmlFor="category" className="text-sm font-medium">Category</Label>
+                  <select id="category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="mt-1 w-full rounded-md border px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    <option value="">Select category</option>
+                    {categories.map(c => <option key={c.id} value={c.slug}>{c.name}</option>)}
+                  </select>
+                </div>
+              </div>
 
-  {/* IMAGE */}
-  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-    <div className="flex-shrink-0">
-      {previewUrl ? (
-        <img src={previewUrl} alt="Preview" className="w-28 h-28 object-cover rounded-md border" />
-      ) : (
-        <div className="w-28 h-28 rounded-md border bg-muted flex items-center justify-center text-muted-foreground">No image</div>
-      )}
-    </div>
+              {/* IMAGE */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex-shrink-0">
+                  {previewUrl ? (
+                    <img src={previewUrl} alt="Preview" className="w-28 h-28 object-cover rounded-md border" />
+                  ) : (
+                    <div className="w-28 h-28 rounded-md border bg-muted flex items-center justify-center text-muted-foreground">No image</div>
+                  )}
+                </div>
 
-    <div className="flex-1">
-      <Label className="text-sm font-medium">Image</Label>
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        onChange={onFileChange}
-        className="mt-1 w-full text-sm"
-        aria-label="Upload product image"
-      />
-      <p className="text-xs text-muted-foreground mt-2">Recommended: JPG/PNG. Max 2MB.</p>
-    </div>
-  </div>
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">Image</Label>
+                  <input type="file" accept="image/*" ref={fileInputRef} onChange={onFileChange} className="mt-1 w-full text-sm" aria-label="Upload product image" />
+                  <p className="text-xs text-muted-foreground mt-2">Recommended: JPG/PNG. Max 2MB.</p>
+                </div>
+              </div>
 
-  {/* PACKS */}
-  <div>
-    <Label className="text-sm font-medium">Available Packs</Label>
-    {form.packs.map((p, idx) => (
-      <div key={idx} className="flex gap-2 mt-1">
-        <Input
-          type="number"
-          placeholder="Pack size"
-          value={p.pack}
-          onChange={(e) => {
-            const newPacks = [...form.packs];
-            newPacks[idx].pack = Number(e.target.value);
-            setForm({ ...form, packs: newPacks });
-          }}
-          className="w-1/2"
-          min={1}
-          required
-        />
-        <Input
-          type="number"
-          placeholder="Price"
-          value={p.price}
-          onChange={(e) => {
-            const newPacks = [...form.packs];
-            newPacks[idx].price = e.target.value;
-            setForm({ ...form, packs: newPacks });
-          }}
-          className="w-1/2"
-          min={0}
-          step={0.01}
-          required
-        />
-        <Button
-          variant="destructive"
-          onClick={() => {
-            const newPacks = form.packs.filter((_, i) => i !== idx);
-            setForm({ ...form, packs: newPacks });
-          }}
-          size="icon"
-        >
-          &times;
-        </Button>
-      </div>
-    ))}
-    <Button
-      type="button"
-      variant="outline"
-      onClick={() => setForm({ ...form, packs: [...form.packs, { pack: 12, price: "" }] })}
-      className="mt-2"
-    >
-      + Add Pack
-    </Button>
-  </div>
+              {/* PACKS */}
+              <div>
+                <Label className="text-sm font-medium">Available Packs</Label>
+                {form.packs.map((p, idx) => (
+                  <div key={idx} className="flex gap-2 mt-1">
+                    <Input type="number" placeholder="Pack size" value={p.pack} onChange={e => { const newPacks = [...form.packs]; newPacks[idx].pack = Number(e.target.value); setForm({ ...form, packs: newPacks }); }} className="w-1/2" min={1} required />
+                    <Input type="number" placeholder="Price" value={p.price} onChange={e => { const newPacks = [...form.packs]; newPacks[idx].price = e.target.value; setForm({ ...form, packs: newPacks }); }} className="w-1/2" min={0} step={0.01} required />
+                    <Button variant="destructive" onClick={() => setForm({ ...form, packs: form.packs.filter((_, i) => i !== idx) })} size="icon">&times;</Button>
+                  </div>
+                ))}
+                <Button type="button" variant="outline" onClick={() => setForm({ ...form, packs: [...form.packs, { pack: 12, price: "" }] })} className="mt-2">+ Add Pack</Button>
+              </div>
 
-  {/* ACTIONS */}
-  <div className="mt-4 mb-4 flex sm:flex sm:justify-end gap-2 sticky bottom-0 bg-background p-2 z-10">
-    <Button type="button" variant="outline" onClick={() => setOpenModal(false)} className="w-full sm:w-auto">Cancel</Button>
-    <Button type="submit" className="w-full sm:w-auto" aria-busy={saving} disabled={saving}>
-      {saving ? "Saving..." : editingId ? "Update Product" : "Add Product"}
-    </Button>
-  </div>
-</form>
+              {/* ACTIONS */}
+              <div className="mt-4 mb-4 flex sm:flex sm:justify-end gap-2 sticky bottom-0 bg-background p-2 z-10">
+                <Button type="button" variant="outline" onClick={() => setOpenModal(false)} className="w-full sm:w-auto">Cancel</Button>
+                <Button type="submit" className="w-full sm:w-auto" aria-busy={saving} disabled={saving}>
+                  {saving ? "Saving..." : editingId ? "Update Product" : "Add Product"}
+                </Button>
+              </div>
+            </form>
 
           </DialogContent>
         </Dialog>
-
       </div>
     </AdminLayout>
   );
