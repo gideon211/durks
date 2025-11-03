@@ -246,18 +246,35 @@ export default function Products() {
     return res;
   };
 
+  // helper to normalize backend drink -> Product
+  const normalizeDrink = (p: any): Product => ({
+    id: p._id ?? p.id,
+    name: p.name ?? "",
+    category: p.category ?? "",
+    size: p.size ?? "",
+    description: p.description ?? "",
+    status: p.status ?? "Active",
+    imageUrl: p.imageUrl ?? p.image ?? "",
+    packs: Array.isArray(p.packs) ? p.packs.map((x: any) => ({ pack: x.pack, price: x.price })) : [],
+  });
+
   // Initial fetch
   useEffect(() => {
     let mounted = true;
     const fetchInitial = async () => {
       try {
         setLoading(true);
-        
+
         const res = await fetchWithAuth(`${DRINKS_BASE}/`);
         if (!mounted) return;
         if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
-        const data = await res.json();
-        setProducts(Array.isArray(data) ? data : []);
+        const payload = await res.json();
+
+        // payload might be: { success, count, drinks: [...] }
+        const rawItems = Array.isArray(payload) ? payload : payload?.drinks ?? [];
+
+        const normalized: Product[] = rawItems.map((item: any) => normalizeDrink(item));
+        setProducts(normalized);
       } catch (err) {
         console.error("fetchInitial error:", err);
         toast.error("Could not load products. Check backend connection or login.");
@@ -286,8 +303,10 @@ export default function Products() {
     try {
       const res = await fetchWithAuth(`${DRINKS_BASE}/`);
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
-      const data = await res.json();
-      setProducts(Array.isArray(data) ? data : []);
+      const payload = await res.json();
+      const rawItems = Array.isArray(payload) ? payload : payload?.drinks ?? [];
+      const normalized: Product[] = rawItems.map((item: any) => normalizeDrink(item));
+      setProducts(normalized);
     } catch (err) {
       console.error("fetchProducts error:", err);
       toast.error("Could not load products. Check backend connection or login.");
