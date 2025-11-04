@@ -58,7 +58,6 @@ export default function Products() {
         .then((res) => res.json())
         .then((data) => {
         const items = Array.isArray(data.drinks) ? data.drinks : [];
-        console.log("Drink image URLs:", items.map((i) => i.imageUrl));
         setProducts(items);
         })
         .catch((err) => console.error("Error loading products:", err));

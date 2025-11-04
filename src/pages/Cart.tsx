@@ -1,14 +1,14 @@
 // src/pages/Cart.tsx
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import Header from '@/components/Header';
-import { Button } from '@/components/ui/button';
-import { Trash2, Package, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { useCartStore, CartItem } from '@/store/cartStore';
-import { useAuth } from '@/context/Authcontext';
-import { Modal } from '@/components/Modal';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import Header from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { Trash2, Package, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { useCartStore, CartItem } from "@/store/cartStore";
+import { useAuth } from "@/context/Authcontext";
+import { Modal } from "@/components/Modal";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -21,33 +21,49 @@ export default function Cart() {
   const clearCart = useCartStore((state) => state.clearCart);
   const totalPrice = useCartStore((state) => state.totalPrice);
   const setCart = useCartStore((state) => state.setCart);
+  const loadCartForUser = useCartStore((state) => state.loadCartForUser);
 
   // Modal & loading states
   const [isModalOpen, setModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'checkout' | 'bulk' | null>(null);
+  const [pendingAction, setPendingAction] = useState<"checkout" | "bulk" | null>(null);
 
   // Scroll to top on page load
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  // Restore pendingCart from localStorage after sign-in
+  // When user changes (login), ensure we load the correct cart from store (either server or per-user local)
+  useEffect(() => {
+    (async () => {
+      try {
+        if (user) {
+          await loadCartForUser(user.id);
+        } else {
+          await loadCartForUser(null);
+        }
+      } catch (err) {
+        console.warn("Failed to load cart for user change:", err);
+      }
+    })();
+  }, [user, loadCartForUser]);
+
+  // Restore pendingCart from localStorage after sign-in (keeps your existing UX)
   useEffect(() => {
     try {
-      const pendingCartRaw = localStorage.getItem('pendingCart');
+      const pendingCartRaw = localStorage.getItem("pendingCart");
       if (user && pendingCartRaw) {
         const parsed = JSON.parse(pendingCartRaw) as CartItem[] | undefined;
         if (Array.isArray(parsed) && parsed.length > 0) {
-          if (typeof setCart === 'function') {
+          if (typeof setCart === "function") {
             setCart(parsed);
-            toast.success('Restored your saved cart after signing in');
+            toast.success("Restored your saved cart after signing in");
           }
         }
-        localStorage.removeItem('pendingCart');
+        localStorage.removeItem("pendingCart");
       }
     } catch (err) {
-      console.warn('Error restoring pendingCart', err);
+      console.warn("Error restoring pendingCart", err);
     }
   }, [user, setCart]);
 
@@ -55,20 +71,20 @@ export default function Cart() {
   useEffect(() => {
     if (!user) return;
     try {
-      const pending = localStorage.getItem('pendingCheckout');
+      const pending = localStorage.getItem("pendingCheckout");
       if (pending) {
-        localStorage.removeItem('pendingCheckout');
+        localStorage.removeItem("pendingCheckout");
         setTimeout(() => {
-          navigate('/checkout');
+          navigate("/checkout");
         }, 250);
       }
     } catch (err) {
-      console.warn('Error handling pendingCheckout', err);
+      console.warn("Error handling pendingCheckout", err);
     }
   }, [user, navigate]);
 
   // Open auth modal if user is not signed in
-  const openAuthModal = (action: 'checkout' | 'bulk') => {
+  const openAuthModal = (action: "checkout" | "bulk") => {
     setPendingAction(action);
     setModalOpen(true);
   };
@@ -76,21 +92,21 @@ export default function Cart() {
   // Checkout button click
   const handleCheckout = () => {
     if (!user) {
-      openAuthModal('checkout');
+      openAuthModal("checkout");
       return;
     }
-    toast.success('Proceeding to checkout...');
-    setTimeout(() => navigate('/checkout'), 400);
+    toast.success("Proceeding to checkout...");
+    setTimeout(() => navigate("/checkout"), 400);
   };
 
   // Bulk quote button click
   const handleBulkQuote = () => {
     if (!user) {
-      openAuthModal('bulk');
+      openAuthModal("bulk");
       return;
     }
-    toast.success('Converting to bulk quote...');
-    navigate('/bulk-quote');
+    toast.success("Converting to bulk quote...");
+    navigate("/bulk-quote");
   };
 
   // Handle sign-in from modal
@@ -98,17 +114,17 @@ export default function Cart() {
     try {
       setIsLoading(true);
       localStorage.setItem(
-        'pendingCheckout',
-        JSON.stringify({ from: '/cart', action: pendingAction ?? 'checkout' })
+        "pendingCheckout",
+        JSON.stringify({ from: "/cart", action: pendingAction ?? "checkout" })
       );
     } catch (err) {
-      console.warn('Could not persist pendingCheckout', err);
+      console.warn("Could not persist pendingCheckout", err);
     }
 
     setTimeout(() => {
       setIsLoading(false);
       setModalOpen(false);
-      navigate('/auth', { state: { from: '/cart' } });
+      navigate("/auth", { state: { from: "/cart" } });
     }, 600);
   };
 
@@ -130,7 +146,7 @@ export default function Cart() {
               variant="hero"
               size="lg"
               onClick={() =>
-                navigate('/products', { state: { skipHero: true, scrollToTabs: true } })
+                navigate("/products", { state: { skipHero: true, scrollToTabs: true } })
               }
             >
               Browse Products
@@ -149,7 +165,7 @@ export default function Cart() {
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 100 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
       >
         <main className="flex-1 container mx-auto px-2 py-4 mt-16">
           <div className="grid grid-cols-1 lg:grid-cols-3">
@@ -237,8 +253,8 @@ export default function Cart() {
         <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center w-full bg-white backdrop-blur-md border-t border-border shadow-lg">
           <div className="w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center justify-between w-full sm:w-auto gap-8">
-              <span className="text-lg font-heading font-extrabold text-black text-pretty">
-                Subtotal
+              <span className="text-lg font-heading font-bold text-black text-pretty">
+                Estimated Total:
               </span>
               <span className="font-heading font-bold text-md">
                 ₵{totalPrice().toFixed(2)}
@@ -254,9 +270,9 @@ export default function Cart() {
         <Modal
           isOpen={isModalOpen}
           title={
-            pendingAction === 'checkout'
-              ? 'Please sign in to continue to checkout'
-              : 'Please sign in to request a bulk quote'
+            pendingAction === "checkout"
+              ? "Please sign in to continue to checkout"
+              : "Please sign in to request a bulk quote"
           }
           onClose={() => setModalOpen(false)}
           footer={
@@ -266,17 +282,15 @@ export default function Cart() {
               </Button>
               <Button onClick={handleSignInFromModal} disabled={isLoading}>
                 {isLoading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
-                {isLoading ? 'Redirecting...' : 'Sign In'}
+                {isLoading ? "Redirecting..." : "Sign In"}
               </Button>
             </>
           }
         >
           <p className="text-sm">
-            You need to be signed in to{' '}
-            {pendingAction === 'checkout'
-              ? 'complete checkout'
-              : 'request a bulk quote'}
-            . Signing in lets you save orders, view order history and manage shipping/payment details.
+            You need to be signed in to{" "}
+            {pendingAction === "checkout" ? "complete checkout" : "request a bulk quote"}.
+            Signing in lets you save orders, view order history and manage shipping/payment details.
           </p>
         </Modal>
       </motion.div>

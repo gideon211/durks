@@ -47,33 +47,42 @@ const DRINKS_BASE = `${API_BASE}/drinks`;
 export default function Products() {
   // include logout + login to persist refreshed token
   const { user, login, tryRefreshToken, logout } = useAuth();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | number | null>(null);
+
+  // form.packs uses strings so inputs can be empty/deleted
   const [form, setForm] = useState({
     name: "",
     category: "",
     size: "",
     description: "",
     status: "Active",
-    packs: [{ pack: 12, price: "" }],
+    packs: [{ pack: "", price: "" }] as { pack: string; price: string }[],
   });
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // track selected pack per product (for grid dropdown)
+  const [selectedPackByProduct, setSelectedPackByProduct] = useState<Record<string, number | "">>({});
+
   // Helper: safe read of stored user object (local copy)
-  const getStoredUser = () => user ?? (() => {
-    try {
-      const raw = localStorage.getItem("user");
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  })();
+  const getStoredUser = () =>
+    user ??
+    (() => {
+      try {
+        const raw = localStorage.getItem("user");
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    })();
 
   // Get token; if expired try tryRefreshToken (keeps backwards compatibility)
   const getToken = async (): Promise<string | null> => {
@@ -150,7 +159,11 @@ export default function Products() {
 
       const text = await res.text();
       let data: any = null;
-      try { data = JSON.parse(text); } catch { data = text; }
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = text;
+      }
 
       console.log("callRefreshEndpoint response:", res.status, data);
 
@@ -317,7 +330,7 @@ export default function Products() {
 
   const openNew = () => {
     setEditingId(null);
-    setForm({ name: "", category: "", size: "", description: "", status: "Active", packs: [{ pack: 12, price: "" }] });
+    setForm({ name: "", category: "", size: "", description: "", status: "Active", packs: [{ pack: "", price: "" }] });
     clearSelectedFile();
     setOpenModal(true);
   };
@@ -330,7 +343,8 @@ export default function Products() {
       size: product.size ?? "",
       description: product.description ?? "",
       status: product.status ?? "Active",
-      packs: product.packs && product.packs.length > 0 ? product.packs.map(p => ({ pack: p.pack, price: p.price.toString() })) : [{ pack: 12, price: "" }],
+      // store as strings so inputs can be empty/edited
+      packs: product.packs && product.packs.length > 0 ? product.packs.map(p => ({ pack: String(p.pack), price: String(p.price) })) : [{ pack: "", price: "" }],
     });
     setPreviewUrl(product.imageUrl ?? null);
     clearSelectedFile();
@@ -372,7 +386,12 @@ export default function Products() {
       fd.append("description", form.description || "");
       fd.append("status", form.status);
       if (selectedFile) fd.append("image", selectedFile);
-      const packsToSend = form.packs.map(p => ({ pack: p.pack, price: parseFloat(p.price) }));
+
+      // Filter out packs where pack (size) is empty
+      const packsToSend = form.packs
+        .filter(p => p.pack !== "")
+        .map(p => ({ pack: Number(p.pack), price: parseFloat(p.price) }));
+
       fd.append("packs", JSON.stringify(packsToSend));
 
       let res: Response;
@@ -423,6 +442,11 @@ export default function Products() {
     }
   };
 
+  // Handler to update selected pack for a product in the grid
+  const onSelectPackForProduct = (productId: string | number, packValue: string) => {
+    setSelectedPackByProduct(prev => ({ ...prev, [`${productId}`]: packValue === "" ? "" : Number(packValue) }));
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6 p-3 sm:p-5">
@@ -449,49 +473,80 @@ export default function Products() {
 
         {viewMode === "grid" && products.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 w-full">
-            {products.map(product => (
-              <Card key={product.id} className="hover:border-primary/40 border-2 transition-all duration-150 relative flex flex-col">
-                <CardContent className="p-3 sm:p-4 flex flex-col h-full">
-                  <div className="aspect-square bg-muted rounded-lg mb-3 overflow-hidden relative w-full">
-                    {product.imageUrl ? (
-                      <img src={product.imageUrl} alt={product.name ?? "Product image"} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <ImageIcon className="h-6 w-6" />
+            {products.map(product => {
+              const key = `${product.id}`;
+              const selectedPack = selectedPackByProduct[key] ?? "";
+              const selectedPackObj = product.packs?.find(p => p.pack === selectedPack) ?? null;
+
+              return (
+                <Card key={product.id} className="hover:border-primary/40 border-2 transition-all duration-150 relative flex flex-col">
+                  <CardContent className="p-3 sm:p-4 flex flex-col h-full">
+                    <div className="aspect-square bg-muted rounded-lg mb-3 overflow-hidden relative w-full">
+                      {product.imageUrl ? (
+                        <img src={product.imageUrl} alt={product.name ?? "Product image"} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <ImageIcon className="h-6 w-6" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col flex-grow text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
+                        <Badge variant={product.status === "Active" ? "default" : "destructive"} className="text-xs">
+                          {product.status ?? "Active"}
+                        </Badge>
                       </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col flex-grow text-center">
-                    <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
-                      <Badge variant={product.status === "Active" ? "default" : "destructive"} className="text-xs">
-                        {product.status ?? "Active"}
-                      </Badge>
+
+                      <h3 className="font-semibold text-sm sm:text-base truncate">{product.name}</h3>
+                      <p className="text-xs text-muted-foreground truncate">{product.category}</p>
+                      {product.size && <p className="text-xs text-muted-foreground truncate">Size: {product.size}</p>}
+
+                      {/* PACKS DROPDOWN (no default price shown) */}
+                      {product.packs && product.packs.length > 0 && (
+                        <div className="mt-2 w-full">
+                          <label htmlFor={`pack-select-${key}`} className="sr-only">Select pack</label>
+                          <select
+                            id={`pack-select-${key}`}
+                            value={selectedPack === "" ? "" : String(selectedPack)}
+                            onChange={(e) => onSelectPackForProduct(key, e.target.value)}
+                            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                          >
+                            <option value="">Select pack</option>
+                            {product.packs.map((p, idx) => (
+                              <option key={idx} value={String(p.pack)}>
+                                {p.pack}-pack — ₵{p.price}
+                              </option>
+                            ))}
+                          </select>
+
+                          {/* show selected pack price only when a pack is chosen */}
+                          {selectedPackObj && (
+                            <p className="font-semibold mt-2 text-foreground">
+                              Selected: {selectedPackObj.pack}-pack — ₵{selectedPackObj.price}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex gap-2 justify-center flex-wrap">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(product)} className="flex-1 min-w-[100px]">
+                          <Edit2 className="h-4 w-4 mr-2" /> Edit
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(product.id)} className="flex-1 min-w-[100px]">
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </Button>
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-sm sm:text-base truncate">{product.name}</h3>
-                    <p className="text-xs text-muted-foreground truncate">{product.category}</p>
-                    {product.size && <p className="text-xs text-muted-foreground truncate">Size: {product.size}</p>}
-                    {product.packs && product.packs.length > 0 && (
-                      <p className="font-bold text-base sm:text-lg mt-1">
-                        {product.packs.map(p => `₵${p.price} (${p.pack}-pack)`).join(" · ")}
-                      </p>
-                    )}
-                    <div className="mt-3 flex gap-2 justify-center flex-wrap">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(product)} className="flex-1 min-w-[100px]">
-                        <Edit2 className="h-4 w-4 mr-2" /> Edit
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(product.id)} className="flex-1 min-w-[100px]">
-                        <Trash2 className="h-4 w-4 mr-2" /> Delete
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 
         <Dialog open={openModal} onOpenChange={setOpenModal}>
-          <DialogContent className="w-full rounded-md px-6 max-w-lg overflow-y-auto" style={{ maxHeight: '90vh' }}>
+          <DialogContent className="w-full rounded-md px-6 max-w-lg overflow-y-auto" style={{ maxHeight: "90vh" }}>
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between text-base sm:text-lg font-semibold">
                 {editingId ? "Edit Product" : "Add Product"}
@@ -543,12 +598,42 @@ export default function Products() {
                 <Label className="text-sm font-medium">Available Packs</Label>
                 {form.packs.map((p, idx) => (
                   <div key={idx} className="flex gap-2 mt-1">
-                    <Input type="number" placeholder="Pack size" value={p.pack} onChange={e => { const newPacks = [...form.packs]; newPacks[idx].pack = Number(e.target.value); setForm({ ...form, packs: newPacks }); }} className="w-1/2" min={1} required />
-                    <Input type="number" placeholder="Price" value={p.price} onChange={e => { const newPacks = [...form.packs]; newPacks[idx].price = e.target.value; setForm({ ...form, packs: newPacks }); }} className="w-1/2" min={0} step={0.01} required />
+                    {/* pack stored as string so it can be empty and deletable */}
+                    <Input
+                      type="number"
+                      placeholder="Pack size"
+                      value={p.pack}
+                      onChange={e => {
+                        const newPacks = [...form.packs];
+                        newPacks[idx].pack = e.target.value; // store as string
+                        setForm({ ...form, packs: newPacks });
+                      }}
+                      className="w-1/2"
+                      step={1}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Price"
+                      value={p.price}
+                      onChange={e => {
+                        const newPacks = [...form.packs];
+                        newPacks[idx].price = e.target.value;
+                        setForm({ ...form, packs: newPacks });
+                      }}
+                      className="w-1/2"
+                      step={0.01}
+                    />
                     <Button variant="destructive" onClick={() => setForm({ ...form, packs: form.packs.filter((_, i) => i !== idx) })} size="icon">&times;</Button>
                   </div>
                 ))}
-                <Button type="button" variant="outline" onClick={() => setForm({ ...form, packs: [...form.packs, { pack: 12, price: "" }] })} className="mt-2">+ Add Pack</Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setForm({ ...form, packs: [...form.packs, { pack: "", price: "" }] })}
+                  className="mt-2"
+                >
+                  + Add Pack
+                </Button>
               </div>
 
               {/* ACTIONS */}
