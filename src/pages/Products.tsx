@@ -17,7 +17,7 @@ const categories = [
   { id: "cut-fruits", name: "CUT FRUITS", slug: "cut-fruits" },
   { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs" },
   { id: "events", name: "EVENTS", slug: "events" },
-  { id: "shots", name: "WORKOUT SHOTS", slug: "shots" },
+  { id: "shots", name: "WELLNESS SHOTS", slug: "shots" },
 ];
 
 export default function Products() {

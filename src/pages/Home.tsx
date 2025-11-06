@@ -76,7 +76,7 @@ const productCategories = [
   },
   {
     id: "shots",
-    name: "WORKOUT SHOTS",
+    name: "WELLNESS SHOTS",
     slug: "shots",
     image: pureJuiceImage,
     description: "Power-packed 2oz wellness shots designed for peak performance. Concentrated blends deliver instant energy, reduce inflammation, and accelerate recovery. Perfect pre or post-workout fuel.",
@@ -285,42 +285,43 @@ export default function Home() {
                 <section className="py-[5rem] md:py-20 bg-muted/30">
                     <div className="container mx-auto px-4">
                     <div className="text-center mb-12 md:mb-16">
-                        <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Explore Our Products</h2>
+                        <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-2">Explore Our Products</h2>
                         <p className="text-md md:text-xl font-body text-muted-foreground">Discover the perfect juice for your lifestyle</p>
                     </div>
 
-<div className="w-full flex gap-6 overflow-x-auto pb-6 scrollbar-none">
+<div className="w-full flex gap-6 overflow-x-auto pb-6 no-scrollbar">
   {productCategories.map((category) => (
-    <div key={category.id} className="min-w-[220px] flex-shrink scrollbar-none">
-      <div className="border-2 rounded-sm overflow-hidden scrollbar-none group hover:shadow-md transition-shadow duration-300">
+    <div key={category.id} className="w-[300px] flex-shrink-0">
+      <div className="border-2 rounded-sm overflow-hidden group hover:shadow-md transition-shadow duration-300">
         {/* Image */}
-        <div className="relative h-full">
+        <div className="relative h-[20rem]">
           <img
             src={category.image}
             alt={category.name}
-            className="w-full h-[20rem] transition-transform duration-300 group-hover:scale-110 object-cover"
+            className="w-full h-full object-cover transition-transform duration-300 "
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 to-transparent" />
-          <CardTitle className="absolute bottom-2 left-2 text-lg font-heading font-bold text-white">
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute bottom-2 left-2 text-lg leading-normal font-bold text-white">
             {category.name}
-          </CardTitle>
+          </div>
         </div>
 
         {/* Text */}
         <div className="px-3 py-2">
           <div className="space-y-1 border-t pt-2">
-            <p className="font-semibold text-xs text-muted-foreground uppercase tracking-wide">
+            <p className="font-semibold text-md text-muted-foreground uppercase tracking-wide">
               Key Ingredients:
             </p>
-            <p className="text-sm">{category.fruits}</p>
+            <p className="text-sm font-sans font-medium">{category.fruits}</p>
           </div>
 
-          <div className="mt-2">
+          <div className="mt-2 flex justify-end">
             <Link
               to={`/products/${category.slug}`}
-              className="text-primary underline text-sm"
+              className="text-primary underline text-sm flex gap-2 text-right"
             >
               Shop Now
+              <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
         </div>
@@ -328,6 +329,7 @@ export default function Home() {
     </div>
   ))}
 </div>
+
 
                     </div>
                 </section>
