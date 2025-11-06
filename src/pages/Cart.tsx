@@ -142,7 +142,7 @@ export default function Cart() {
     <AnimatePresence>
       <Header />
       <motion.div
-        className="min-h-screen flex flex-col pb-32"
+        className="min-h-screen flex flex-col pb-32 bg-white"
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 100 }}
@@ -178,7 +178,7 @@ export default function Cart() {
                 return (
                   <div
                     key={item.id}
-                    className="bg-card border border-border rounded-md p-3 flex flex-row items-center gap-3"
+                    className="bg-white border border-border rounded-md p-3 flex flex-row items-center gap-3"
                   >
                     <div className="w-24 flex-shrink-0">
                       <img
@@ -252,7 +252,7 @@ export default function Cart() {
           </div>
         </main>
 
-        <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center w-full bg-white backdrop-blur-md border-t border-border shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center w-full bg-card backdrop-blur-md border-t border-border shadow-lg">
           <div className="w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center justify-between w-full sm:w-auto gap-8">
               <span className="text-lg font-heading font-bold text-black text-pretty">

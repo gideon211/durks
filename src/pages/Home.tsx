@@ -166,33 +166,65 @@ export default function Home() {
             <motion.div
               className="w-full flex gap-4 overflow-x-auto pb-6 no-scrollbar smooth-scroll"
             >
-              {productCategories.map((category) => (
-                <motion.div
-                  key={category.id}
-                  className="w-[300px] flex-shrink-0"
-                  variants={cardVariants}
-                >
-                  <div className=" rounded-sm overflow-hidden group hover:shadow-md transition-shadow duration-300">
-                    <div className="relative h-[25rem] md:h-[32rem] lg:h-[36rem]">
-                      <img src={category.image} alt={category.name} className="w-full h-full object-cover transition-transform duration-300" />
-                      <div className="absolute inset-0 bg-black/20" />
-                      <div className="absolute bottom-2 left-2 text-lg leading-normal font-bold text-white ">{category.name}</div>
-                    </div>
-                    <div className="px-3 py-2 border-2">
-                      <div className="space-y-1 border-t pt-2">
-                        <p className="font-semibold text-md text-muted-foreground uppercase tracking-wide">Key Ingredients:</p>
-                        <p className="text-sm font-sans font-medium">{category.fruits}</p>
-                      </div>
-                      <div className="mt-2 flex justify-end">
-                        <Link to={`/products/${category.slug}`} className="text-primary underline text-sm flex gap-2 items-center">
-                          Shop Now
-                          <ArrowRight className="w-5 h-5" />
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+{productCategories.map((category) => (
+  <motion.div
+    key={category.id}
+    className="w-[300px] flex-shrink-0"
+    variants={cardVariants}
+  >
+    <div
+      className="relative rounded-sm overflow-hidden group hover:shadow-2xl transition-all duration-500"
+    //   style={{ backgroundColor: category.bgColor }}
+    >
+      {/* Image section */}
+      <div className="relative h-[32rem] md:h-[34rem] lg:h-[36rem] overflow-hidden">
+        <img
+          src={category.image}
+          alt={category.name}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+      </div>
+
+      {/* Content section */}
+      <div
+        className={`absolute inset-x-0 bottom-0 p-4 backdrop-blur-md rounded-t-2xl transition-all duration-700 
+        bg-black/30 md:group-hover:bg-black/60`}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-white text-lg md:text-xl font-bold">
+            {category.name}
+          </h2>
+          <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">
+            +
+          </button>
+        </div>
+
+        {/* Description + Button */}
+        <div
+          className="mt-2 text-white text-sm leading-relaxed 
+          opacity-100 translate-y-0 
+          md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-700"
+        >
+  
+          <p className="text-xs mt-1 opacity-80">Key Ingredients:</p>
+          <p className="text-xs font-medium mb-3">{category.fruits}</p>
+          <Link
+            to={`/products/${category.slug}`}
+            className=" flex mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm "
+          >
+            Shop Now
+            <ArrowRight className="w-5 h-5" />
+            
+          </Link>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+))}
+
+
+
             </motion.div>
           </div>
         </motion.section>
