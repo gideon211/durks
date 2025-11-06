@@ -52,7 +52,7 @@ export const Footer = () => {
                   to="/contact"
                   className="text-muted-foreground hover:text-foreground text-xs transition-colors"
                 >
-                  Contact Us
+                Contact Us
                 </Link>
               </li>
             </ul>
