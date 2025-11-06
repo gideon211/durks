@@ -155,7 +155,7 @@ const tiktokLinks = [
 export default function Home() {
   return (
     <div>
-    <Header  />
+    <Header />
     <div className="min-h-screen bg-background">
         
         
@@ -282,7 +282,7 @@ export default function Home() {
                 <p className="text-lg md:text-xl font-body text-muted-foreground">Discover the perfect juice for your lifestyle</p>
             </div>
 
-            <div className="w-full flex gap-[5rem]">
+            <div className="w-full flex gap-[5rem] overflow-x-auto">
             
                 {productCategories.map((category) => (
                     <div key={category.id} className="">
@@ -320,7 +320,7 @@ export default function Home() {
         </section>
 
         {/* Testimonials */}
-        <section className="py-12 md:py-20">
+        {/* <section className="py-12 md:py-20">
             <div className="container mx-auto px-4">
             <div className="text-center mb-12 md:mb-16">
                 <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">What Our Customers Say</h2>
@@ -346,7 +346,7 @@ export default function Home() {
                 ))}
             </div>
             </div>
-        </section>
+        </section> */}
 
         {/* TikTok */}
         <section className="py-12 md:py-20 bg-neutral-charcoal text-white">
