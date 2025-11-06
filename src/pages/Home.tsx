@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { Star, Leaf, Heart, Sparkles } from "lucide-react";
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import heroImage from "@/assets/hero-juice.jpeg";
+import heroImage from "@/assets/hero-juice.png";
 import pureJuiceImage from "@/assets/pure-juice.jpg";
 import cleanseJuiceImage from "@/assets/cleanse-juice.jpg";
 import smoothiesImage from "@/assets/smoothies.jpg";
@@ -167,6 +167,7 @@ export default function Home() {
         alt="Fresh Organic Cold-Pressed Juice" 
         className="w-full h-full object-cover"
         />
+
 
         {/* Overlay only on desktop */}
         <div className="hidden lg:flex absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 via-neutral-charcoal/40 to-transparent items-center justify-center">
