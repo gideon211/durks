@@ -385,6 +385,7 @@ export default function Products() {
       fd.append("category", form.category);
       fd.append("description", form.description || "");
       fd.append("status", form.status);
+      fd.append("size", form.size || ""); 
       if (selectedFile) fd.append("image", selectedFile);
 
       // Filter out packs where pack (size) is empty
