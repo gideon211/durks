@@ -96,7 +96,7 @@ export const ProductCard = ({
   const sizeLabel = size ? size : "";
 
   return (
-    <div className="bg-card rounded-xl border-2 border-border overflow-hidden hover:border-primary/40 hover:shadow-xl transition-all duration-150 flex flex-col h-full">
+    <div className="bg-card rounded-xl border-2 border-green-200 overflow-hidden hover:border-green-300 hover:shadow-xl transition-all duration-150 flex flex-col h-full">
       <div className="relative aspect-square overflow-hidden bg-muted block">
         {/* Image */}
         {image ? (

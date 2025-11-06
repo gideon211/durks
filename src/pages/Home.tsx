@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { motion, Variants, easeOut } from "framer-motion";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Link } from "react-router-dom";
-import { Star, Leaf, Heart, Sparkles, ArrowRight } from "lucide-react";
+import { Star, Leaf, Heart, Sparkles, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import heroImage from "@/assets/hero-juice.png";
@@ -19,6 +19,7 @@ import tiktok1 from "@/assets/tiktok-1.jpg";
 import tiktok2 from "@/assets/tiktok-2.jpg";
 import tiktok3 from "@/assets/tiktok-3.jpg";
 import tiktok4 from "@/assets/tiktok-4.jpg";
+import { useRef, useState, useEffect } from "react";
 
 const productCategories = [
   { id: "pure-juice", name: "PURE JUICES", slug: "pure-juice", image: pureJuiceImage, fruits: "Oranges, Apples, Watermelon, Pineapple, Grapes" },
@@ -56,12 +57,41 @@ const cardVariants: Variants = {
 };
 
 export default function Home() {
+  // ref for the horizontal carousel
+  const carouselRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      setCanScrollLeft(el.scrollLeft > 10);
+      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 10);
+    };
+    onScroll();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  const scrollCarousel = (dir: "left" | "right") => {
+    const el = carouselRef.current;
+    if (!el) return;
+    // scroll by ~80% of viewport width of the carousel
+    const amount = Math.floor(el.clientWidth * 0.8);
+    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+  };
+
   return (
     <div>
       <Header />
       <div className="min-h-screen bg-white">
 
-        {/* Hero Section */}
+        {/* Hero Section (unchanged) */}
         <motion.section
           className="relative"
           initial={{ opacity: 0 }}
@@ -70,7 +100,6 @@ export default function Home() {
           transition={{ duration: 1.5 }}
         >
           <div className="h-[500px] md:h-[600px] lg:h-[700px] w-full overflow-hidden">
-            {/* Desktop Hero */}
             <motion.img
               src={deskheroImage}
               alt="Fresh Organic Cold-Pressed Juice"
@@ -80,17 +109,15 @@ export default function Home() {
               className="hidden lg:block w-full h-full object-cover"
             />
 
-            {/* Mobile Hero */}
             <motion.img
               src={heroImage}
               alt="Fresh Organic Cold-Pressed Juice"
               initial={{ opacity: 0, y: -80 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 2.5, ease: "easeOut" }}
-              className="block lg:hidden w-full h-full object-cover"
+              className="block lg:hidden w-full h-full object-cover rounded-b-md"
             />
 
-            {/* Overlay Desktop */}
             <div className="hidden lg:flex absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 via-neutral-charcoal/40 to-transparent items-center justify-center">
               <div className="container mx-auto px-4 text-left">
                 <motion.div
@@ -101,7 +128,7 @@ export default function Home() {
                 >
                   <h1 className="text-8xl lg:text-7xl font-heading font-bold text-white leading-wide tracking-wide">
                     Fall Into <br />
-                    <span className="text-primary">Wellness</span>
+                    <span className="text-green-400">Wellness</span>
                   </h1>
                   <p className="text-xl lg:text-2xl text-white/90 max-w-2xl">
                     Cold-pressed perfection. Zero additives. Maximum flavor.
@@ -119,7 +146,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Mobile text */}
           <motion.div
             initial={{ opacity: 0, y: 80 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -128,14 +154,14 @@ export default function Home() {
             className="lg:hidden py-6 mt-2 flex flex-col items-center text-center space-y-4"
             style={{ fontFamily: 'Raleway, sans-serif' }}
           >
-            <h1 className="text-5xl sm:text-4xl font-bold text-neutral-900">
+            <h1 className="text-5xl sm:text-4xl font-extrabold text-neutral-900">
               Fall into<br />
-              <span className="text-primary">Wellness</span>
+              <span className="text-green-400">Wellness</span>
             </h1>
-            <p className="text-lg sm:text-xl text-neutral-700 max-w-md px-4">
+            <p className="text-lg sm:text-xl text-neutral-900 max-w-md px-4">
               Cold-pressed perfection. Zero additives. Maximum flavor.
             </p>
-            <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2">
+            <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2 font-semibold">
               <Link to="/products">
                 Shop Now
                 <ArrowRight className="w-5 h-5" />
@@ -144,9 +170,9 @@ export default function Home() {
           </motion.div>
         </motion.section>
 
-        {/* Products Carousel */}
+        {/* Products Carousel with left/right arrows */}
         <motion.section
-          className="py-[5rem] md:py-20 bg-muted/30"
+          className="py-[5rem] md:py-20 bg-muted/30 relative"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -163,73 +189,92 @@ export default function Home() {
               <p className="text-md md:text-xl font-body text-muted-foreground">Discover the perfect juice for your lifestyle</p>
             </motion.div>
 
-            <motion.div
-              className="w-full flex gap-4 overflow-x-auto pb-6 no-scrollbar smooth-scroll"
-            >
-{productCategories.map((category) => (
-  <motion.div
-    key={category.id}
-    className="w-[300px] flex-shrink-0"
-    variants={cardVariants}
-  >
-    <div
-      className="relative rounded-sm overflow-hidden group hover:shadow-2xl transition-all duration-500"
-    //   style={{ backgroundColor: category.bgColor }}
-    >
-      {/* Image section */}
-      <div className="relative h-[32rem] md:h-[34rem] lg:h-[36rem] overflow-hidden">
-        <img
-          src={category.image}
-          alt={category.name}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-      </div>
+            {/* Wrapper for arrows + carousel */}
+            <div className="relative">
+              {/* Left Arrow */}
+              <button
+                aria-label="Scroll left"
+                onClick={() => scrollCarousel("left")}
+                className={`hidden md:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full shadow-md bg-white/90 hover:bg-white transition-opacity duration-200 ${canScrollLeft ? "opacity-100" : "opacity-40 pointer-events-auto"}`}
+                style={{ transform: 'translateY(-50%)' }}
+              >
+                <ChevronLeft className="w-6 h-6 text-neutral-900" />
+              </button>
 
-      {/* Content section */}
-      <div
-        className={`absolute inset-x-0 bottom-0 p-4 backdrop-blur-md rounded-t-2xl transition-all duration-700 
-        bg-black/30 md:group-hover:bg-black/60`}
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-white text-lg md:text-xl font-bold">
-            {category.name}
-          </h2>
-          <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">
-            +
-          </button>
-        </div>
+              {/* Right Arrow */}
+              <button
+                aria-label="Scroll right"
+                onClick={() => scrollCarousel("right")}
+                className={`hidden md:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full shadow-md bg-white/90 hover:bg-white transition-opacity duration-200 ${canScrollRight ? "opacity-100" : "opacity-40 pointer-events-none"}`}
+                style={{ transform: 'translateY(-50%)' }}
+              >
+                <ChevronRight className="w-6 h-6 text-neutral-900" />
+              </button>
 
-        {/* Description + Button */}
-        <div
-          className="mt-2 text-white text-sm leading-relaxed 
-          opacity-100 translate-y-0 
-          md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-700"
-        >
-  
-          <p className="text-xs mt-1 opacity-80">Key Ingredients:</p>
-          <p className="text-xs font-medium mb-3">{category.fruits}</p>
-          <Link
-            to={`/products/${category.slug}`}
-            className=" flex mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm "
-          >
-            Shop Now
-            <ArrowRight className="w-5 h-5" />
-            
-          </Link>
-        </div>
-      </div>
-    </div>
-  </motion.div>
-))}
+              {/* Carousel */}
+              <motion.div
+                ref={carouselRef}
+                className="w-full flex gap-4 overflow-x-auto pb-6 no-scrollbar smooth-scroll scroll-pl-4"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                variants={containerVariants}
+                style={{ scrollBehavior: 'smooth' }}
+              >
+                {productCategories.map((category) => (
+                  <motion.div
+                    key={category.id}
+                    className="w-[300px] flex-shrink-0"
+                    variants={cardVariants}
+                  >
+                    <div className="relative rounded-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
+                      <div className="relative h-[32rem] md:h-[34rem] lg:h-[36rem] overflow-hidden">
+                        <img
+                          src={category.image}
+                          alt={category.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      </div>
 
+                      <div
+                        className={`absolute inset-x-0 bottom-0 p-4 backdrop-blur-md rounded-t-2xl transition-all duration-700 bg-black/30 md:group-hover:bg-black/60`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <h2 className="text-white text-lg md:text-xl font-bold">
+                            {category.name}
+                          </h2>
+                          <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">
+                            +
+                          </button>
+                        </div>
 
+                        <div
+                          className="mt-2 text-white text-sm leading-relaxed opacity-100 translate-y-0 md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-700"
+                        >
 
-            </motion.div>
+                          <p className="text-xs mt-1 opacity-80">Key Ingredients:</p>
+                          <p className="text-xs font-medium mb-3">{category.fruits}</p>
+                          <Link
+                            to={`/products/${category.slug}`}
+                            className=" flex mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm "
+                          >
+                            Shop Now
+                            <ArrowRight className="w-5 h-5 ml-2" />
+
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+
           </div>
         </motion.section>
 
-        {/* Health Benefits */}
+        {/* Health Benefits (unchanged) */}
         <motion.section
           className="md:py-20 mt-10"
           initial="hidden"
@@ -248,22 +293,22 @@ export default function Home() {
               <div>
                 <motion.img src={chooseImage} alt="why choose us Image" className="w-full object-cover h-[14rem] rounded-md lg:h-[30rem] lg:rounded-md py-4" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 1 }} />
               </div>
-              <p className="text-md md:text-xl font-body text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-md md:text-xl font-semibold text-muted-foreground max-w-2xl mx-auto">
                 Every bottle is a commitment to your health and our planet
               </p>
             </motion.div>
 
-            <motion.div className="grid md:grid-cols-3 gap-6 md:gap-8 rounded-md" variants={containerVariants}>
+            <motion.div className="grid md:grid-cols-3 gap-6 md:gap-8 " variants={containerVariants}>
               {[{ icon: Leaf, title: "Totally Organic", text: "USDA certified organic fruits and vegetables from sustainable farms. No pesticides, no GMOs, no compromises." },
                 { icon: Sparkles, title: "Bursting with Benefits", text: "Cold-press technology preserves maximum vitamins, minerals, and enzymes." },
                 { icon: Heart, title: "Deliciously Elevated", text: "Our master blenders create flavor combinations that excite your taste buds while nourishing your body." }
               ].map((item, index) => (
-                <motion.div key={index} className="border rounded p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-2" variants={cardVariants}>
+                <motion.div key={index} className="border border-green-400 rounded-md p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-2" variants={cardVariants}>
                   <div className="flex items-center gap-4 px-4 py-2">
                     <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
                       <item.icon className="w-8 h-8 text-accent" />
                     </div>
-                    <div className="text-xl font-medium">{item.title}</div>
+                    <div className="text-xl font-semibold">{item.title}</div>
                   </div>
                   <div>
                     <div className="text-base font-body leading-relaxed px-4 text-center py-2">{item.text}</div>
@@ -274,9 +319,9 @@ export default function Home() {
           </div>
         </motion.section>
 
-        {/* TikTok Section */}
+        {/* TikTok Section (unchanged) */}
         <motion.section
-          className="py-12 md:py-20 bg-neutral-charcoal text-white mt-10"
+          className="py-12 md:py-20 bg-neutral-charcoal text-white mt-10 rounded-b-lg"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -307,7 +352,7 @@ export default function Home() {
           </div>
         </motion.section>
 
-        {/* FAQ Section */}
+        {/* FAQ Section (unchanged) */}
         <motion.section
           className="py-12 md:py-20"
           initial="hidden"
