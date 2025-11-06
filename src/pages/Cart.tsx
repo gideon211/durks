@@ -14,7 +14,6 @@ export default function Cart() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Zustand cart store hooks
   const cartItems = useCartStore((state) => state.cart);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const updateQty = useCartStore((state) => state.updateQty);
@@ -23,17 +22,14 @@ export default function Cart() {
   const setCart = useCartStore((state) => state.setCart);
   const loadCartForUser = useCartStore((state) => state.loadCartForUser);
 
-  // Modal & loading states
   const [isModalOpen, setModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState<"checkout" | "bulk" | null>(null);
 
-  // Scroll to top on page load
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  // When user changes (login), ensure we load the correct cart from store (either server or per-user local)
   useEffect(() => {
     (async () => {
       try {
@@ -48,17 +44,14 @@ export default function Cart() {
     })();
   }, [user, loadCartForUser]);
 
-  // Restore pendingCart from localStorage after sign-in (keeps your existing UX)
   useEffect(() => {
     try {
       const pendingCartRaw = localStorage.getItem("pendingCart");
       if (user && pendingCartRaw) {
         const parsed = JSON.parse(pendingCartRaw) as CartItem[] | undefined;
         if (Array.isArray(parsed) && parsed.length > 0) {
-          if (typeof setCart === "function") {
-            setCart(parsed);
-            toast.success("Restored your saved cart after signing in");
-          }
+          setCart(parsed);
+          toast.success("Restored your saved cart after signing in");
         }
         localStorage.removeItem("pendingCart");
       }
@@ -67,29 +60,24 @@ export default function Cart() {
     }
   }, [user, setCart]);
 
-  // Handle pending checkout after login
   useEffect(() => {
     if (!user) return;
     try {
       const pending = localStorage.getItem("pendingCheckout");
       if (pending) {
         localStorage.removeItem("pendingCheckout");
-        setTimeout(() => {
-          navigate("/checkout");
-        }, 250);
+        setTimeout(() => navigate("/checkout"), 250);
       }
     } catch (err) {
       console.warn("Error handling pendingCheckout", err);
     }
   }, [user, navigate]);
 
-  // Open auth modal if user is not signed in
   const openAuthModal = (action: "checkout" | "bulk") => {
     setPendingAction(action);
     setModalOpen(true);
   };
 
-  // Checkout button click
   const handleCheckout = () => {
     if (!user) {
       openAuthModal("checkout");
@@ -99,7 +87,6 @@ export default function Cart() {
     setTimeout(() => navigate("/checkout"), 400);
   };
 
-  // Bulk quote button click
   const handleBulkQuote = () => {
     if (!user) {
       openAuthModal("bulk");
@@ -109,17 +96,12 @@ export default function Cart() {
     navigate("/bulk-quote");
   };
 
-  // Handle sign-in from modal
   const handleSignInFromModal = () => {
-    try {
-      setIsLoading(true);
-      localStorage.setItem(
-        "pendingCheckout",
-        JSON.stringify({ from: "/cart", action: pendingAction ?? "checkout" })
-      );
-    } catch (err) {
-      console.warn("Could not persist pendingCheckout", err);
-    }
+    setIsLoading(true);
+    localStorage.setItem(
+      "pendingCheckout",
+      JSON.stringify({ from: "/cart", action: pendingAction ?? "checkout" })
+    );
 
     setTimeout(() => {
       setIsLoading(false);
@@ -128,7 +110,6 @@ export default function Cart() {
     }, 600);
   };
 
-  // Empty cart view
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -170,86 +151,107 @@ export default function Cart() {
         <main className="flex-1 container mx-auto px-2 py-4 mt-16">
           <div className="grid grid-cols-1 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-3">
-              {cartItems.map((item: CartItem) => (
-                <div
-                  key={item.id}
-                  className="bg-card border border-border rounded-md p-3 flex flex-row items-center gap-3"
-                >
-                  {/* Product image */}
-                  <div className="w-24 flex-shrink-0">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-24 object-cover rounded border"
-                    />
-                  </div>
+              {cartItems.map((item: CartItem) => {
+                const [localQty, setLocalQty] = useState<number | "">(item.qty);
 
-                  {/* Product info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="font-medium text-sm truncate">{item.name}</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          ₵{item.price.toFixed(2)} each
-                        </p>
-                      </div>
-                      <Trash2
-                        className="h-4 w-4 cursor-pointer"
-                        onClick={() => removeFromCart(item.id)}
+                useEffect(() => {
+                  setLocalQty(item.qty);
+                }, [item.qty]);
+
+                const handleQtyChange = (val: string) => {
+                  setLocalQty(val === "" ? "" : Number(val));
+                  // immediately update total price
+                  if (val !== "") {
+                    updateQty(item.id, Number(val));
+                  }
+                };
+
+                const handleQtyBlur = () => {
+                  if (!localQty || localQty < 1) {
+                    updateQty(item.id, 1);
+                    setLocalQty(1);
+                  } else {
+                    updateQty(item.id, localQty as number);
+                  }
+                };
+
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-card border border-border rounded-md p-3 flex flex-row items-center gap-3"
+                  >
+                    <div className="w-24 flex-shrink-0">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-24 object-cover rounded border"
                       />
                     </div>
 
-                    {/* Pack & qty controls */}
-                    <div className="mt-2 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        {/* Pack size dropdown */}
-                        <select
-                          className="border rounded px-2 py-1 text-sm"
-                          value={item.pack || 12}
-                          onChange={(e) => {
-                            const newPack = Number(e.target.value);
-                            const updated = cartItems.map((c) =>
-                              c.id === item.id ? { ...c, pack: newPack } : c
-                            );
-                            setCart(updated);
-                          }}
-                        >
-                          <option value={6}>6</option>
-                          <option value={12}>12</option>
-                          <option value={24}>24</option>
-                        </select>
-
-                        {/* Number of packs input */}
-                        <p className="text-xs">qty:</p>
-                        <input
-                          type="number"
-                          min={1}
-                          value={item.qty}
-                          onChange={(e) => {
-                            const newQty = Math.max(1, Number(e.target.value));
-                            updateQty(item.id, newQty);
-                          }}
-                          className="border px-2 py-1 w-16 text-center rounded text-sm"
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="font-medium text-sm truncate">{item.name}</h3>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            ₵{item.price.toFixed(2)} each
+                          </p>
+                        </div>
+                        <Trash2
+                          className="h-4 w-4 cursor-pointer"
+                          onClick={() => removeFromCart(item.id)}
                         />
                       </div>
 
-                      {/* Total price per item */}
-                      <div className="text-right min-w-[80px]">
-                        <div className="text-xs text-muted-foreground">Total</div>
-                        <div className="font-heading font-semibold text-sm">
-                          ₵{((item.price || 0) * (item.pack || 12) * (item.qty || 1)).toFixed(2)}
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <select
+                            className="border rounded px-2 py-1 text-sm"
+                            value={item.pack || 12}
+                            onChange={(e) => {
+                              const newPack = Number(e.target.value);
+                              const updated = cartItems.map((c) =>
+                                c.id === item.id ? { ...c, pack: newPack } : c
+                              );
+                              setCart(updated);
+                            }}
+                          >
+                            <option value={6}>6</option>
+                            <option value={12}>12</option>
+                            <option value={24}>24</option>
+                          </select>
+
+                          <p className="text-xs">qty:</p>
+                          <input
+                            type="number"
+                            min={1}
+                            value={localQty}
+                            onChange={(e) => handleQtyChange(e.target.value)}
+                            onBlur={handleQtyBlur}
+                            className="border px-2 py-1 w-16 text-center rounded text-sm"
+                          />
+                        </div>
+
+                        <div className="text-right min-w-[80px]">
+                          <div className="text-xs text-muted-foreground">Total</div>
+                          <div className="font-heading font-semibold text-sm">
+                            ₵
+                            {(
+                              (item.price || 0) *
+                              (item.pack || 12) *
+                              ((localQty === "" ? 0 : localQty) || 1)
+                            ).toFixed(2)}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="hidden lg:block" />
           </div>
         </main>
 
-        {/* Sticky subtotal card at bottom */}
         <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center w-full bg-white backdrop-blur-md border-t border-border shadow-lg">
           <div className="w-full max-w-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center justify-between w-full sm:w-auto gap-8">
@@ -266,7 +268,6 @@ export default function Cart() {
           </div>
         </div>
 
-        {/* Modal for auth prompt */}
         <Modal
           isOpen={isModalOpen}
           title={

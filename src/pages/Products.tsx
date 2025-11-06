@@ -6,8 +6,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
-import { TypeAnimation } from "react-type-animation";
-import heroImage from "@/assets/heroimg.jpg";
+import Banner from "../components/CallToOrderBanner"
 
 const categories = [
   { id: "all", name: "ALL PRODUCTS", slug: "all" },
@@ -38,6 +37,11 @@ export default function Products() {
     }
     return null;
   };
+
+  
+    useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const scrollTabsIntoViewRespectingHeader = (smooth = true) => {
     if (!tabsRef.current) return;
@@ -107,10 +111,16 @@ export default function Products() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
+    <div className="mt-20 lg:mt-32  f">
+    <Banner />
+  </div>
+      
+
+
       {/* Tabs Section */}
       <div
         ref={tabsRef}
-        className="mb-8 overflow-x-auto no-scrollbar mt-24 sticky top-16 z-50 lg:mx-auto"
+        className="mb-8 overflow-x-auto no-scrollbar mt sticky top-16 z-50 lg:mx-auto"
       >
         <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
           <TabsList className="inline-flex w-auto">

@@ -1,98 +1,154 @@
 import { Link } from 'react-router-dom'
-import { Phone } from 'lucide-react'
+import { Phone, Facebook, Instagram, X, MapPin,  } from 'lucide-react'
 import Logo from '@/assets/logo.svg'
 
 export const Footer = () => {
-  return (
-    <footer className="bg-card border-t border-border mt-12">
-      <div className="container mx-auto px-4 py-6">
-        {/* Main content */}
-        <div className="flex flex-wrap gap-6 justify-between">
-          {/* Brand */}
-          <div className="flex-1 min-w-[180px]">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-10 h-10 flex items-center justify-center">
-                <img src={Logo} alt="logo" className="h-12 w-12" />
-              </div>
+  const currentYear = new Date().getFullYear()
 
+  return (
+    // Increase top margin and use a slightly darker background (if not already dark) for better contrast
+    <footer className="bg-card border-t border-border mt-16"> 
+      <div className="container mx-auto px-4 py-8"> {/* Increased padding */}
+        
+        {/* Main content */}
+        {/* Explicitly define gap and stacking for mobile/desktop */}
+        <div className="flex flex-wrap gap-y-8 gap-x-12 justify-between"> 
+          
+          {/* 1. Brand & Social (Moved to top for visibility) */}
+          <div className="flex-1 min-w-[200px]">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-10 h-10 flex items-center justify-center">
+                {/* Ensure logo scales correctly */}
+                <img src={Logo} alt="Duks Logo" className="h-14 w-14 object-contain" /> 
+              </div>
+              {/* Optional: Add Brand Name next to Logo */}
+              <h2 className="font-heading font-bold text-md">DUKS JUICES</h2>
             </div>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-sm max-w-xs mb-4"> {/* Larger text size for main tagline */}
               Premium bulk fruit juice for businesses, events, and wholesale orders.
             </p>
+
+            {/* Social Media Integration */}
+            <div className="flex gap-4">
+
+
+              <a href="https://www.instagram.com/@duks_juice" aria-label="Follow us on Instagram" className="text-muted-foreground hover:text-primary transition-colors">
+                <Instagram className="h-5 w-5" />
+              </a>
+              <a href="#" aria-label="Follow us on X (Twitter)" className="text-muted-foreground hover:text-primary transition-colors">
+                <X className="h-5 w-5" />
+              </a>
+            </div>
           </div>
 
+          
+          <div className='flex flex-wrap gap-x-12 gap-y-8 min-w-[140px]'> {/* Adjusted inner wrap for grouping */}
 
-          <div className='flex gap-8 min-w-[140px]'>
+            {/* 2. Products (Improved Heading and Spacing) */}
+            <div className="min-w-[140px]">
+              {/* Stronger heading */}
+              <h3 className="font-heading font-bold text-base mb-3 text-foreground">Products</h3> 
+              <ul className="space-y-2"> {/* Increased vertical spacing */}
+                {["pure-juice", "cleanse", "smoothies", "cut-fruits", "gift-packs", "events"].map((cat) => (
+                  <li key={cat}>
+                    <Link
+                      to={`/products/${cat}`}
+                      // Apply `text-sm` and `block` for better click area
+                      className="text-muted-foreground hover:text-foreground text-sm transition-colors block" 
+                    >
+                      {cat.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-         
-
-          {/* Products */}
-          <div className="flex-1 ">
-            <h3 className="font-heading font-semibold text-sm mb-1">Products</h3>
-            <ul className="">
-              {["pure-juice", "cleanse", "smoothies", "cut-fruits", "gift-packs", "events"].map((cat) => (
-                <li key={cat}>
+            {/* 3. Company & Legal Links */}
+            <div className="min-w-[140px]">
+              {/* Stronger heading */}
+              <h3 className="font-heading font-bold text-base mb-3 text-foreground">Company</h3> 
+              <ul className="space-y-2"> {/* Increased vertical spacing */}
+                <li>
                   <Link
-                    to={`/products/${cat}`}
-                    className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+                    to="/about"
+                    className="text-muted-foreground hover:text-foreground text-sm transition-colors block"
                   >
-                    {cat.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    About Us
                   </Link>
                 </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div className="flex-1 ">
-            <h3 className="font-heading font-semibold text-sm mb-2">Company</h3>
-            <ul className="space-y-1">
-              <li>
-                <Link
-                  to="/contact"
-                  className="text-muted-foreground hover:text-foreground text-xs transition-colors"
-                >
-                Contact Us
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div className="flex-1 min-w-[160px]">
-            <h3 className="font-heading font-semibold text-sm mb-2">Contact</h3>
-            <ul className="space-y-1 text-xs">
-              <li>
-                <a
-                  href="tel:+233202427880"
-                  className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                >
-                  <Phone className="h-3 w-3" />
-                  +233 202 427 880
-                </a>
-              </li>
-              <li>
-                <a
-                  href="tel:+233243587001"
-                  className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                >
-                  <Phone className="h-3 w-3" />
-                  +233 243 587 001
-                </a>
-              </li>
-              <li className="pt-1">
-                <p className="font-medium mb-0.5">Physical Address:</p>
-                <p>[GOs Address - To be provided]</p>
-              </li>
-            </ul>
+                <li>
+                  <Link
+                    to="/contact"
+                    className="text-muted-foreground hover:text-foreground text-sm transition-colors block"
+                  >
+                    Contact Us
+                  </Link>
+                </li>
+                {/* Added Legal links for professionalism */}
+                <li>
+                  <Link
+                    to="/privacy-policy"
+                    className="text-muted-foreground hover:text-foreground text-sm transition-colors block"
+                  >
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/terms-of-service"
+                    className="text-muted-foreground hover:text-foreground text-sm transition-colors block"
+                  >
+                    Terms of Service
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            
+            {/* 4. Contact (Improved Prominence) */}
+            <div className="min-w-[160px]">
+              {/* Stronger heading */}
+              <h3 className="font-heading font-bold text-base mb-3 text-foreground">Contact</h3> 
+              <ul className="space-y-3 text-sm"> {/* Increased vertical spacing and size */}
+                
+                {/* Highlighted Phone Numbers (CTA) */}
+                <li>
+                  <a
+                    href="tel:+233202427880"
+                    className="flex items-center gap-2 font-semibold text-foreground hover:text-primary" // Bolder and primary color hover
+                  >
+                    <Phone className="h-4 w-4 text-primary" />
+                    +233 202 427 880
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="tel:+233243587001"
+                    className="flex items-center gap-2 font-semibold text-foreground hover:text-primary"
+                  >
+                    <Phone className="h-4 w-4 text-primary" />
+                    +233 243 587 001
+                  </a>
+                </li>
+                
+                {/* Address Formatting */}
+                <li className="pt-1">
+                  <p className="font-semibold mb-1 flex items-center gap-2">
+                     <MapPin className="h-4 w-4 text-primary"/>Physical Address:
+                  </p>
+                  <p className="text-muted-foreground">
+                    [GOs Address - To be provided]
+                  </p>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
-     </div>
+        {/* --- */}
 
         {/* Bottom bar */}
-        <div className="border-t border-border mt-4 pt-4 text-center text-xs text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Duks. All rights reserved.</p>
+        <div className="border-t border-border mt-8 pt-6 text-center text-xs text-muted-foreground">
+          <p>&copy; {currentYear} Duks. All rights reserved.</p>
         </div>
       </div>
     </footer>

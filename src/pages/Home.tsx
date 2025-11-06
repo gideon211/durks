@@ -240,122 +240,68 @@ export default function Home() {
 
 
 
-                {/* Health Benefits */}
-                {/* <section className="py-12 md:py-20 mt-20">
-                    <div className="container mx-auto px-4">
-                        <div className="text-center mb-12 md:mb-16">
-                            <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Why Choose Duk's?</h2>
-                            <p className="text-lg md:text-xl font-body text-muted-foreground max-w-2xl mx-auto">
-                            Every bottle is a commitment to your health and our planet
-                            </p>
-                        </div>
 
-                        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-                            <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                            <CardHeader>
-                                <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4">
-                                <Leaf className="w-8 h-8 text-accent" />
-                                </div>
-                                <CardTitle className="text-2xl font-heading">Totally Organic</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <CardDescription className="text-base font-body leading-relaxed">
-                                USDA certified organic fruits and vegetables from sustainable farms. No pesticides, no GMOs, no compromises. Every ingredient is traceable from farm to bottle.
-                                </CardDescription>
-                            </CardContent>
-                            </Card>
-
-                            <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                            <CardHeader>
-                                <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mb-4">
-                                <Sparkles className="w-8 h-8 text-secondary" />
-                                </div>
-                                <CardTitle className="text-2xl font-heading">Bursting with Benefits</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <CardDescription className="text-base font-body leading-relaxed">
-                                Cold-press technology preserves maximum vitamins, minerals, and enzymes. Powerful antioxidants, natural energy, and immune support in every bottle.
-                                </CardDescription>
-                            </CardContent>
-                            </Card>
-
-                            <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                            <CardHeader>
-                                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                                <Heart className="w-8 h-8 text-secondary" />
-                                </div>
-                                <CardTitle className="text-2xl font-heading">Deliciously Elevated</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <CardDescription className="text-base font-body leading-relaxed">
-                                Our master blenders create flavor combinations that excite your taste buds while nourishing your body. Premium taste meets premium nutrition.
-                                </CardDescription>
-                            </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-                </section> */}
 
                 {/* Products Carousel */}
                 <section className="py-[5rem] md:py-20 bg-muted/30">
                     <div className="container mx-auto px-4">
-                    <div className="text-center mb-12 md:mb-16">
-                        <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-2">Explore Our Products</h2>
-                        <p className="text-md md:text-xl font-body text-muted-foreground">Discover the perfect juice for your lifestyle</p>
-                    </div>
+                        <div className="text-center mb-12 md:mb-16">
+                            <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-2">Explore Our Products</h2>
+                            <p className="text-md md:text-xl font-body text-muted-foreground">Discover the perfect juice for your lifestyle</p>
+                        </div>
 
-    <motion.div
-      className="w-full flex gap-4 overflow-x-auto pb-6 no-scrollbar smooth-scroll"
-      style={{ WebkitOverflowScrolling: "touch" }}
-      variants={containerVariants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.3 }}
-    >
-      {productCategories.map((category) => (
-        <motion.div
-          key={category.id}
-          className="w-[300px] flex-shrink-0"
-          variants={cardVariants}
-        >
-          <div className="border-2 rounded-sm overflow-hidden group hover:shadow-md transition-shadow duration-300">
-            {/* Image */}
-            <div className="relative h-[25rem] md:h-[32rem] lg:h-[36rem]">
-            <img
-                src={category.image}
-                alt={category.name}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-black/40" />
-            <div className="absolute bottom-2 left-2 text-lg leading-normal font-bold text-white">
-                {category.name}
-            </div>
-            </div>
+                        <motion.div
+                        className="w-full flex gap-4 overflow-x-auto pb-6 no-scrollbar smooth-scroll"
+                        style={{ WebkitOverflowScrolling: "touch" }}
+                        variants={containerVariants}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, amount: 0.3 }}
+                        >
+                        {productCategories.map((category) => (
+                            <motion.div
+                            key={category.id}
+                            className="w-[300px] flex-shrink-0"
+                            variants={cardVariants}
+                            >
+                                <div className=" rounded-sm overflow-hidden group hover:shadow-md transition-shadow duration-300">
+                                    {/* Image */}
+                                    <div className="relative h-[25rem] md:h-[32rem] lg:h-[36rem]">
+                                        <img
+                                            src={category.image}
+                                            alt={category.name}
+                                            className="w-full h-full object-cover transition-transform duration-300"
+                                        />
+                                        <div className="absolute inset-0 bg-black/40" />
+                                        <div className="absolute bottom-2 left-2 text-lg leading-normal font-bold text-white ">
+                                            {category.name}
+                                        </div>
+                                    </div>
 
 
-            {/* Text */}
-            <div className="px-3 py-2">
-              <div className="space-y-1 border-t pt-2">
-                <p className="font-semibold text-md text-muted-foreground uppercase tracking-wide">
-                  Key Ingredients:
-                </p>
-                <p className="text-sm font-sans font-medium">{category.fruits}</p>
-              </div>
+                                    {/* Text */}
+                                    <div className="px-3 py-2 border-2">
+                                        <div className="space-y-1 border-t pt-2">
+                                            <p className="font-semibold text-md text-muted-foreground uppercase tracking-wide">
+                                            Key Ingredients:
+                                            </p>
+                                            <p className="text-sm font-sans font-medium">{category.fruits}</p>
+                                        </div>
 
-              <div className="mt-2 flex justify-end">
-                <Link
-                  to={`/products/${category.slug}`}
-                  className="text-primary underline text-sm flex gap-2 items-center"
-                >
-                  Shop Now
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      ))}
-    </motion.div>
+                                        <div className="mt-2 flex justify-end">
+                                            <Link
+                                            to={`/products/${category.slug}`}
+                                            className="text-primary underline text-sm flex gap-2 items-center"
+                                            >
+                                            Shop Now
+                                            <ArrowRight className="w-5 h-5" />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                        </motion.div>
 
 
                     </div>
@@ -390,8 +336,69 @@ export default function Home() {
                     </div>
                 </section> */}
 
+
+                                {/* Health Benefits */}
+                <section className=" md:py-20 mt-10">
+                    <div className="container mx-auto px-4">
+                        <div className="text-center mb-12 md:mb-16">
+                            <h2 className="text-xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Why Choose Duk's?</h2>
+                            <p className="text-md md:text-xl font-body text-muted-foreground max-w-2xl mx-auto">
+                            Every bottle is a commitment to your health and our planet
+                            </p>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+                        {/* Card 1 */}
+                        <div className="border hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                            <div className="flex items-center gap-4 px-4 py-2">
+                            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
+                                <Leaf className="w-8 h-8 text-accent" />
+                            </div>
+                            <div className="text-xl font-medium">Totally Organic</div>
+                            </div>
+                            <div>
+                            <div className="text-base font-body leading-relaxed px-4 text-center py-2">
+                                USDA certified organic fruits and vegetables from sustainable farms. No pesticides, no GMOs, no compromises. Every ingredient is traceable from farm to bottle.
+                            </div>
+                            </div>
+                        </div>
+
+                        {/* Card 2 */}
+                        <div className="border hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                            <div className="flex items-center gap-4 px-4 py-2">
+                            <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center">
+                                <Sparkles className="w-8 h-8 text-secondary" />
+                            </div>
+                            <div className="text-xl font-medium">Bursting with Benefits</div>
+                            </div>
+                            <div>
+                            <div className="text-base font-body leading-relaxed px-4 text-center py-2">
+                                Cold-press technology preserves maximum vitamins, minerals, and enzymes. Powerful antioxidants, natural energy, and immune support in every bottle.
+                            </div>
+                            </div>
+                        </div>
+
+                        {/* Card 3 */}
+                        <div className="border hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                            <div className="flex items-center gap-4 px-4 py-2">
+                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                                <Heart className="w-8 h-8 text-secondary" />
+                            </div>
+                            <div className="text-xl font-medium">Deliciously Elevated</div>
+                            </div>
+                            <div>
+                            <div className="text-base font-body leading-relaxed px-4 text-center py-2">
+                                Our master blenders create flavor combinations that excite your taste buds while nourishing your body. Premium taste meets premium nutrition.
+                            </div>
+                            </div>
+                        </div>
+                        </div>
+
+                    </div>
+                </section>
+
                 {/* TikTok */}
-                <section className="py-12 md:py-20 bg-neutral-charcoal text-white">
+                <section className="py-12 md:py-20 bg-neutral-charcoal text-white mt-10">
                     <div className="container mx-auto px-4">
                     <div className="text-center mb-12 md:mb-16">
                         <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Join Us On TikTok</h2>
@@ -416,6 +423,9 @@ export default function Home() {
                     </div>
                     </div>
                 </section>
+
+
+
 
                 {/* FAQ */}
                 <section className="py-12 md:py-20">
