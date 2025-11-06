@@ -16,7 +16,7 @@ All colors MUST be HSL.
     --ocean-teal: 182 100% 36%;
     --neutral-charcoal: 210 29% 16%;
     --soft-sand: 37 100% 97%;
-    
+
     --background: 37 100% 97%; /* Soft Sand */
     --foreground: 210 29% 16%; /* Neutral Charcoal */
 
@@ -115,16 +115,19 @@ All colors MUST be HSL.
     overflow-x: hidden;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-heading;
     font-family: National2Condensed;
   }
 
   .calendar-day.today {
-  background-color: transparent; 
-}
-
-
+    background-color: transparent;
+  }
 }
 
 @layer utilities {
@@ -146,7 +149,8 @@ All colors MUST be HSL.
   }
 
   @keyframes float {
-    0%, 100% {
+    0%,
+    100% {
       transform: translateY(0px);
     }
     50% {
@@ -168,9 +172,20 @@ All colors MUST be HSL.
     }
   }
 
+  @keyframes scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-scroll {
+    animation: scroll 20s linear infinite;
+  }
   /* Hover effects */
 
-  
   .hover-lift {
     transition: all 150ms ease-out;
   }
@@ -188,8 +203,4 @@ All colors MUST be HSL.
     scrollbar-width: none; /* Firefox */
     -webkit-overflow-scrolling: touch; /* iOS smooth scroll */
   }
-
-
-
 }
-
