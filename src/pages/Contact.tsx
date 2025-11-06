@@ -19,9 +19,9 @@ export default function Contact() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="bg-soft-sand py-16">
+        <section className="bg-soft-sand py-16 mt-10">
           <div className="container mx-auto px-4">
-            <h1 className="font-heading font-bold text-4xl md:text-5xl text-center mb-4">
+            <h1 className="font-heading font-bold text-2xl md:text-5xl text-center mb-4">
               Get in Touch
             </h1>
             <p className="text-muted-foreground text-center text-lg max-w-2xl mx-auto">
@@ -31,12 +31,12 @@ export default function Contact() {
         </section>
 
         {/* Contact Content */}
-        <section className="container mx-auto px-4 py-16">
+        <section className="container mx-auto px-4 py-12">
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Contact Info */}
             <div className="space-y-8">
               <div>
-                <h2 className="font-heading font-bold text-2xl mb-6">Contact Information</h2>
+                <h2 className="font-heading font-bold text-xl mb-6">Contact Information</h2>
                 <div className="space-y-6">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">

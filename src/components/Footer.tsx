@@ -49,7 +49,7 @@ export const Footer = () => {
               {/* Stronger heading */}
               <h3 className="font-heading font-bold text-base mb-3 text-foreground">Products</h3> 
               <ul className="space-y-2"> {/* Increased vertical spacing */}
-                {["pure-juice", "cleanse", "smoothies", "cut-fruits", "gift-packs", "events"].map((cat) => (
+                {["pure-juices", "cleanse", "smoothies", "cut-fruits", "gift-packs", "events"].map((cat) => (
                   <li key={cat}>
                     <Link
                       to={`/products/${cat}`}
@@ -64,45 +64,7 @@ export const Footer = () => {
             </div>
 
             {/* 3. Company & Legal Links */}
-            <div className="min-w-[140px]">
-              {/* Stronger heading */}
-              <h3 className="font-heading font-bold text-base mb-3 text-foreground">Company</h3> 
-              <ul className="space-y-2"> {/* Increased vertical spacing */}
-                <li>
-                  <Link
-                    to="/about"
-                    className="text-muted-foreground hover:text-foreground text-sm transition-colors block"
-                  >
-                    About Us
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/contact"
-                    className="text-muted-foreground hover:text-foreground text-sm transition-colors block"
-                  >
-                    Contact Us
-                  </Link>
-                </li>
-                {/* Added Legal links for professionalism */}
-                <li>
-                  <Link
-                    to="/privacy-policy"
-                    className="text-muted-foreground hover:text-foreground text-sm transition-colors block"
-                  >
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/terms-of-service"
-                    className="text-muted-foreground hover:text-foreground text-sm transition-colors block"
-                  >
-                    Terms of Service
-                  </Link>
-                </li>
-              </ul>
-            </div>
+
             
             {/* 4. Contact (Improved Prominence) */}
             <div className="min-w-[160px]">
@@ -126,7 +88,7 @@ export const Footer = () => {
                     className="flex items-center gap-2 font-semibold text-foreground hover:text-primary"
                   >
                     <Phone className="h-4 w-4 text-primary" />
-                    +233 243 587 001
+                    +233 240 076 685
                   </a>
                 </li>
                 
@@ -136,13 +98,14 @@ export const Footer = () => {
                      <MapPin className="h-4 w-4 text-primary"/>Physical Address:
                   </p>
                   <p className="text-muted-foreground">
-                    [GOs Address - To be provided]
+                    Madina, Accra Ghana
                   </p>
                 </li>
               </ul>
             </div>
           </div>
         </div>
+        
 
         {/* --- */}
 

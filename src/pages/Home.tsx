@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { motion, Variants, easeOut } from "framer-motion";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Link } from "react-router-dom";
-import { Star, Leaf, Heart, Sparkles,ArrowRight} from "lucide-react";
+import { Star, Leaf, Heart, Sparkles, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import heroImage from "@/assets/hero-juice.png";
@@ -11,137 +11,31 @@ import cleanseJuiceImage from "@/assets/cleanse-juice.jpg";
 import smoothiesImage from "@/assets/smoothies.jpg";
 import cutFruitsImage from "@/assets/cut-fruits.jpg";
 import giftPacksImage from "@/assets/gift-packs.jpg";
+import wellnessPacksImage from "@/assets/wellness-shot.jpg";
+import chooseImage from "@/assets/chooseImage.jpg";
 import eventsImage from "@/assets/events.jpg";
+import deskheroImage from "@/assets/desktopheroimage.jpg";
 import tiktok1 from "@/assets/tiktok-1.jpg";
 import tiktok2 from "@/assets/tiktok-2.jpg";
 import tiktok3 from "@/assets/tiktok-3.jpg";
 import tiktok4 from "@/assets/tiktok-4.jpg";
 
 const productCategories = [
-  {
-    id: "pure-juice",
-    name: "PURE JUICES",
-    slug: "pure-juice",
-    image: pureJuiceImage,
-    description: "Experience nature's finest with our cold-pressed pure juices. Made from 100% fresh fruits with zero additives, each bottle captures the vibrant flavors of oranges, apples, watermelons, and pineapples.",
-    fruits: "Oranges, Apples, Watermelon, Pineapple, Grapes",
-    benefit: "High in Vitamin C & Natural Energy"
-  },
-  {
-    id: "cleanse",
-    name: "CLEANSE JUICES",
-    slug: "cleanse",
-    image: cleanseJuiceImage,
-    description: "Detoxify and rejuvenate your body with our specially crafted cleanse juices. Expertly blended combinations of leafy greens, cucumber, celery, lemon, and ginger work together to flush toxins and boost metabolism.",
-    fruits: "Kale, Spinach, Cucumber, Celery, Lemon, Ginger, Green Apple",
-    benefit: "Natural Detox & Metabolism Boost"
-  },
-  {
-    id: "smoothies",
-    name: "SMOOTHIES",
-    slug: "smoothies",
-    image: smoothiesImage,
-    description: "Creamy, dreamy, and packed with nutrition! Our smoothies blend premium fruits with Greek yogurt, oats, and superfoods like chia seeds. Perfect for breakfast or post-workout fuel.",
-    fruits: "Bananas, Berries, Mangos, Avocado, Dates, Coconut",
-    benefit: "Protein-Rich & Sustained Energy"
-  },
-  {
-    id: "cut-fruits",
-    name: "CUT FRUITS",
-    slug: "cut-fruits",
-    image: cutFruitsImage,
-    description: "Fresh, hand-cut fruits ready to enjoy! Our fruit cups feature a colorful medley of seasonal fruits, perfectly portioned for snacking. Washed, cut, and packed fresh daily.",
-    fruits: "Pineapple, Watermelon, Cantaloupe, Berries, Grapes, Kiwi",
-    benefit: "Convenient & Vitamin-Packed Snacking"
-  },
-  {
-    id: "gift-packs",
-    name: "GIFT PACKS",
-    slug: "gift-packs",
-    image: giftPacksImage,
-    description: "Share the gift of health with our beautifully curated gift packs. Each collection features an assortment of our bestselling juices, smoothies, and wellness shots, elegantly packaged.",
-    fruits: "Assorted Premium Selection",
-    benefit: "Thoughtful Wellness Gifting"
-  },
-  {
-    id: "events",
-    name: "EVENTS",
-    slug: "events",
-    image: eventsImage,
-    description: "Elevate your events with our bulk juice catering service. From corporate wellness programs to weddings and festivals, we provide fresh, custom juice bars with professional service.",
-    fruits: "Custom Event-Based Selection",
-    benefit: "Professional Catering & Bulk Orders"
-  },
-  {
-    id: "shots",
-    name: "WELLNESS SHOTS",
-    slug: "shots",
-    image: pureJuiceImage,
-    description: "Power-packed 2oz wellness shots designed for peak performance. Concentrated blends deliver instant energy, reduce inflammation, and accelerate recovery. Perfect pre or post-workout fuel.",
-    fruits: "Turmeric, Ginger, Beetroot, Wheatgrass, Cayenne",
-    benefit: "Performance & Quick Recovery"
-  }
-];
-
-const testimonials = [
-  {
-    name: "Sarah Martinez",
-    category: "Pure Juices",
-    rating: 5,
-    text: "The pure orange juice from Duk's is incredible! You can taste the freshness in every sip. My kids actually prefer this over sugary drinks now.",
-    location: "Los Angeles, CA"
-  },
-  {
-    name: "James Chen",
-    category: "Cleanse Juices",
-    rating: 5,
-    text: "I completed their 3-day cleanse program and felt absolutely amazing. My energy levels skyrocketed and I lost 5 pounds!",
-    location: "San Francisco, CA"
-  },
-  {
-    name: "Emily Johnson",
-    category: "Smoothies",
-    rating: 5,
-    text: "These smoothies are a lifesaver! The berry blast smoothie is my post-workout ritual. Creamy, delicious, and keeps me full for hours.",
-    location: "Austin, TX"
-  },
-  {
-    name: "Michael Roberts",
-    category: "Workout Shots",
-    rating: 5,
-    text: "These wellness shots are game-changers! The turmeric ginger shot gives me such a boost. Less joint pain and faster recovery times.",
-    location: "Miami, FL"
-  },
-  {
-    name: "Priya Patel",
-    category: "Events",
-    rating: 5,
-    text: "We hired Duk's for our corporate wellness event and they were phenomenal! The juice bar was a huge hit with our employees!",
-    location: "New York, NY"
-  }
+  { id: "pure-juice", name: "PURE JUICES", slug: "pure-juice", image: pureJuiceImage, fruits: "Oranges, Apples, Watermelon, Pineapple, Grapes" },
+  { id: "cleanse", name: "CLEANSE JUICES", slug: "cleanse", image: cleanseJuiceImage, fruits: "Kale, Spinach, Cucumber, Celery, Lemon, Ginger, Green Apple" },
+  { id: "smoothies", name: "SMOOTHIES", slug: "smoothies", image: smoothiesImage, fruits: "Bananas, Berries, Mangos, Avocado, Dates, Coconut" },
+  { id: "cut-fruits", name: "CUT FRUITS", slug: "cut-fruits", image: cutFruitsImage, fruits: "Pineapple, Watermelon, Cantaloupe, Berries, Grapes, Kiwi" },
+  { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs", image: tiktok2, fruits: "Assorted Premium Selection" },
+  { id: "events", name: "EVENTS", slug: "events", image: eventsImage, fruits: "Custom Event-Based Selection" },
+  { id: "shots", name: "WELLNESS SHOTS", slug: "shots", image: wellnessPacksImage, fruits: "Turmeric, Ginger, Beetroot, Wheatgrass, Cayenne" }
 ];
 
 const faqs = [
-  {
-    question: "How long do your fresh juices stay fresh?",
-    answer: "Our cold-pressed juices stay fresh for 3-5 days when refrigerated at 35-40°F. We use HPP (High Pressure Processing) to maintain freshness without preservatives."
-  },
-  {
-    question: "Are your juices 100% organic?",
-    answer: "Yes! We source 100% USDA certified organic fruits and vegetables from local farms. We never use pesticides, GMOs, or artificial additives."
-  },
-  {
-    question: "Do you offer bulk or wholesale pricing?",
-    answer: "Absolutely! We offer special bulk pricing for orders of 20+ bottles and wholesale partnerships for cafes, gyms, and retailers."
-  },
-  {
-    question: "What's the difference between juice and smoothie?",
-    answer: "Our juices are cold-pressed, extracting pure liquid from fruits/vegetables. Smoothies blend whole ingredients, retaining all fiber."
-  },
-  {
-    question: "Can I customize my juice cleanse program?",
-    answer: "Yes! We offer 1, 3, 5, and 7-day cleanse programs. You can customize based on your goals and dietary preferences."
-  }
+  { question: "How long do your fresh juices stay fresh?", answer: "Our cold-pressed juices stay fresh for 3-5 days when refrigerated at 35-40°F." },
+  { question: "Are your juices 100% organic?", answer: "Yes! We source 100% USDA certified organic fruits and vegetables from local farms." },
+  { question: "Do you offer bulk or wholesale pricing?", answer: "Absolutely! We offer special bulk pricing for orders of 20+ bottles and wholesale partnerships for cafes, gyms, and retailers." },
+  { question: "What's the difference between juice and smoothie?", answer: "Our juices are cold-pressed, extracting pure liquid from fruits/vegetables. Smoothies blend whole ingredients, retaining all fiber." },
+  { question: "Can I customize my juice cleanse program?", answer: "Yes! We offer 1, 3, 5, and 7-day cleanse programs. You can customize based on your goals and dietary preferences." }
 ];
 
 const tiktokLinks = [
@@ -153,305 +47,263 @@ const tiktokLinks = [
 
 const containerVariants = {
   hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.15, // stagger delay between cards
-    },
-  },
+  visible: { transition: { staggerChildren: 0.15 } }
 };
 
 const cardVariants: Variants = {
   hidden: { opacity: 0, y: 50 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.9, ease: easeOut }, // use the imported easeOut
-  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: easeOut } }
 };
+
 export default function Home() {
   return (
-        <div>
-            <Header />
-            <div className="min-h-screen bg-white">
-                
-                
-                {/* Hero Section */}
-                <section className="relative">
-                    <div className="h-[500px] md:h-[600px] lg:h-[700px] w-full overflow-hidden">
-                        <motion.img
-                            src={heroImage}
-                            alt="Fresh Organic Cold-Pressed Juice"
-                            initial={{ opacity: 0, y: -80 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 2.5, ease: "easeOut" }}
-                            className="w-full h-full object-cover"
-                        />
+    <div>
+      <Header />
+      <div className="min-h-screen bg-white">
 
+        {/* Hero Section */}
+        <motion.section
+          className="relative"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.5 }}
+        >
+          <div className="h-[500px] md:h-[600px] lg:h-[700px] w-full overflow-hidden">
+            {/* Desktop Hero */}
+            <motion.img
+              src={deskheroImage}
+              alt="Fresh Organic Cold-Pressed Juice"
+              initial={{ opacity: 0, y: -80 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 2.5, ease: "easeOut" }}
+              className="hidden lg:block w-full h-full object-cover"
+            />
 
-                        {/* Overlay only on desktop */}
-                        <div className="hidden lg:flex absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 via-neutral-charcoal/40 to-transparent items-center justify-center">
-                            <div className="container mx-auto px-4 text-left">
-                                <div className="max-w-3xl space-y-4 animate-fade-in">
-                                    <h1 className="text-8xl lg:text-7xl font-heading font-bold text-white leading-wide tracking-wide " >
-                                        Fall Into <br />
-                                        <span className="text-primary">Wellness</span>
-                                    </h1>
-                                    <p className="text-xl lg:text-2xl text-white/90 max-w-2xl">
-                                        Cold-pressed perfection. Zero additives. Maximum flavor.
-                                    </p>
-                                    <div className="flex gap-4 pt-4">
-                                        <Button asChild size="md" variant="hero">
-                                        <Link to="/products">Shop All Juices</Link>
-                                        </Button>
-                                        <Button asChild size="md" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-foreground">
-                                        <Link to="/products/cleanse">Start Your Cleanse</Link>
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+            {/* Mobile Hero */}
+            <motion.img
+              src={heroImage}
+              alt="Fresh Organic Cold-Pressed Juice"
+              initial={{ opacity: 0, y: -80 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 2.5, ease: "easeOut" }}
+              className="block lg:hidden w-full h-full object-cover"
+            />
+
+            {/* Overlay Desktop */}
+            <div className="hidden lg:flex absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 via-neutral-charcoal/40 to-transparent items-center justify-center">
+              <div className="container mx-auto px-4 text-left">
+                <motion.div
+                  className="max-w-3xl space-y-4 animate-fade-in"
+                  initial={{ opacity: 0, x: -50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 1 }}
+                >
+                  <h1 className="text-8xl lg:text-7xl font-heading font-bold text-white leading-wide tracking-wide">
+                    Fall Into <br />
+                    <span className="text-primary">Wellness</span>
+                  </h1>
+                  <p className="text-xl lg:text-2xl text-white/90 max-w-2xl">
+                    Cold-pressed perfection. Zero additives. Maximum flavor.
+                  </p>
+                  <div className="flex gap-4 pt-4">
+                    <Button asChild size="md" variant="hero">
+                      <Link to="/products">Shop All Juices</Link>
+                    </Button>
+                    <Button asChild size="md" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-foreground">
+                      <Link to="/products/cleanse">Start Your Cleanse</Link>
+                    </Button>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile text */}
+          <motion.div
+            initial={{ opacity: 0, y: 80 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            viewport={{ once: true }}
+            className="lg:hidden py-6 mt-2 flex flex-col items-center text-center space-y-4"
+            style={{ fontFamily: 'Raleway, sans-serif' }}
+          >
+            <h1 className="text-5xl sm:text-4xl font-bold text-neutral-900">
+              Fall into<br />
+              <span className="text-primary">Wellness</span>
+            </h1>
+            <p className="text-lg sm:text-xl text-neutral-700 max-w-md px-4">
+              Cold-pressed perfection. Zero additives. Maximum flavor.
+            </p>
+            <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2">
+              <Link to="/products">
+                Shop Now
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </Button>
+          </motion.div>
+        </motion.section>
+
+        {/* Products Carousel */}
+        <motion.section
+          className="py-[5rem] md:py-20 bg-muted/30"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={containerVariants}
+        >
+          <div className="container mx-auto px-4">
+            <motion.div
+              className="text-center mb-12 md:mb-16"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-2">Explore Our Products</h2>
+              <p className="text-md md:text-xl font-body text-muted-foreground">Discover the perfect juice for your lifestyle</p>
+            </motion.div>
+
+            <motion.div
+              className="w-full flex gap-4 overflow-x-auto pb-6 no-scrollbar smooth-scroll"
+            >
+              {productCategories.map((category) => (
+                <motion.div
+                  key={category.id}
+                  className="w-[300px] flex-shrink-0"
+                  variants={cardVariants}
+                >
+                  <div className=" rounded-sm overflow-hidden group hover:shadow-md transition-shadow duration-300">
+                    <div className="relative h-[25rem] md:h-[32rem] lg:h-[36rem]">
+                      <img src={category.image} alt={category.name} className="w-full h-full object-cover transition-transform duration-300" />
+                      <div className="absolute inset-0 bg-black/20" />
+                      <div className="absolute bottom-2 left-2 text-lg leading-normal font-bold text-white ">{category.name}</div>
                     </div>
-
-                    {/* Text below image on mobile */}
-                    <motion.div
-                    initial={{ opacity: 0, y: 80 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="lg:hidden py-6 mt-2 flex flex-col items-center text-center space-y-4"
-                    style={{ fontFamily: 'Raleway, sans-serif', }}
-                    >
-                        <h1 className="text-5xl sm:text-4xl font-bold text-neutral-900">
-                        Fall into<br />
-                        <span className="text-primary">Wellness</span>
-                        </h1>
-
-                        <p className="text-lg sm:text-xl text-neutral-700 max-w-md px-4">
-                        Cold-pressed perfection. Zero additives. Maximum flavor.
-                        </p>
-
-                        <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2">
-                            <Link to="/products">
-                                Shop Now
-                                <ArrowRight className="w-5 h-5" />
-                            </Link>
-                        </Button>
-                    </motion.div>
-                </section>
-
-
-
-
-
-                {/* Products Carousel */}
-                <section className="py-[5rem] md:py-20 bg-muted/30">
-                    <div className="container mx-auto px-4">
-                        <div className="text-center mb-12 md:mb-16">
-                            <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-2">Explore Our Products</h2>
-                            <p className="text-md md:text-xl font-body text-muted-foreground">Discover the perfect juice for your lifestyle</p>
-                        </div>
-
-                        <motion.div
-                        className="w-full flex gap-4 overflow-x-auto pb-6 no-scrollbar smooth-scroll"
-                        style={{ WebkitOverflowScrolling: "touch" }}
-                        variants={containerVariants}
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.3 }}
-                        >
-                        {productCategories.map((category) => (
-                            <motion.div
-                            key={category.id}
-                            className="w-[300px] flex-shrink-0"
-                            variants={cardVariants}
-                            >
-                                <div className=" rounded-sm overflow-hidden group hover:shadow-md transition-shadow duration-300">
-                                    {/* Image */}
-                                    <div className="relative h-[25rem] md:h-[32rem] lg:h-[36rem]">
-                                        <img
-                                            src={category.image}
-                                            alt={category.name}
-                                            className="w-full h-full object-cover transition-transform duration-300"
-                                        />
-                                        <div className="absolute inset-0 bg-black/40" />
-                                        <div className="absolute bottom-2 left-2 text-lg leading-normal font-bold text-white ">
-                                            {category.name}
-                                        </div>
-                                    </div>
-
-
-                                    {/* Text */}
-                                    <div className="px-3 py-2 border-2">
-                                        <div className="space-y-1 border-t pt-2">
-                                            <p className="font-semibold text-md text-muted-foreground uppercase tracking-wide">
-                                            Key Ingredients:
-                                            </p>
-                                            <p className="text-sm font-sans font-medium">{category.fruits}</p>
-                                        </div>
-
-                                        <div className="mt-2 flex justify-end">
-                                            <Link
-                                            to={`/products/${category.slug}`}
-                                            className="text-primary underline text-sm flex gap-2 items-center"
-                                            >
-                                            Shop Now
-                                            <ArrowRight className="w-5 h-5" />
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                        </motion.div>
-
-
+                    <div className="px-3 py-2 border-2">
+                      <div className="space-y-1 border-t pt-2">
+                        <p className="font-semibold text-md text-muted-foreground uppercase tracking-wide">Key Ingredients:</p>
+                        <p className="text-sm font-sans font-medium">{category.fruits}</p>
+                      </div>
+                      <div className="mt-2 flex justify-end">
+                        <Link to={`/products/${category.slug}`} className="text-primary underline text-sm flex gap-2 items-center">
+                          Shop Now
+                          <ArrowRight className="w-5 h-5" />
+                        </Link>
+                      </div>
                     </div>
-                </section>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </motion.section>
 
-                {/* Testimonials */}
-                {/* <section className="py-12 md:py-20">
-                    <div className="container mx-auto px-4">
-                    <div className="text-center mb-12 md:mb-16">
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">What Our Customers Say</h2>
-                        <p className="text-lg md:text-xl font-body text-muted-foreground">Real stories from real juice lovers</p>
+        {/* Health Benefits */}
+        <motion.section
+          className="md:py-20 mt-10"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={containerVariants}
+        >
+          <div className="container mx-auto px-4">
+            <motion.div
+              className="text-center mb-12 md:mb-16"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <h2 className="text-xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Why Choose Duk's?</h2>
+              <div>
+                <motion.img src={chooseImage} alt="why choose us Image" className="w-full object-cover h-[14rem] rounded-md lg:h-[30rem] lg:rounded-md py-4" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 1 }} />
+              </div>
+              <p className="text-md md:text-xl font-body text-muted-foreground max-w-2xl mx-auto">
+                Every bottle is a commitment to your health and our planet
+              </p>
+            </motion.div>
+
+            <motion.div className="grid md:grid-cols-3 gap-6 md:gap-8 rounded-md" variants={containerVariants}>
+              {[{ icon: Leaf, title: "Totally Organic", text: "USDA certified organic fruits and vegetables from sustainable farms. No pesticides, no GMOs, no compromises." },
+                { icon: Sparkles, title: "Bursting with Benefits", text: "Cold-press technology preserves maximum vitamins, minerals, and enzymes." },
+                { icon: Heart, title: "Deliciously Elevated", text: "Our master blenders create flavor combinations that excite your taste buds while nourishing your body." }
+              ].map((item, index) => (
+                <motion.div key={index} className="border rounded p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-2" variants={cardVariants}>
+                  <div className="flex items-center gap-4 px-4 py-2">
+                    <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
+                      <item.icon className="w-8 h-8 text-accent" />
                     </div>
+                    <div className="text-xl font-medium">{item.title}</div>
+                  </div>
+                  <div>
+                    <div className="text-base font-body leading-relaxed px-4 text-center py-2">{item.text}</div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </motion.section>
 
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
-                        {testimonials.map((testimonial, index) => (
-                        <Card key={index} className="border-2 hover:shadow-xl transition-all duration-300">
-                            <CardHeader>
-                            <div className="flex gap-1 mb-2">
-                                {[...Array(testimonial.rating)].map((_, i) => (
-                                <Star key={i} className="w-5 h-5 fill-primary text-primary" />
-                                ))}
-                            </div>
-                            <CardTitle className="text-lg font-heading">{testimonial.name}</CardTitle>
-                            <CardDescription className="text-sm">{testimonial.category} • {testimonial.location}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                            <p className="text-foreground/80 italic leading-relaxed font-body">"{testimonial.text}"</p>
-                            </CardContent>
-                        </Card>
-                        ))}
-                    </div>
-                    </div>
-                </section> */}
+        {/* TikTok Section */}
+        <motion.section
+          className="py-12 md:py-20 bg-neutral-charcoal text-white mt-10"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={containerVariants}
+        >
+          <div className="container mx-auto px-4">
+            <motion.div className="text-center mb-12 md:mb-16" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Join Us On TikTok</h2>
+              <p className="text-md md:text-xl font-body text-white/80">Follow @duks_juice for daily juice inspo, recipes, and wellness tips</p>
+            </motion.div>
 
+            <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+              {tiktokLinks.map((item, index) => (
+                <motion.a key={index} href={item.url} target="_blank" rel="noopener noreferrer" className="group relative aspect-square overflow-hidden rounded-sm" variants={cardVariants}>
+                  <img src={item.image} alt={`TikTok post ${index + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/80 transition-all duration-300 flex items-center justify-center">
+                    <span className="text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-heading">View on TikTok</span>
+                  </div>
+                </motion.a>
+              ))}
+            </motion.div>
 
-                                {/* Health Benefits */}
-                <section className=" md:py-20 mt-10">
-                    <div className="container mx-auto px-4">
-                        <div className="text-center mb-12 md:mb-16">
-                            <h2 className="text-xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Why Choose Duk's?</h2>
-                            <p className="text-md md:text-xl font-body text-muted-foreground max-w-2xl mx-auto">
-                            Every bottle is a commitment to your health and our planet
-                            </p>
-                        </div>
+            <motion.div className="text-center mt-12" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+              <Button asChild size="md" className="bg-primary hover:bg-primary/90 text-foreground font-bold">
+                <a href="https://www.tiktok.com/@duks_juice" target="_blank" rel="noopener noreferrer">Follow Duks</a>
+              </Button>
+            </motion.div>
+          </div>
+        </motion.section>
 
-                        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-                        {/* Card 1 */}
-                        <div className="border hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                            <div className="flex items-center gap-4 px-4 py-2">
-                            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
-                                <Leaf className="w-8 h-8 text-accent" />
-                            </div>
-                            <div className="text-xl font-medium">Totally Organic</div>
-                            </div>
-                            <div>
-                            <div className="text-base font-body leading-relaxed px-4 text-center py-2">
-                                USDA certified organic fruits and vegetables from sustainable farms. No pesticides, no GMOs, no compromises. Every ingredient is traceable from farm to bottle.
-                            </div>
-                            </div>
-                        </div>
+        {/* FAQ Section */}
+        <motion.section
+          className="py-12 md:py-20"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={containerVariants}
+        >
+          <div className="container mx-auto px-4 max-w-4xl">
+            <motion.div className="text-center mb-12 md:mb-16" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">FAQS</h2>
+              <p className="text-md md:text-xl font-body text-muted-foreground">Everything you need to know about Duk's juices</p>
+            </motion.div>
 
-                        {/* Card 2 */}
-                        <div className="border hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                            <div className="flex items-center gap-4 px-4 py-2">
-                            <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center">
-                                <Sparkles className="w-8 h-8 text-secondary" />
-                            </div>
-                            <div className="text-xl font-medium">Bursting with Benefits</div>
-                            </div>
-                            <div>
-                            <div className="text-base font-body leading-relaxed px-4 text-center py-2">
-                                Cold-press technology preserves maximum vitamins, minerals, and enzymes. Powerful antioxidants, natural energy, and immune support in every bottle.
-                            </div>
-                            </div>
-                        </div>
+            <Accordion type="single" collapsible className="space-y-2">
+              {faqs.map((faq, index) => (
+                <motion.div key={index} variants={cardVariants}>
+                  <AccordionItem value={`item-${index}`} className="border rounded-sm px-6 bg-card">
+                    <AccordionTrigger className="text-md font-semibold font-heading hover:text-secondary hover:no-underline">{faq.question}</AccordionTrigger>
+                    <AccordionContent className="text-sm font-semibold leading-relaxed pt-2">{faq.answer}</AccordionContent>
+                  </AccordionItem>
+                </motion.div>
+              ))}
+            </Accordion>
+          </div>
+        </motion.section>
 
-                        {/* Card 3 */}
-                        <div className="border hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                            <div className="flex items-center gap-4 px-4 py-2">
-                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                                <Heart className="w-8 h-8 text-secondary" />
-                            </div>
-                            <div className="text-xl font-medium">Deliciously Elevated</div>
-                            </div>
-                            <div>
-                            <div className="text-base font-body leading-relaxed px-4 text-center py-2">
-                                Our master blenders create flavor combinations that excite your taste buds while nourishing your body. Premium taste meets premium nutrition.
-                            </div>
-                            </div>
-                        </div>
-                        </div>
-
-                    </div>
-                </section>
-
-                {/* TikTok */}
-                <section className="py-12 md:py-20 bg-neutral-charcoal text-white mt-10">
-                    <div className="container mx-auto px-4">
-                    <div className="text-center mb-12 md:mb-16">
-                        <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Join Us On TikTok</h2>
-                        <p className="text-md md:text-xl font-body text-white/80">Follow @duks_juice for daily juice inspo, recipes, and wellness tips</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
-                        {tiktokLinks.map((item, index) => (
-                        <a key={index} href={item.url} target="_blank" rel="noopener noreferrer" className="group relative aspect-square overflow-hidden rounded-sm">
-                            <img src={item.image} alt={`TikTok post ${index + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                            <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/80 transition-all duration-300 flex items-center justify-center">
-                            <span className="text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-heading">View on TikTok</span>
-                            </div>
-                        </a>
-                        ))}
-                    </div>
-
-                    <div className="text-center mt-12">
-                        <Button asChild size="md" className="bg-primary hover:bg-primary/90 text-foreground font-bold">
-                        <a href="https://www.tiktok.com/@duks_juice" target="_blank" rel="noopener noreferrer">Follow Duks</a>
-                        </Button>
-                    </div>
-                    </div>
-                </section>
-
-
-
-
-                {/* FAQ */}
-                <section className="py-12 md:py-20">
-                    <div className="container mx-auto px-4 max-w-4xl">
-                    <div className="text-center mb-12 md:mb-16">
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">FAQS</h2>
-                        <p className="text-md md:text-xl font-body text-muted-foreground">Everything you need to know about Duk's juices</p>
-                    </div>
-
-                    <Accordion type="single" collapsible className="space-y-2">
-                        {faqs.map((faq, index) => (
-                        <AccordionItem key={index} value={`item-${index}`} className="border rounded-sm px-6 bg-card">
-                            <AccordionTrigger className="text-md font-semibold font-heading hover:text-secondary hover:no-underline">
-                            {faq.question}
-                            </AccordionTrigger>
-                            <AccordionContent className="text-sm font-semibold leading-relaxed pt-2">
-                            {faq.answer}
-                            </AccordionContent>
-                        </AccordionItem>
-                        ))}
-                    </Accordion>
-                    </div>
-                </section>
-
-                <Footer />
-                </div>
-        </div>
-    );
+        <Footer />
+      </div>
+    </div>
+  );
 }
