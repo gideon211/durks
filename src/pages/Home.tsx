@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Link } from "react-router-dom";
-import { Star, Leaf, Heart, Sparkles } from "lucide-react";
+import { Star, Leaf, Heart, Sparkles,ArrowRight} from "lucide-react";
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import heroImage from "@/assets/hero-juice.png";
@@ -154,252 +155,264 @@ const tiktokLinks = [
 
 export default function Home() {
   return (
-    <div>
-    <Header />
-    <div className="min-h-screen bg-background">
-        
-        
-        {/* Hero Section */}
-    <section className="relative">
-    <div className="h-[500px] md:h-[600px] lg:h-[700px] w-full overflow-hidden">
-        <img 
-        src={heroImage} 
-        alt="Fresh Organic Cold-Pressed Juice" 
-        className="w-full h-full object-cover"
-        />
-
-
-        {/* Overlay only on desktop */}
-        <div className="hidden lg:flex absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 via-neutral-charcoal/40 to-transparent items-center justify-center">
-        <div className="container mx-auto px-4 text-left">
-            <div className="max-w-3xl space-y-4 animate-fade-in">
-            <h1 className="text-8xl lg:text-7xl font-heading font-bold text-white leading-wide tracking-wide " >
-                Fall Into <br />
-                <span className="text-primary">Wellness</span>
-            </h1>
-            <p className="text-xl lg:text-2xl text-white/90 max-w-2xl">
-                Cold-pressed perfection. Zero additives. Maximum flavor.
-            </p>
-            <div className="flex gap-4 pt-4">
-                <Button asChild size="md" variant="hero">
-                <Link to="/products">Shop All Juices</Link>
-                </Button>
-                <Button asChild size="md" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-foreground">
-                <Link to="/products/cleanse">Start Your Cleanse</Link>
-                </Button>
-            </div>
-            </div>
-        </div>
-        </div>
-    </div>
-
-    {/* Text below image on mobile */}
-    <div className="lg:hidden container py-6 text- space-y-4 mt-2">
-        
-        <h1
-        className="text-3xl sm:text-xl font-heading font-bold text-neutral-900 "
-        
-        >
-    Fall into<br />
-    <span className="text-primary">Wellness..</span>
-    </h1>
-
-        <p className="text-lg sm:text-xl text-neutral-700 max-w-2xl mx-auto">
-        Cold-pressed perfection. Zero additives. Maximum flavor.
-        </p>
-        <div className="flex sm:flex-row gap-4">
-        <Button asChild size="md" variant="hero" className="rounded-lg sm:w-auto">
-            <Link to="/products">Shop Now</Link>
-        </Button>
-
-        </div>
-    </div>
-    </section>
-
-
-
-        {/* Health Benefits */}
-        <section className="py-12 md:py-20 mt-20">
-            <div className="container mx-auto px-4">
-            <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Why Choose Duk's?</h2>
-                <p className="text-lg md:text-xl font-body text-muted-foreground max-w-2xl mx-auto">
-                Every bottle is a commitment to your health and our planet
-                </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-                <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                <CardHeader>
-                    <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4">
-                    <Leaf className="w-8 h-8 text-accent" />
-                    </div>
-                    <CardTitle className="text-2xl font-heading">Totally Organic</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <CardDescription className="text-base font-body leading-relaxed">
-                    USDA certified organic fruits and vegetables from sustainable farms. No pesticides, no GMOs, no compromises. Every ingredient is traceable from farm to bottle.
-                    </CardDescription>
-                </CardContent>
-                </Card>
-
-                <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                <CardHeader>
-                    <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mb-4">
-                    <Sparkles className="w-8 h-8 text-secondary" />
-                    </div>
-                    <CardTitle className="text-2xl font-heading">Bursting with Benefits</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <CardDescription className="text-base font-body leading-relaxed">
-                    Cold-press technology preserves maximum vitamins, minerals, and enzymes. Powerful antioxidants, natural energy, and immune support in every bottle.
-                    </CardDescription>
-                </CardContent>
-                </Card>
-
-                <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                <CardHeader>
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <Heart className="w-8 h-8 text-secondary" />
-                    </div>
-                    <CardTitle className="text-2xl font-heading">Deliciously Elevated</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <CardDescription className="text-base font-body leading-relaxed">
-                    Our master blenders create flavor combinations that excite your taste buds while nourishing your body. Premium taste meets premium nutrition.
-                    </CardDescription>
-                </CardContent>
-                </Card>
-            </div>
-            </div>
-        </section>
-
-        {/* Products Carousel */}
-        <section className="py-12 md:py-20 bg-muted/30">
-            <div className="container mx-auto px-4">
-            <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Explore Our Products</h2>
-                <p className="text-lg md:text-xl font-body text-muted-foreground">Discover the perfect juice for your lifestyle</p>
-            </div>
-
-            <div className="w-full flex gap-[5rem] overflow-x-auto">
-            
-                {productCategories.map((category) => (
-                    <div key={category.id} className="">
-                    <div className="h-full hover:shadow-2xl transition-all duration-300 border-2 overflow-hidden group">
-                        <div className="relative h-48 ">
-                        <img 
-                            src={category.image} 
-                            alt={category.name}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+        <div>
+            <Header />
+            <div className="min-h-screen bg-white">
+                
+                
+                {/* Hero Section */}
+                <section className="relative">
+                    <div className="h-[500px] md:h-[600px] lg:h-[700px] w-full overflow-hidden">
+                        <motion.img
+                            src={heroImage}
+                            alt="Fresh Organic Cold-Pressed Juice"
+                            initial={{ opacity: 0, y: -80 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 to-transparent" />
-                        <CardTitle className="absolute bottom-4 left-4 text-xl font-heading font-bold text-white">
-                            {category.name}
-                        </CardTitle>
-                        </div>
-                        <div className=" pt-6">
 
-                        
-                        <div className="space-y-2 py-4 border-t">
-                            <p className="font-semibold text-xs text-muted-foreground uppercase tracking-wide">Key Ingredients:</p>
-                            <p className="text-sm">{category.fruits}</p>
-                        </div>
 
-                        <div className="px-4 underline ">
-                            <Link to={`/products/${category.slug}`}>Shop Now</Link>
-                        </div>
+                        {/* Overlay only on desktop */}
+                        <div className="hidden lg:flex absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 via-neutral-charcoal/40 to-transparent items-center justify-center">
+                            <div className="container mx-auto px-4 text-left">
+                                <div className="max-w-3xl space-y-4 animate-fade-in">
+                                    <h1 className="text-8xl lg:text-7xl font-heading font-bold text-white leading-wide tracking-wide " >
+                                        Fall Into <br />
+                                        <span className="text-primary">Wellness</span>
+                                    </h1>
+                                    <p className="text-xl lg:text-2xl text-white/90 max-w-2xl">
+                                        Cold-pressed perfection. Zero additives. Maximum flavor.
+                                    </p>
+                                    <div className="flex gap-4 pt-4">
+                                        <Button asChild size="md" variant="hero">
+                                        <Link to="/products">Shop All Juices</Link>
+                                        </Button>
+                                        <Button asChild size="md" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-foreground">
+                                        <Link to="/products/cleanse">Start Your Cleanse</Link>
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    {/* Text below image on mobile */}
+                    <motion.div
+                    initial={{ opacity: 0, y: 80 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="lg:hidden py-6 mt-2 flex flex-col items-center text-center space-y-4"
+                    style={{ fontFamily: 'Raleway, sans-serif', }}
+                    >
+                        <h1 className="text-5xl sm:text-4xl font-bold text-neutral-900">
+                        Fall into<br />
+                        <span className="text-primary">Wellness</span>
+                        </h1>
+
+                        <p className="text-lg sm:text-xl text-neutral-700 max-w-md px-4">
+                        Cold-pressed perfection. Zero additives. Maximum flavor.
+                        </p>
+
+                        <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2">
+                            <Link to="/products">
+                                Shop Now
+                                <ArrowRight className="w-5 h-5" />
+                            </Link>
+                        </Button>
+                    </motion.div>
+                </section>
+
+
+
+                {/* Health Benefits */}
+                {/* <section className="py-12 md:py-20 mt-20">
+                    <div className="container mx-auto px-4">
+                        <div className="text-center mb-12 md:mb-16">
+                            <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Why Choose Duk's?</h2>
+                            <p className="text-lg md:text-xl font-body text-muted-foreground max-w-2xl mx-auto">
+                            Every bottle is a commitment to your health and our planet
+                            </p>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+                            <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                            <CardHeader>
+                                <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4">
+                                <Leaf className="w-8 h-8 text-accent" />
+                                </div>
+                                <CardTitle className="text-2xl font-heading">Totally Organic</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <CardDescription className="text-base font-body leading-relaxed">
+                                USDA certified organic fruits and vegetables from sustainable farms. No pesticides, no GMOs, no compromises. Every ingredient is traceable from farm to bottle.
+                                </CardDescription>
+                            </CardContent>
+                            </Card>
+
+                            <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                            <CardHeader>
+                                <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mb-4">
+                                <Sparkles className="w-8 h-8 text-secondary" />
+                                </div>
+                                <CardTitle className="text-2xl font-heading">Bursting with Benefits</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <CardDescription className="text-base font-body leading-relaxed">
+                                Cold-press technology preserves maximum vitamins, minerals, and enzymes. Powerful antioxidants, natural energy, and immune support in every bottle.
+                                </CardDescription>
+                            </CardContent>
+                            </Card>
+
+                            <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                            <CardHeader>
+                                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                                <Heart className="w-8 h-8 text-secondary" />
+                                </div>
+                                <CardTitle className="text-2xl font-heading">Deliciously Elevated</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <CardDescription className="text-base font-body leading-relaxed">
+                                Our master blenders create flavor combinations that excite your taste buds while nourishing your body. Premium taste meets premium nutrition.
+                                </CardDescription>
+                            </CardContent>
+                            </Card>
+                        </div>
                     </div>
-                ))}
-            
+                </section> */}
 
-            </div>
-            </div>
-        </section>
+                {/* Products Carousel */}
+                <section className="py-[5rem] md:py-20 bg-muted/30">
+                    <div className="container mx-auto px-4">
+                    <div className="text-center mb-12 md:mb-16">
+                        <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Explore Our Products</h2>
+                        <p className="text-md md:text-xl font-body text-muted-foreground">Discover the perfect juice for your lifestyle</p>
+                    </div>
 
-        {/* Testimonials */}
-        {/* <section className="py-12 md:py-20">
-            <div className="container mx-auto px-4">
-            <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">What Our Customers Say</h2>
-                <p className="text-lg md:text-xl font-body text-muted-foreground">Real stories from real juice lovers</p>
-            </div>
+<div className="w-full flex gap-6 overflow-x-auto pb-6 scrollbar-none">
+  {productCategories.map((category) => (
+    <div key={category.id} className="min-w-[220px] flex-shrink scrollbar-none">
+      <div className="border-2 rounded-sm overflow-hidden scrollbar-none group hover:shadow-md transition-shadow duration-300">
+        {/* Image */}
+        <div className="relative h-full">
+          <img
+            src={category.image}
+            alt={category.name}
+            className="w-full h-[20rem] transition-transform duration-300 group-hover:scale-110 object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 to-transparent" />
+          <CardTitle className="absolute bottom-2 left-2 text-lg font-heading font-bold text-white">
+            {category.name}
+          </CardTitle>
+        </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
-                {testimonials.map((testimonial, index) => (
-                <Card key={index} className="border-2 hover:shadow-xl transition-all duration-300">
-                    <CardHeader>
-                    <div className="flex gap-1 mb-2">
-                        {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="w-5 h-5 fill-primary text-primary" />
+        {/* Text */}
+        <div className="px-3 py-2">
+          <div className="space-y-1 border-t pt-2">
+            <p className="font-semibold text-xs text-muted-foreground uppercase tracking-wide">
+              Key Ingredients:
+            </p>
+            <p className="text-sm">{category.fruits}</p>
+          </div>
+
+          <div className="mt-2">
+            <Link
+              to={`/products/${category.slug}`}
+              className="text-primary underline text-sm"
+            >
+              Shop Now
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
+                    </div>
+                </section>
+
+                {/* Testimonials */}
+                {/* <section className="py-12 md:py-20">
+                    <div className="container mx-auto px-4">
+                    <div className="text-center mb-12 md:mb-16">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">What Our Customers Say</h2>
+                        <p className="text-lg md:text-xl font-body text-muted-foreground">Real stories from real juice lovers</p>
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
+                        {testimonials.map((testimonial, index) => (
+                        <Card key={index} className="border-2 hover:shadow-xl transition-all duration-300">
+                            <CardHeader>
+                            <div className="flex gap-1 mb-2">
+                                {[...Array(testimonial.rating)].map((_, i) => (
+                                <Star key={i} className="w-5 h-5 fill-primary text-primary" />
+                                ))}
+                            </div>
+                            <CardTitle className="text-lg font-heading">{testimonial.name}</CardTitle>
+                            <CardDescription className="text-sm">{testimonial.category} • {testimonial.location}</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                            <p className="text-foreground/80 italic leading-relaxed font-body">"{testimonial.text}"</p>
+                            </CardContent>
+                        </Card>
                         ))}
                     </div>
-                    <CardTitle className="text-lg font-heading">{testimonial.name}</CardTitle>
-                    <CardDescription className="text-sm">{testimonial.category} • {testimonial.location}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                    <p className="text-foreground/80 italic leading-relaxed font-body">"{testimonial.text}"</p>
-                    </CardContent>
-                </Card>
-                ))}
-            </div>
-            </div>
-        </section> */}
-
-        {/* TikTok */}
-        <section className="py-12 md:py-20 bg-neutral-charcoal text-white">
-            <div className="container mx-auto px-4">
-            <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Join Us On TikTok</h2>
-                <p className="text-lg md:text-xl font-body text-white/80">Follow @duksjuice for daily juice inspo, recipes, and wellness tips</p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
-                {tiktokLinks.map((item, index) => (
-                <a key={index} href={item.url} target="_blank" rel="noopener noreferrer" className="group relative aspect-square overflow-hidden rounded-lg">
-                    <img src={item.image} alt={`TikTok post ${index + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/80 transition-all duration-300 flex items-center justify-center">
-                    <span className="text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-heading">View on TikTok</span>
                     </div>
-                </a>
-                ))}
-            </div>
+                </section> */}
 
-            <div className="text-center mt-12">
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-foreground font-bold">
-                <a href="https://www.tiktok.com/@duksjuice" target="_blank" rel="noopener noreferrer">Follow @duksjuice</a>
-                </Button>
-            </div>
-            </div>
-        </section>
+                {/* TikTok */}
+                <section className="py-12 md:py-20 bg-neutral-charcoal text-white">
+                    <div className="container mx-auto px-4">
+                    <div className="text-center mb-12 md:mb-16">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Join Us On TikTok</h2>
+                        <p className="text-lg md:text-xl font-body text-white/80">Follow @duksjuice for daily juice inspo, recipes, and wellness tips</p>
+                    </div>
 
-        {/* FAQ */}
-        <section className="py-12 md:py-20">
-            <div className="container mx-auto px-4 max-w-4xl">
-            <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Frequently Asked Questions</h2>
-                <p className="text-lg md:text-xl font-body text-muted-foreground">Everything you need to know about Duk's juices</p>
-            </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+                        {tiktokLinks.map((item, index) => (
+                        <a key={index} href={item.url} target="_blank" rel="noopener noreferrer" className="group relative aspect-square overflow-hidden rounded-lg">
+                            <img src={item.image} alt={`TikTok post ${index + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                            <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/80 transition-all duration-300 flex items-center justify-center">
+                            <span className="text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-heading">View on TikTok</span>
+                            </div>
+                        </a>
+                        ))}
+                    </div>
 
-            <Accordion type="single" collapsible className="space-y-4">
-                {faqs.map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`} className="border-2 rounded-lg px-6 bg-card">
-                    <AccordionTrigger className="text-lg font-semibold font-heading hover:text-secondary hover:no-underline">
-                    {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-base font-body leading-relaxed pt-2">
-                    {faq.answer}
-                    </AccordionContent>
-                </AccordionItem>
-                ))}
-            </Accordion>
-            </div>
-        </section>
+                    <div className="text-center mt-12">
+                        <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-foreground font-bold">
+                        <a href="https://www.tiktok.com/@duksjuice" target="_blank" rel="noopener noreferrer">Follow @duksjuice</a>
+                        </Button>
+                    </div>
+                    </div>
+                </section>
 
-        <Footer />
+                {/* FAQ */}
+                <section className="py-12 md:py-20">
+                    <div className="container mx-auto px-4 max-w-4xl">
+                    <div className="text-center mb-12 md:mb-16">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Frequently Asked Questions</h2>
+                        <p className="text-lg md:text-xl font-body text-muted-foreground">Everything you need to know about Duk's juices</p>
+                    </div>
+
+                    <Accordion type="single" collapsible className="space-y-4">
+                        {faqs.map((faq, index) => (
+                        <AccordionItem key={index} value={`item-${index}`} className="border-2 rounded-lg px-6 bg-card">
+                            <AccordionTrigger className="text-lg font-semibold font-heading hover:text-secondary hover:no-underline">
+                            {faq.question}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-base font-body leading-relaxed pt-2">
+                            {faq.answer}
+                            </AccordionContent>
+                        </AccordionItem>
+                        ))}
+                    </Accordion>
+                    </div>
+                </section>
+
+                <Footer />
+                </div>
         </div>
-    </div>
-  );
+    );
 }
