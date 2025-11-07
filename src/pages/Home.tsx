@@ -208,7 +208,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-2">Explore Our Products</h2>
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-2">Explore Our Products</h2>
               <p className="text-md md:text-xl font-body text-muted-foreground">Discover the perfect juice for your lifestyle</p>
             </motion.div>
 
