@@ -178,7 +178,7 @@ export default function Cart() {
                 return (
                   <div
                     key={item.id}
-                    className="bg-white border border-border rounded-md p-3 flex flex-row items-center gap-3"
+                    className="bg-white border border-green-300 rounded-md p-3 flex flex-row items-center gap-3"
                   >
                     <div className="w-24 flex-shrink-0">
                       <img
