@@ -26,6 +26,9 @@ export default function Cart() {
   const [isLoading, setIsLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState<"checkout" | "bulk" | null>(null);
 
+  // local quantity map keyed by item id
+  const [localQtyMap, setLocalQtyMap] = useState<Record<string, number>>({});
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
@@ -44,6 +47,7 @@ export default function Cart() {
     })();
   }, [user, loadCartForUser]);
 
+  // restore pending cart for logged-in user
   useEffect(() => {
     try {
       const pendingCartRaw = localStorage.getItem("pendingCart");
@@ -60,6 +64,7 @@ export default function Cart() {
     }
   }, [user, setCart]);
 
+  // handle pending checkout redirect
   useEffect(() => {
     if (!user) return;
     try {
@@ -72,6 +77,15 @@ export default function Cart() {
       console.warn("Error handling pendingCheckout", err);
     }
   }, [user, navigate]);
+
+  // initialize localQtyMap whenever cartItems changes
+  useEffect(() => {
+    const map: Record<string, number> = {};
+    cartItems.forEach((item) => {
+      map[item.id] = item.qty;
+    });
+    setLocalQtyMap(map);
+  }, [cartItems]);
 
   const openAuthModal = (action: "checkout" | "bulk") => {
     setPendingAction(action);
@@ -152,26 +166,20 @@ export default function Cart() {
           <div className="grid grid-cols-1 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-3">
               {cartItems.map((item: CartItem) => {
-                const [localQty, setLocalQty] = useState<number | "">(item.qty);
-
-                useEffect(() => {
-                  setLocalQty(item.qty);
-                }, [item.qty]);
+                const localQty = localQtyMap[item.id] ?? item.qty;
 
                 const handleQtyChange = (val: string) => {
-                  setLocalQty(val === "" ? "" : Number(val));
-                  // immediately update total price
-                  if (val !== "") {
-                    updateQty(item.id, Number(val));
-                  }
+                  const newQty = val === "" ? 0 : Number(val);
+                  setLocalQtyMap((prev) => ({ ...prev, [item.id]: newQty }));
+                  if (val !== "") updateQty(item.id, newQty);
                 };
 
                 const handleQtyBlur = () => {
                   if (!localQty || localQty < 1) {
                     updateQty(item.id, 1);
-                    setLocalQty(1);
+                    setLocalQtyMap((prev) => ({ ...prev, [item.id]: 1 }));
                   } else {
-                    updateQty(item.id, localQty as number);
+                    updateQty(item.id, localQty);
                   }
                 };
 
@@ -238,7 +246,7 @@ export default function Cart() {
                             {(
                               (item.price || 0) *
                               (item.pack || 12) *
-                              ((localQty === "" ? 0 : localQty) || 1)
+                              (localQty || 1)
                             ).toFixed(2)}
                           </div>
                         </div>
