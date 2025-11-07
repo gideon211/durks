@@ -115,31 +115,30 @@ export default function Home() {
       <div className="min-h-screen bg-white">
 
         {/* Hero Section (unchanged) */}
-        <motion.section
-          className="relative"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.5 }}
-        >
-          <div className="h-[500px] md:h-[600px] lg:h-[700px] w-full overflow-hidden">
-            <motion.img
-              src={deskheroImage}
-              alt="Fresh Organic Cold-Pressed Juice"
-              initial={{ opacity: 0, y: -80 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 2.5, ease: "easeOut" }}
-              className="hidden lg:block w-full h-full object-cover"
-            />
+     <div className="relative h-[500px] md:h-[600px] lg:h-[700px] w-full overflow-hidden">
+  {/* Desktop image */}
+  <motion.img
+    src={deskheroImage}
+    alt="Fresh Organic Cold-Pressed Juice"
+    initial={{ opacity: 0, y: -80 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 2.5, ease: "easeOut" }}
+    className="hidden lg:block w-full h-full object-cover"
+  />
 
-            <motion.img
-              src={heroImage}
-              alt="Fresh Organic Cold-Pressed Juice"
-              initial={{ opacity: 0, y: -80 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 2.5, ease: "easeOut" }}
-              className="block lg:hidden w-full h-full object-cover rounded-b-md"
-            />
+  {/* Mobile image */}
+  <motion.img
+    src={heroImage}
+    alt="Fresh Organic Cold-Pressed Juice"
+    initial={{ opacity: 0, y: -80 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 2.5, ease: "easeOut" }}
+    className="block lg:hidden w-full h-full object-cover rounded-b-md"
+  />
+
+  {/* Overlay (only on mobile) */}
+  <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/10 to-transparent pointer-events-none block lg:hidden" />
+</div>
 
             <div className="hidden lg:flex absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 via-neutral-charcoal/40 to-transparent items-center justify-center">
               <div className="container mx-auto px-4 text-left">
