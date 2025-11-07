@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { motion, Variants, easeOut } from "framer-motion";
+import { motion, Variants, easeOut, useAnimationFrame } from "framer-motion";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Link } from "react-router-dom";
 import { Star, Leaf, Heart, Sparkles, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
@@ -31,6 +31,15 @@ const productCategories = [
   { id: "shots", name: "WELLNESS SHOTS", slug: "shots", image: wellnessPacksImage, fruits: "Turmeric, Ginger, Beetroot, Wheatgrass, Cayenne" }
 ];
 
+const messages = [
+  "Packed with vitamins and natural energy",
+  "Boost your immunity with every sip",
+  "No added sugar, only pure fruit goodness",
+  "Stay hydrated and refreshed the healthy way"
+];
+
+const baseSpeed = 60;
+
 const faqs = [
   { question: "How long do your fresh juices stay fresh?", answer: "Our cold-pressed juices stay fresh for 3-5 days when refrigerated at 35-40°F." },
   { question: "Are your juices 100% organic?", answer: "Yes! We source 100% USDA certified organic fruits and vegetables from local farms." },
@@ -61,6 +70,20 @@ export default function Home() {
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+
+  // refs and state for the marquee ticker (moved hooks inside component to fix invalid hook call)
+  const baseX = useRef(0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useAnimationFrame((t, delta) => {
+    const el = containerRef.current;
+    if (!el) return;
+    baseX.current -= (baseSpeed * delta) / 1000;
+    if (Math.abs(baseX.current) >= el.scrollWidth / 2) {
+      baseX.current = 0;
+    }
+    el.style.transform = `translateX(${baseX.current}px)`;
+  });
 
   useEffect(() => {
     const el = carouselRef.current;
@@ -273,6 +296,24 @@ export default function Home() {
 
           </div>
         </motion.section>
+
+      <div className="bg-green-600 text-white py-2 overflow-hidden font-lexend border-2 border-t-red-400">
+        <motion.div
+          ref={containerRef}
+          className="flex gap-12 whitespace-nowrap will-change-transform"
+        >
+          {[...Array(2)].map((_, i) => (
+            <span key={i} className="flex gap-12 px-8">
+              {messages.map((msg, index) => (
+                <span key={index}>{msg}</span>
+              ))}
+            </span>
+          ))}
+        </motion.div>
+      </div>
+
+
+
 
         {/* Health Benefits (unchanged) */}
         <motion.section
