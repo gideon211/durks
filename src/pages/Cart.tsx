@@ -212,21 +212,32 @@ export default function Cart() {
 
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <select
-                            className="border rounded px-2 py-1 text-sm"
-                            value={item.pack || 12}
+                            <select
+                            value={item.pack}
                             onChange={(e) => {
-                              const newPack = Number(e.target.value);
-                              const updated = cartItems.map((c) =>
-                                c.id === item.id ? { ...c, pack: newPack } : c
-                              );
-                              setCart(updated);
+                                const newPack = Number(e.target.value);
+                                const selectedPack = item.packs?.find((p) => p.pack === newPack);
+                                const newPrice = selectedPack ? selectedPack.price : item.price;
+
+                                const updated = cartItems.map((c) =>
+                                c.id === item.id ? { ...c, pack: newPack, price: newPrice } : c
+                                );
+                                setCart(updated);
                             }}
-                          >
-                            <option value={6}>6</option>
-                            <option value={12}>12</option>
-                            <option value={24}>24</option>
-                          </select>
+                            >
+                            {item.packs?.length
+                                ? item.packs.map((p) => (
+                                    <option key={p.pack} value={p.pack}>
+                                    {p.pack}
+                                    </option>
+                                ))
+                                : [6, 12, 24].map((val) => (
+                                    <option key={val} value={val}>
+                                    {val}
+                                    </option>
+                                ))}
+                            </select>
+
 
                           <p className="text-xs">qty:</p>
                           <input

@@ -28,6 +28,7 @@ export interface CartItem extends Product {
   pack: number; // number of items per pack
   qty: number; // number of packs
   _local?: boolean;
+  packs?: { pack: number; price: number }[]; 
 }
 
 interface CartState {
@@ -282,6 +283,9 @@ export const useCartStore = create<CartState>()(
             image: item.Drink?.image ?? item.image,
             qty: item.quantity ?? item.qty ?? 1,
             pack: item.pack || 12,
+            packs: item.Drink?.packs ?? [],
+
+            
           }));
           set({ cart: items });
           try {
@@ -314,15 +318,21 @@ export const useCartStore = create<CartState>()(
             } catch {}
           } else {
             const localItem: CartItem = {
-              id: `local-${Date.now()}`,
-              drinkId: product.id,
-              name: product.name,
-              price: product.price,
-              image: product.image,
-              pack,
-              qty,
-              _local: true,
+            id: `local-${Date.now()}`,
+            drinkId: product.id,
+            name: product.name,
+            // pick correct price based on selected pack
+            price:
+                (Array.isArray((product as any).packs)
+                ? (product as any).packs.find((p: any) => p.pack === pack)?.price
+                : product.price) ?? product.price,
+            image: product.image,
+            pack,
+            qty,
+            packs: (product as any).packs ?? [],
+            _local: true,
             };
+
             const updated = [...get().cart, localItem];
             set({ cart: updated });
             try {
@@ -364,14 +374,19 @@ export const useCartStore = create<CartState>()(
 
             const item = res.data.cartItem;
             const newItem: CartItem = {
-              id: item.id,
-              drinkId: item.drinkId,
-              name: item.Drink?.name ?? product.name,
-              price: item.Drink?.price ?? product.price,
-              image: item.Drink?.image ?? product.image,
-              pack: item.pack || pack,
-              qty: item.quantity,
+            id: item.id,
+            drinkId: item.drinkId,
+            name: item.Drink?.name ?? product.name,
+            price:
+                (Array.isArray((product as any).packs)
+                ? (product as any).packs.find((p: any) => p.pack === pack)?.price
+                : item.Drink?.price ?? product.price) ?? product.price,
+            image: item.Drink?.image ?? product.image,
+            pack: item.pack || pack,
+            qty: item.quantity,
+            packs: (product as any).packs ?? [],
             };
+
 
             const updated = existingItem
               ? get().cart.map((i) =>

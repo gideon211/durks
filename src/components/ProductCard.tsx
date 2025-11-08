@@ -29,7 +29,9 @@ interface CartProduct {
   category?: string;
   size?: string;
   pack?: number;
+  packs?: { pack: number; price: number }[]; // <-- add this line
 }
+
 
 export const ProductCard = ({
   id,
@@ -64,6 +66,9 @@ export const ProductCard = ({
         category,
         size,
         pack: selectedPack,
+        packs,
+
+
       };
 
       await addToCart(productToAdd, selectedPack);
