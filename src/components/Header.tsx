@@ -63,7 +63,7 @@ const Header = () => {
 
   return (
     <header
-      className={`fixed top-0 z-50 w-full border-b transition-all duration-500 px-2 ${
+      className={`fixed top-0 z-50 w-full border-b transition-all duration-500 px-2${
         scrolled
           ? "bg-card border-border shadow-sm"
           : "bg-transparent border-transparent"

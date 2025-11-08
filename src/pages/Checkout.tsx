@@ -262,7 +262,7 @@ export default function Checkout(): JSX.Element {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 container py-8 mt-14 bg-white">
+      <main className="flex-1 container py-16 bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <form onSubmit={handleSubmit} className="lg:col-span-2 rounded space-y-6">
             <h2 className="font-heading text-2xl font-semibold mb-4">Checkout</h2>
