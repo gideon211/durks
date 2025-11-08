@@ -265,7 +265,7 @@ export default function Checkout(): JSX.Element {
       <main className="flex-1 container py-16 bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <form onSubmit={handleSubmit} className="lg:col-span-2 rounded space-y-6">
-            <h2 className="font-heading text-2xl font-semibold mb-4">Checkout</h2>
+            <h2 className="font-heading text-2xl font-bold mb-6 text-center">Checkout</h2>
 
             {/* Order Type */}
             <div className="space-y-2">
