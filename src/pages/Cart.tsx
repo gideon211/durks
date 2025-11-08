@@ -25,8 +25,6 @@ export default function Cart() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState<"checkout" | "bulk" | null>(null);
-
-  // local quantity map keyed by item id
   const [localQtyMap, setLocalQtyMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -47,7 +45,6 @@ export default function Cart() {
     })();
   }, [user, loadCartForUser]);
 
-  // restore pending cart for logged-in user
   useEffect(() => {
     try {
       const pendingCartRaw = localStorage.getItem("pendingCart");
@@ -64,7 +61,6 @@ export default function Cart() {
     }
   }, [user, setCart]);
 
-  // handle pending checkout redirect
   useEffect(() => {
     if (!user) return;
     try {
@@ -78,7 +74,6 @@ export default function Cart() {
     }
   }, [user, navigate]);
 
-  // initialize localQtyMap whenever cartItems changes
   useEffect(() => {
     const map: Record<string, number> = {};
     cartItems.forEach((item) => {
@@ -98,16 +93,7 @@ export default function Cart() {
       return;
     }
     toast.success("Proceeding to checkout...");
-    setTimeout(() => navigate("/checkout"), 400);
-  };
-
-  const handleBulkQuote = () => {
-    if (!user) {
-      openAuthModal("bulk");
-      return;
-    }
-    toast.success("Converting to bulk quote...");
-    navigate("/bulk-quote");
+    setTimeout(() => navigate("/checkout"), 2000);
   };
 
   const handleSignInFromModal = () => {
@@ -169,17 +155,19 @@ export default function Cart() {
                 const localQty = localQtyMap[item.id] ?? item.qty;
 
                 const handleQtyChange = (val: string) => {
-                  const newQty = val === "" ? 0 : Number(val);
+                  if (val === "") {
+                    setLocalQtyMap((prev) => ({ ...prev, [item.id]: 0 }));
+                    return;
+                  }
+                  const newQty = Math.max(1, Number(val));
                   setLocalQtyMap((prev) => ({ ...prev, [item.id]: newQty }));
-                  if (val !== "") updateQty(item.id, newQty);
+                  updateQty(item.id, newQty);
                 };
 
                 const handleQtyBlur = () => {
                   if (!localQty || localQty < 1) {
                     updateQty(item.id, 1);
                     setLocalQtyMap((prev) => ({ ...prev, [item.id]: 1 }));
-                  } else {
-                    updateQty(item.id, localQty);
                   }
                 };
 
@@ -199,9 +187,9 @@ export default function Cart() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <h3 className="font-medium text-sm truncate">{item.name}</h3>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            ₵{item.price.toFixed(2)} each
+                          <h3 className="font-semibold text-sm truncate">{item.name}</h3>
+                          <p className="text-xs text-muted-foreground mt-0.5 font-semibold">
+                            {item.pack} bottles
                           </p>
                         </div>
                         <Trash2
@@ -212,38 +200,38 @@ export default function Cart() {
 
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                            <select
+                          <select
                             value={item.pack}
                             onChange={(e) => {
-                                const newPack = Number(e.target.value);
-                                const selectedPack = item.packs?.find((p) => p.pack === newPack);
-                                const newPrice = selectedPack ? selectedPack.price : item.price;
+                              const newPack = Number(e.target.value);
+                              const selectedPack = item.packs?.find((p) => p.pack === newPack);
+                              const newPrice = selectedPack ? selectedPack.price : item.price;
 
-                                const updated = cartItems.map((c) =>
+                              const updated = cartItems.map((c) =>
                                 c.id === item.id ? { ...c, pack: newPack, price: newPrice } : c
-                                );
-                                setCart(updated);
+                              );
+                              setCart(updated);
                             }}
-                            >
+                            className="border px-2 py-1 rounded text-sm"
+                          >
                             {item.packs?.length
-                                ? item.packs.map((p) => (
-                                    <option key={p.pack} value={p.pack}>
+                              ? item.packs.map((p) => (
+                                  <option key={p.pack} value={p.pack}>
                                     {p.pack}
-                                    </option>
+                                  </option>
                                 ))
-                                : [6, 12, 24].map((val) => (
-                                    <option key={val} value={val}>
+                              : [6, 12, 24].map((val) => (
+                                  <option key={val} value={val}>
                                     {val}
-                                    </option>
+                                  </option>
                                 ))}
-                            </select>
-
+                          </select>
 
                           <p className="text-xs">qty:</p>
                           <input
                             type="number"
                             min={1}
-                            value={localQty}
+                            value={localQty || ""}
                             onChange={(e) => handleQtyChange(e.target.value)}
                             onBlur={handleQtyBlur}
                             className="border px-2 py-1 w-16 text-center rounded text-sm"
@@ -253,12 +241,7 @@ export default function Cart() {
                         <div className="text-right min-w-[80px]">
                           <div className="text-xs text-muted-foreground">Total</div>
                           <div className="font-heading font-semibold text-sm">
-                            ₵
-                            {(
-                              (item.price || 0) *
-                              (item.pack || 12) *
-                              (localQty || 1)
-                            ).toFixed(2)}
+                            ₵{(item.price * (localQty || 1)).toFixed(2)}
                           </div>
                         </div>
                       </div>
