@@ -262,7 +262,7 @@ export default function Checkout(): JSX.Element {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 container py-8 mt-14">
+      <main className="flex-1 container py-8 mt-14 bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <form onSubmit={handleSubmit} className="lg:col-span-2 rounded space-y-6">
             <h2 className="font-heading text-2xl font-semibold mb-4">Checkout</h2>
@@ -358,37 +358,9 @@ export default function Checkout(): JSX.Element {
             )}
 
             {/* Payment Section */}
-            <div className="mt-6">
-              <h2 className="font-heading text-xl font-bold mb-4">Payment Method</h2>
-              <RadioGroup
-                value={formData.paymentMethod}
-                onValueChange={(val) =>
-                  setFormData((prev) => ({ ...prev, paymentMethod: val }))
-                }
-                className="space-y-3"
-              >
-                <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer">
-                  <RadioGroupItem value="card" id="card" />
-                  <Label htmlFor="card" className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" /> Credit/Debit Card
-                  </Label>
-                </div>
-                <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer">
-                  <RadioGroupItem value="mobile" id="mobile" />
-                  <Label htmlFor="mobile" className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" /> Mobile Money
-                  </Label>
-                </div>
-                <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer">
-                  <RadioGroupItem value="delivery" id="delivery" />
-                  <Label htmlFor="delivery" className="flex items-center gap-2">
-                    <Truck className="h-4 w-4" /> Pay on Delivery
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
 
-            <Button type="submit" size="lg" className="w-full mt-4">
+
+            <Button type="submit" size="md" className="w-full mt-4">
               Confirm & Place Order
             </Button>
           </form>
