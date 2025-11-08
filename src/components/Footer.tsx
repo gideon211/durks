@@ -76,7 +76,7 @@ export const Footer = () => {
                 <li>
                   <a
                     href="tel:+233202427880"
-                    className="flex items-center gap-2 font-semibold text-foreground hover:text-primary" // Bolder and primary color hover
+                    className="flex items-center gap-2 text-foreground hover:text-primary" // Bolder and primary color hover
                   >
                     <Phone className="h-4 w-4 text-primary" />
                     +233 202 427 880
@@ -85,7 +85,7 @@ export const Footer = () => {
                 <li>
                   <a
                     href="tel:+233243587001"
-                    className="flex items-center gap-2 font-semibold text-foreground hover:text-primary"
+                    className="flex items-center gap-2  text-foreground hover:text-primary"
                   >
                     <Phone className="h-4 w-4 text-primary" />
                     +233 240 076 685

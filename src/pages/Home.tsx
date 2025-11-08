@@ -362,7 +362,7 @@ export default function Home() {
 
         {/* TikTok Section (unchanged) */}
         <motion.section
-          className="py-12 md:py-20 bg-neutral-charcoal text-white mt-10 rounded-b-lg"
+          className="py-12  md:py-20 bg-neutral-charcoal text-white mt-24 rounded-b-lg"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -395,7 +395,7 @@ export default function Home() {
 
         {/* FAQ Section (unchanged) */}
         <motion.section
-          className="py-12 md:py-20"
+          className="py-12 md:py-20 mt-10"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -412,7 +412,7 @@ export default function Home() {
                 <motion.div key={index} variants={cardVariants}>
                   <AccordionItem value={`item-${index}`} className="border rounded-sm px-6 bg-card">
                     <AccordionTrigger className="text-md font-semibold font-heading hover:text-secondary hover:no-underline">{faq.question}</AccordionTrigger>
-                    <AccordionContent className="text-sm font-semibold leading-relaxed pt-2">{faq.answer}</AccordionContent>
+                    <AccordionContent className="text-sm  leading-relaxed pt-2">{faq.answer}</AccordionContent>
                   </AccordionItem>
                 </motion.div>
               ))}
