@@ -187,8 +187,8 @@ export default function Cart() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <h3 className="font-bold text-sm truncate">{item.name}</h3>
-                          <p className="text-xs text-muted-foreground mt-0.5 font-semibold">
+                          <h3 className="font-semibold text-sm truncate">{item.name}</h3>
+                          <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                             {item.pack} bottles
                           </p>
                         </div>
