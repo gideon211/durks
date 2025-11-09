@@ -487,7 +487,7 @@ export const useCartStore = create<CartState>()(
       totalQty: () => get().cart.reduce((sum, item) => sum + item.qty, 0),
 
       totalPrice: () =>
-        get().cart.reduce((sum, item) => sum + item.price * item.qty * item.pack, 0),
+        get().cart.reduce((sum, item) => sum + (item.price ?? 0) * (item.qty ?? 0), 0),
 
       syncLocalItems: async () => {
         const localItems = get().cart.filter((i) => i._local);
