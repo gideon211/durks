@@ -149,10 +149,9 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 1 }}
                 >
-                  <h1 className="text-8xl lg:text-7xl font-heading font-bold text-white leading-wide tracking-wide">
-                    Fall Into <br />
-                    <span className="text-green-400">Wellness</span>
-                  </h1>
+                <h1 className="text-8xl lg:text-7xl font-heading font-bold text-white leading-wide tracking-wide"> Fall Into <br /> <span className="text-green-400">Wellness</span> </h1>
+
+
                   <p className="text-xl lg:text-2xl text-white/90 max-w-2xl">
                     Cold-pressed perfection. Zero additives. Maximum flavor.
                   </p>
@@ -177,10 +176,26 @@ export default function Home() {
             className="lg:hidden py-6 mt-2 flex flex-col items-center text-center space-y-4"
             style={{ fontFamily: 'Raleway, sans-serif' }}
           >
-            <h1 className="text-5xl sm:text-4xl font-extrabold text-neutral-900">
-              Fall into<br />
-              <span className="text-green-400">Wellness</span>
-            </h1>
+<h1
+  className="text-5xl sm:text-4xl font-bold text-neutral-800 leading-none tracking-tight"
+  style={{
+    fontFamily: "'Poppins', sans-serif",
+   
+  }}
+>
+  Fall into<br />
+  <span
+    className="text-green-400"
+    style={{
+      fontFamily: "'Poppins', serif",
+      fontWeight: 600,
+      fontStyle: "italic",
+    }}
+  >
+    Wellness
+  </span>
+</h1>
+
             <p className="text-lg sm:text-xl text-neutral-900 max-w-md px-4">
               Cold-pressed perfection. Zero additives. Maximum flavor.
             </p>

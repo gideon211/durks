@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-         heading: ['"Baloo 2"', 'cursive'],
+         heading: ['Montserrat', 'sans'],
         body: ['Poppins', 'sans-serif'],
       },
       colors: {
