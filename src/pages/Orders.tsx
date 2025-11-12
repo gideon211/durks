@@ -1,26 +1,61 @@
-// src/pages/Orders.jsx
-import { useEffect } from "react";
+// src/pages/Orders.tsx
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Package } from "lucide-react";
+import { Package, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/context/Authcontext";
-// import { useOrdersStore } from "@/store/ordersStore";
+import axios from "axios";
+
+interface OrderItem {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+  qty: number;
+  pack?: number;
+}
+
+interface Order {
+  id: string;
+  date: string;
+  status: "Pending" | "Processing" | "Delivered" | "Cancelled";
+  total: number;
+  items: OrderItem[];
+}
 
 export default function Orders() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  // const orders = useOrdersStore((s) => s.orders);
-  // const clearOrders = useOrdersStore((s) => s.clearOrders);
-
-  // Placeholder orders for demo
-  const orders = []; // Replace with your store hook
-  const clearOrders = () => console.log("Clearing orders"); // Replace with your store hook
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const { data } = await axios.get<Order[]>(
+          `http://localhost:5000/api/orders?userId=${user.id}`
+        );
+        setOrders(data);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch your orders");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [user]);
 
   if (!user) {
     return (
@@ -37,6 +72,17 @@ export default function Orders() {
             </p>
             <Button onClick={() => navigate("/auth")}>Sign in</Button>
           </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center px-4 py-16">
+          <Loader2 className="animate-spin h-12 w-12 text-accent" />
         </main>
       </div>
     );
@@ -71,16 +117,21 @@ export default function Orders() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-
       <main className="flex-1 container mx-auto px-4 py-4">
         <h1 className="font-heading font-semibold text-3xl md:text-4xl mb-6">My Orders</h1>
 
         <div className="space-y-4">
           {orders.map((order) => (
-            <div key={order.id} className="bg-card border border-border rounded-xl p-4">
+            <motion.div
+              key={order.id}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className="bg-card border border-border rounded-xl p-4"
+            >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">Order</div>
+                  <div className="text-sm text-muted-foreground">Order ID</div>
                   <div className="font-heading font-semibold">{order.id}</div>
                   <div className="text-xs text-muted-foreground mt-1">
                     {new Date(order.date).toLocaleString()}
@@ -142,32 +193,17 @@ export default function Orders() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => {
-                        navigator.clipboard?.writeText(order.id);
-                      }}
+                      onClick={() => navigator.clipboard?.writeText(order.id)}
                     >
                       Copy Order ID
                     </Button>
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
-
-        <div className="mt-6">
-          <Button
-            variant="outline"
-            onClick={() => {
-              clearOrders();
-            }}
-          >
-            Clear Order History
-          </Button>
-        </div>
       </main>
-
-      {/* <Footer /> */}
     </div>
   );
 }
