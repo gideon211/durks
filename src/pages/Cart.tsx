@@ -149,8 +149,10 @@ export default function Cart() {
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
         <main className="flex-1 container mx-auto px-2 py-4 mt-16">
+          {/* Keep a 3-column grid so we can center the cart in the middle column on lg */}
           <div className="grid grid-cols-1 lg:grid-cols-3">
-            <div className="lg:col-span-2 space-y-3">
+            {/* Place cart into the center column on large screens */}
+            <div className="space-y-3 lg:col-start-2 lg:col-span-1 max-w-3xl w-full mx-auto">
               {cartItems.map((item: CartItem) => {
                 const localQty = localQtyMap[item.id] ?? item.qty;
 
@@ -250,6 +252,7 @@ export default function Cart() {
                 );
               })}
             </div>
+            {/* intentionally left empty to preserve 3-column layout and keep center column centered */}
             <div className="hidden lg:block" />
           </div>
         </main>
