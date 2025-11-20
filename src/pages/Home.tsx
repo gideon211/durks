@@ -8,12 +8,32 @@ import { Footer } from "@/components/Footer";
 import heroImage from "@/assets/hero-juice.png";
 import pureJuiceImage from "@/assets/pure-juice.jpg";
 import cleanseJuiceImage from "@/assets/cleanse-juice.jpg";
-import smoothiesImage from "@/assets/smoothies.jpg";
-import cutFruitsImage from "@/assets/cut-fruits.jpg";
-import giftPacksImage from "@/assets/gift-packs.jpg";
+import {
+  smoothie1,
+  smoothie2,
+  smoothie3,
+  smoothie4,
+  cutFruit1,
+  cutFruit2,
+  cutFruit3,
+  cutFruit4,
+  gift1,
+  gift2,
+  gift3,
+  gift4,
+  bundle1,
+  bundle2,
+  bundle3,
+  bundle4,
+  flavor1,
+  flavor2,
+  flavor3,
+  flavor4,
+} from "@/constants/imagePaths";
+
 import wellnessPacksImage from "@/assets/wellness-shot.jpg";
 import chooseImage from "@/assets/chooseImage.jpg";
-import eventsImage from "@/assets/events.jpg";
+import eventsImage from "@/assets/events.jpeg";
 import deskheroImage from "@/assets/desktopheroimage.jpg";
 import tiktok1 from "@/assets/tiktok-1.jpg";
 import tiktok2 from "@/assets/tiktok-2.jpg";
@@ -22,13 +42,82 @@ import tiktok4 from "@/assets/tiktok-4.jpg";
 import { useRef, useState, useEffect } from "react";
 
 const productCategories = [
-  { id: "pure-juice", name: "PURE JUICES", slug: "pure-juice", image: pureJuiceImage, fruits: "Oranges, Apples, Watermelon, Pineapple, Grapes" },
-  { id: "cleanse", name: "CLEANSE JUICES", slug: "cleanse", image: cleanseJuiceImage, fruits: "Kale, Spinach, Cucumber, Celery, Lemon, Ginger, Green Apple" },
-  { id: "smoothies", name: "SMOOTHIES", slug: "smoothies", image: smoothiesImage, fruits: "Bananas, Berries, Mangos, Avocado, Dates, Coconut" },
-  { id: "cut-fruits", name: "CUT FRUITS", slug: "cut-fruits", image: cutFruitsImage, fruits: "Pineapple, Watermelon, Cantaloupe, Berries, Grapes, Kiwi" },
-  { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs", image: tiktok2, fruits: "Assorted Premium Selection" },
-  { id: "events", name: "EVENTS", slug: "events", image: eventsImage, fruits: "Custom Event-Based Selection" },
-  { id: "shots", name: "WELLNESS SHOTS", slug: "shots", image: wellnessPacksImage, fruits: "Turmeric, Ginger, Beetroot, Wheatgrass, Cayenne" }
+  {
+    id: "pure-juice",
+    name: "PURE JUICES",
+    slug: "pure-juice",
+    image: pureJuiceImage,
+    fruits: "Oranges, Apples, Watermelon, Pineapple, Grapes",
+  },
+
+  {
+    id: "cleanse",
+    name: "CLEANSE JUICES",
+    slug: "cleanse",
+    image: cleanseJuiceImage,
+    fruits: "Kale, Spinach, Cucumber, Celery, Lemon, Ginger, Green Apple",
+  },
+
+  // Smoothies → 4 images
+  {
+    id: "smoothies",
+    name: "SMOOTHIES",
+    slug: "smoothies",
+    images: [smoothie1, smoothie2, smoothie3, smoothie4],
+    fruits: "Bananas, Strawberries, Blueberries, Mangos, Avocado, Dates, Coconut",
+  },
+
+  // Cut Fruits → 4 images
+  {
+    id: "cut-fruits",
+    name: "CUT FRUITS",
+    slug: "cut-fruits",
+    images: [cutFruit1, cutFruit2, cutFruit3, cutFruit4],
+    fruits: "Pineapple, Watermelon, Cantaloupe, Berries, Grapes, Kiwi",
+  },
+
+  // Gift Packs → 4 images
+  {
+    id: "gift-packs",
+    name: "GIFT PACKS",
+    slug: "gift-packs",
+    images: [gift1, gift2, gift3, gift4],
+    fruits: "Premium Assorted Selection: Berries, Pineapple, Grapes, Citrus Mix, Exotic Fruits",
+  },
+
+  {
+    id: "events",
+    name: "EVENTS",
+    slug: "events",
+    image: eventsImage,
+    fruits: "Custom Event-Based Selection (Bulk Packs, Party Trays, Juice Stations)",
+  },
+
+  {
+    id: "shots",
+    name: "WELLNESS SHOTS",
+    slug: "shots",
+    image: wellnessPacksImage,
+    fruits: "Ginger, Turmeric, Beetroot, Wheatgrass, Cayenne, Lemon",
+  },
+
+  // Bundles → 4 images
+  {
+    id: "bundles",
+    name: "BUNDLES",
+    slug: "bundles",
+    images: [bundle1, bundle2, bundle3, bundle4],
+    fruits: "Mixed Fruit Packs, Mixed Juice Combos, Cleanse Packs, Family Fruit Bowls",
+  },
+
+  // Flavors → 4 images
+  {
+    id: "flavors",
+    name: "FLAVORS",
+    slug: "flavors",
+    images: [flavor1, flavor2, flavor3, flavor4],
+    fruits: "Strawberry, Mango, Coconut, Berry Fusion (Flavor-Based Assortment)",
+  },
 ];
 
 const messages = [
@@ -250,63 +339,81 @@ export default function Home() {
               </button>
 
               {/* Carousel */}
-              <motion.div
-                ref={carouselRef}
-                className="w-full flex gap-4 overflow-x-auto pb-6 no-scrollbar smooth-scroll scroll-pl-4"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.3 }}
-                variants={containerVariants}
-                style={{ scrollBehavior: 'smooth' }}
-              >
-                {productCategories.map((category) => (
-                  <motion.div
-                    key={category.id}
-                    className="w-[300px] flex-shrink-0"
-                    variants={cardVariants}
-                  >
-                    <div className="relative rounded-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
-                      <div className="relative h-[32rem] md:h-[34rem] lg:h-[36rem] overflow-hidden">
-                        <img
-                          src={category.image}
-                          alt={category.name}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                      </div>
+<motion.div
+  ref={carouselRef}
+  className="w-full flex gap-4 overflow-x-auto pb-6 no-scrollbar smooth-scroll scroll-pl-4"
+  initial="hidden"
+  whileInView="visible"
+  viewport={{ once: true, amount: 0.3 }}
+  variants={containerVariants}
+  style={{ scrollBehavior: "smooth" }}
+>
+  {productCategories.map((category) => (
+    <motion.div
+      key={category.id}
+      className="w-[300px] flex-shrink-0"
+      variants={cardVariants}
+    >
+      <div className="relative rounded-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
 
-                      <div
-                        className={`absolute inset-x-0 bottom-0 p-4 backdrop-blur-md rounded-t-2xl transition-all duration-700 bg-black/30 md:group-hover:bg-black/60`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <h2 className="text-white text-lg md:text-xl font-bold">
-                            {category.name}
-                          </h2>
-                          <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">
-                            +
-                          </button>
-                        </div>
+        {/* TOP SECTION: IMAGE OR GRID */}
+        <div className="relative h-[32rem] md:h-[34rem] lg:h-[36rem] overflow-hidden">
 
-                        <div
-                          className="mt-2 text-white text-sm leading-relaxed opacity-100 translate-y-0 md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-700"
-                        >
+          {/* 👉 MULTIPLE IMAGES (GRID OF 4) */}
+          {category.images ? (
+            <div className="grid grid-cols-2 gap-[1px] w-full h-full">
+              {category.images.map((img, index) => (
+                <img
+                  key={index}
+                  src={img}
+                  alt={`${category.name} ${index + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              ))}
+            </div>
+          ) : (
+            /* 👉 SINGLE IMAGE */
+            <img
+              src={category.image}
+              alt={category.name}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            />
+          )}
 
-                          <p className="text-xs mt-1 opacity-80">Key Ingredients:</p>
-                          <p className="text-xs font-medium mb-3">{category.fruits}</p>
-                          <Link
-                            to={`/products/${category.slug}`}
-                            className=" flex mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm "
-                          >
-                            Shop Now
-                            <ArrowRight className="w-5 h-5 ml-2" />
+          {/* Overlay Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        </div>
 
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
+        {/* BOTTOM CONTENT */}
+        <div className="absolute inset-x-0 bottom-0 p-4 backdrop-blur-md rounded-t-2xl transition-all duration-700 bg-black/30 md:group-hover:bg-black/60">
+          <div className="flex items-center justify-between">
+            <h2 className="text-white text-lg md:text-xl font-bold">
+              {category.name}
+            </h2>
+            <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">
+              +
+            </button>
+          </div>
+
+          <div className="mt-2 text-white text-sm leading-relaxed opacity-100 translate-y-0 md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-700">
+            <p className="text-xs mt-1 opacity-80">Key Ingredients:</p>
+            <p className="text-xs font-medium mb-3">{category.fruits}</p>
+
+            <Link
+              to={`/products/${category.slug}`}
+              className="flex mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm"
+            >
+              Shop Now
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Link>
+          </div>
+        </div>
+
+      </div>
+    </motion.div>
+  ))}
+</motion.div>
+
             </div>
 
           </div>
