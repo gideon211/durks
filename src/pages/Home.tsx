@@ -42,66 +42,7 @@ import tiktok4 from "@/assets/tiktok-4.jpg";
 import { useRef, useState, useEffect } from "react";
 
 const productCategories = [
-  {
-    id: "pure-juice",
-    name: "PURE JUICES",
-    slug: "pure-juice",
-    image: pureJuiceImage,
-    fruits: "Oranges, Apples, Watermelon, Pineapple, Grapes",
-  },
-
-  {
-    id: "cleanse",
-    name: "CLEANSE JUICES",
-    slug: "cleanse",
-    image: cleanseJuiceImage,
-    fruits: "Kale, Spinach, Cucumber, Celery, Lemon, Ginger, Green Apple",
-  },
-
-  // Smoothies → 4 images
-  {
-    id: "smoothies",
-    name: "SMOOTHIES",
-    slug: "smoothies",
-    images: [smoothie1, smoothie2, smoothie3, smoothie4],
-    fruits: "Bananas, Strawberries, Blueberries, Mangos, Avocado, Dates, Coconut",
-  },
-
-  // Cut Fruits → 4 images
-  {
-    id: "cut-fruits",
-    name: "CUT FRUITS",
-    slug: "cut-fruits",
-    images: [cutFruit1, cutFruit2, cutFruit3, cutFruit4],
-    fruits: "Pineapple, Watermelon, Cantaloupe, Berries, Grapes, Kiwi",
-  },
-
-  // Gift Packs → 4 images
-  {
-    id: "gift-packs",
-    name: "GIFT PACKS",
-    slug: "gift-packs",
-    images: [gift1, gift2, gift3, gift4],
-    fruits: "Premium Assorted Selection: Berries, Pineapple, Grapes, Citrus Mix, Exotic Fruits",
-  },
-
-  {
-    id: "events",
-    name: "EVENTS",
-    slug: "events",
-    image: eventsImage,
-    fruits: "Custom Event-Based Selection (Bulk Packs, Party Trays, Juice Stations)",
-  },
-
-  {
-    id: "shots",
-    name: "WELLNESS SHOTS",
-    slug: "shots",
-    image: wellnessPacksImage,
-    fruits: "Ginger, Turmeric, Beetroot, Wheatgrass, Cayenne, Lemon",
-  },
-
-  // Bundles → 4 images
+  // 1. Bundles → 4 images
   {
     id: "bundles",
     name: "BUNDLES",
@@ -110,7 +51,44 @@ const productCategories = [
     fruits: "Mixed Fruit Packs, Mixed Juice Combos, Cleanse Packs, Family Fruit Bowls",
   },
 
-  // Flavors → 4 images
+
+  // 3. Pure juices
+  {
+    id: "pure-juice",
+    name: "PURE JUICES",
+    slug: "pure-juice",
+    image: pureJuiceImage,
+    fruits: "Oranges, Apples, Watermelon, Pineapple, Grapes",
+  },
+
+  // 4. Cleanse juices
+  {
+    id: "cleanse",
+    name: "CLEANSE JUICES",
+    slug: "cleanse",
+    image: cleanseJuiceImage,
+    fruits: "Kale, Spinach, Cucumber, Celery, Lemon, Ginger, Green Apple",
+  },
+
+  // 5. Wellness shots
+  {
+    id: "shots",
+    name: "WELLNESS SHOTS",
+    slug: "shots",
+    image: wellnessPacksImage,
+    fruits: "Ginger, Turmeric, Beetroot, Wheatgrass, Cayenne, Lemon",
+  },
+
+  // 6. Smoothies → 4 images
+  {
+    id: "smoothies",
+    name: "SMOOTHIES",
+    slug: "smoothies",
+    images: [smoothie1, smoothie2, smoothie3, smoothie4],
+    fruits: "Bananas, Strawberries, Blueberries, Mangos, Avocado, Dates, Coconut",
+  },
+
+  // 7. Flavors → 4 images
   {
     id: "flavors",
     name: "FLAVORS",
@@ -118,7 +96,35 @@ const productCategories = [
     images: [flavor1, flavor2, flavor3, flavor4],
     fruits: "Strawberry, Mango, Coconut, Berry Fusion (Flavor-Based Assortment)",
   },
+
+  // 8. Cut Fruits → 4 images
+  {
+    id: "cut-fruits",
+    name: "CUT FRUITS",
+    slug: "cut-fruits",
+    images: [cutFruit1, cutFruit2, cutFruit3, cutFruit4],
+    fruits: "Pineapple, Watermelon, Cantaloupe, Berries, Grapes, Kiwi",
+  },
+
+  // 9. Gift packs → 4 images
+  {
+    id: "gift-packs",
+    name: "GIFT PACKS",
+    slug: "gift-packs",
+    images: [gift1, gift2, gift3, gift4],
+    fruits: "Premium Assorted Selection: Berries, Pineapple, Grapes, Citrus Mix, Exotic Fruits",
+  },
+
+  // 10. Events
+  {
+    id: "events",
+    name: "EVENTS",
+    slug: "events",
+    image: eventsImage,
+    fruits: "Custom Event-Based Selection (Bulk Packs, Party Trays, Juice Stations)",
+  },
 ];
+
 
 const messages = [
   "Packed with vitamins and natural energy",
