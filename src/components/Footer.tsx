@@ -98,7 +98,7 @@ export const Footer = () => {
                      <MapPin className="h-4 w-4 text-primary"/>Physical Address:
                   </p>
                   <p className="text-muted-foreground">
-                    Madina, Accra Ghana
+                    Madina Estate, Accra Ghana
                   </p>
                 </li>
               </ul>
