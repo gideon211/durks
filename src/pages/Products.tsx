@@ -28,13 +28,16 @@ type Product = {
 
 const categories = [
   { id: "all", name: "ALL PRODUCTS", slug: "all" },
+  {id: "bundles", name:"BUNDLES", slug: "bundle"},
   { id: "pure-juice", name: "PURE JUICES", slug: "pure-juice" },
   { id: "cleanse", name: "CLEANSE JUICES", slug: "cleanse" },
+  { id: "shots", name: "WELLNESS SHOTS", slug: "shots" },
   { id: "smoothies", name: "SMOOTHIES", slug: "smoothies" },
+  { id: "flavors", name: "FLAVORS", slug: "flavor" },
   { id: "cut-fruits", name: "CUT FRUITS", slug: "cut-fruits" },
   { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs" },
   { id: "events", name: "EVENTS", slug: "events" },
-  { id: "shots", name: "WELLNESS SHOTS", slug: "shots" },
+  
 ];
 
 const PRODUCTS_API = "https://duksshopback-end2-0.onrender.com/api/drinks/";
