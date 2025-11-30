@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { zones } from "@/data/zones"
+import { useAuth } from "@/context/Authcontext";
+
 
 interface Calendar24Props {
   date?: Date
@@ -142,6 +144,7 @@ SelectItem.displayName = "SelectItem"
 // Checkout
 // ----------------------
 export default function Checkout(): JSX.Element {
+  const { user } = useAuth();
   const navigate = useNavigate()
   const cart = useCartStore((s) => s.cart) as CartItem[]
   const totalPrice = useCartStore((s) => s.totalPrice) as () => number
@@ -179,46 +182,77 @@ export default function Checkout(): JSX.Element {
 
   const generateOrderId = () => "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase()
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    if (!formData.fullName || !formData.email || !formData.address || !formData.city) {
-      toast.error("Please fill all required fields")
-      return
-    }
+  if (!formData.fullName || !formData.email || !formData.address || !formData.city) {
+    toast.error("Please fill all required fields");
+    return;
+  }
 
-    const finalTotal = totalPrice() + shippingFee
+  const finalTotal = totalPrice() + shippingFee;
+  const orderId = generateOrderId();
 
-    if (formData.paymentMethod === "delivery") {
-      try {
-        await axios.post("http://localhost:5000/api/orders", {
-          cart,
-          total: finalTotal,
-          customer: formData,
-          orderId: generateOrderId(),
-          paymentMethod: "Pay on Delivery",
-        })
-        setShowConfirmation(true)
-        clearCart()
-      } catch (err) {
-        console.error(err)
-        toast.error("Failed to save order")
-      }
-      return
-    }
+  // Get cart directly from Zustand
+  const currentCart = useCartStore.getState().cart; // <-- this is the live cart from Zustand
+  if (!currentCart || currentCart.length === 0) {
+    toast.error("Your cart is empty");
+    return;
+  }
 
+  // Format cart if needed
+  const formattedCart = currentCart.map((item) => ({
+    productId: item.id, // match backend schema
+    qty: item.qty,
+  }));
+
+  // Delivery payment
+  if (formData.paymentMethod === "delivery") {
     try {
-      const { data } = await axios.post("http://localhost:5000/api/paystack/init", {
+      await axios.post("http://localhost:5000/api/orders", {
+        total: finalTotal,
+        customer: formData,
+        orderId,
+        paymentMethod: "Pay on Delivery",
+      });
+      setShowConfirmation(true);
+      clearCart();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save order");
+    }
+    return;
+  }
+
+  if (!user || !user.token) {
+    toast.error("You must be logged in to pay with card");
+    return;
+  }
+
+  try {
+    const { data } = await axios.post(
+      "https://duksshopback-end.onrender.com/api/payments/initialize",
+      {
         amount: finalTotal * 100,
         email: formData.email,
-        orderId: generateOrderId(),
-      })
-      window.location.href = data.authorization_url
-    } catch (err) {
-      console.error(err)
-      toast.error("Payment initialization failed")
-    }
+        orderId,
+        cart, // send cart directly from Zustand
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      }
+    );
+
+    window.location.href = data.authorization_url;
+  } catch (err) {
+    console.error(err);
+    toast.error("Payment initialization failed");
   }
+};
+
+
 
   if (showConfirmation) {
     return (

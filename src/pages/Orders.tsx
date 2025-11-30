@@ -1,13 +1,13 @@
 // src/pages/Orders.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Package, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/Authcontext";
-import axios from "axios";
+import axiosInstance from "@/api/axios"; // Make sure this axios instance has auth headers set
 
 interface OrderItem {
   id: string;
@@ -42,9 +42,7 @@ export default function Orders() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get<Order[]>(
-          `http://localhost:5000/api/orders?userId=${user.id}`
-        );
+        const { data } = await axiosInstance.get<Order[]>("/orders/user"); // Backend identifies user from token
         setOrders(data);
       } catch (err) {
         console.error(err);

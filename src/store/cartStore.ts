@@ -3,15 +3,26 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axios from "axios";
 
-/**
- * NOTE:
- * - Adjust baseURL below to your real backend or swap to your shared axios instance.
- * - This file assumes auth tokens are attached elsewhere (axios interceptors)
- */
+
 const axiosInstance = axios.create({
-  baseURL: "https://your-backend-url",
+  baseURL: "https://duksshopback-end.onrender.com/api",
   timeout: 5000,
 });
+
+// AUTO-ADD TOKEN
+axiosInstance.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const rawUser = localStorage.getItem("user");
+    if (rawUser) {
+      const user = JSON.parse(rawUser);
+      if (user?.token) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+      }
+    }
+  }
+  return config;
+});
+
 
 export interface Product {
   id: string | number;
