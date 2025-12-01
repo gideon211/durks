@@ -399,8 +399,8 @@ export default function Checkout(): JSX.Element {
         footer={null}
       >
         <div className="flex flex-col items-center justify-center py-4">
-          <Loader2 className="h-6 w-6 animate-spin mb-3" />
-          <p className="text-center text-sm">Please wait — redirecting to payment.</p>
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <p className="text-center text-sm">Please wait..  redirecting to payment.</p>
         </div>
       </Modal>
     </div>

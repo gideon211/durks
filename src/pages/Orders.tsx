@@ -10,20 +10,20 @@ import { useAuth } from "@/context/Authcontext";
 import axiosInstance from "@/api/axios"; // Make sure this axios instance has auth headers set
 
 interface OrderItem {
-  id: string;
+  drinkId: string;
   name: string;
-  image: string;
   price: number;
-  qty: number;
-  pack?: number;
+  quantity: number;
+  image?: string;
 }
 
 interface Order {
   id: string;
-  date: string;
-  status: "Pending" | "Processing" | "Delivered" | "Cancelled";
-  total: number;
   items: OrderItem[];
+  totalAmount: number;
+  orderStatus: "pending" | "confirmed" | "completed" | "cancelled";
+  paymentStatus: "pending" | "paid" | "failed" | "refunded";
+  createdAt: string;
 }
 
 export default function Orders() {
@@ -31,6 +31,7 @@ export default function Orders() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -42,10 +43,18 @@ export default function Orders() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const { data } = await axiosInstance.get<Order[]>("/orders/user"); // Backend identifies user from token
-        setOrders(data);
+        const { data } = await axiosInstance.get("/orders/my-orders");
+        const ordersFromApi = (data.orders || []).map((o: any) => ({
+          id: o._id,
+          items: o.items || [],
+          totalAmount: o.totalAmount ?? 0,
+          orderStatus: o.orderStatus,
+          paymentStatus: o.paymentStatus,
+          createdAt: o.createdAt,
+        }));
+        setOrders(ordersFromApi);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch orders:", err);
         toast.error("Failed to fetch your orders");
       } finally {
         setLoading(false);
@@ -55,6 +64,73 @@ export default function Orders() {
     fetchOrders();
   }, [user]);
 
+  const statusText = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "Pending";
+      case "confirmed":
+        return "Processing";
+      case "completed":
+        return "Delivered";
+      case "cancelled":
+        return "Cancelled";
+      default:
+        return status;
+    }
+  };
+
+  const statusClass = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "text-accent font-semibold";
+      case "cancelled":
+        return "text-destructive font-semibold";
+      case "confirmed":
+        return "text-primary font-semibold";
+      default:
+        return "text-foreground font-semibold";
+    }
+  };
+
+  const canCancel = (order: Order) => {
+    // Allow cancellation only for pending/confirmed orders (not for completed/cancelled)
+    return order.orderStatus === "pending" || order.orderStatus === "confirmed";
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    const ok = window.confirm("Are you sure you want to cancel this order? This action cannot be undone.");
+    if (!ok) return;
+
+    try {
+      setCancellingOrderId(orderId);
+      // Call backend cancel route
+      const res = await axiosInstance.put(`/orders/cancel/${orderId}`);
+      // Backend should return updated order — if not, optimistically update
+      const updatedOrder = res.data.order;
+      if (updatedOrder) {
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? {
+          id: updatedOrder._id ?? orderId,
+          items: updatedOrder.items ?? [],
+          totalAmount: updatedOrder.totalAmount ?? (prev.find(p => p.id === orderId)?.totalAmount ?? 0),
+          orderStatus: updatedOrder.orderStatus ?? "cancelled",
+          paymentStatus: updatedOrder.paymentStatus ?? "refunded",
+          createdAt: updatedOrder.createdAt ?? (prev.find(p => p.id === orderId)?.createdAt ?? new Date().toISOString()),
+        } : o)));
+      } else {
+        // fallback: set local order status to cancelled
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, orderStatus: "cancelled", paymentStatus: "refunded" } : o)));
+      }
+
+      toast.success("Order cancelled. Refund will be processed if applicable.");
+    } catch (err) {
+      console.error("Cancel order failed:", err);
+      toast.error("Failed to cancel order. Try again.");
+    } finally {
+      setCancellingOrderId(null);
+    }
+  };
+
+  // UI states
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -132,20 +208,16 @@ export default function Orders() {
                   <div className="text-sm text-muted-foreground">Order ID</div>
                   <div className="font-heading font-semibold">{order.id}</div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    {new Date(order.date).toLocaleString()}
+                    {new Date(order.createdAt).toLocaleString()}
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <div
-                    className={`text-sm font-semibold ${
-                      order.status === "Delivered" ? "text-accent" : ""
-                    }`}
-                  >
-                    {order.status}
+                  <div className={statusClass(order.orderStatus)}>
+                    {statusText(order.orderStatus)}
                   </div>
                   <div className="text-sm mt-2 font-heading font-bold">
-                    ₵{order.total.toFixed(2)}
+                    ₵{order.totalAmount.toFixed(2)}
                   </div>
                 </div>
               </div>
@@ -154,12 +226,12 @@ export default function Orders() {
                 <div className="md:col-span-2 space-y-3">
                   {order.items.map((item) => (
                     <div
-                      key={item.id}
+                      key={item.drinkId}
                       className="flex items-center gap-3 bg-muted border border-border rounded p-2"
                     >
                       <div className="w-20 flex-shrink-0">
                         <img
-                          src={item.image}
+                          src={item.image || "/placeholder.png"}
                           alt={item.name}
                           className="w-full h-20 object-cover rounded"
                         />
@@ -169,7 +241,7 @@ export default function Orders() {
                         <div className="text-xs text-muted-foreground">
                           ₵{item.price.toFixed(2)} each
                         </div>
-                        <div className="text-xs text-muted-foreground">Qty: {item.qty}</div>
+                        <div className="text-xs text-muted-foreground">Qty: {item.quantity}</div>
                       </div>
                     </div>
                   ))}
@@ -178,7 +250,7 @@ export default function Orders() {
                 <div className="bg-card border border-border rounded-xl p-4">
                   <div className="text-muted-foreground text-sm">Order Summary</div>
                   <div className="font-heading font-semibold text-lg mt-2">
-                    ₵{order.total.toFixed(2)}
+                    ₵{order.totalAmount.toFixed(2)}
                   </div>
 
                   <div className="mt-4 space-y-2">
@@ -188,13 +260,34 @@ export default function Orders() {
                     >
                       View Details
                     </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => navigator.clipboard?.writeText(order.id)}
-                    >
-                      Copy Order ID
-                    </Button>
+
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => navigator.clipboard?.writeText(order.id)}
+                      >
+                        Copy Order ID
+                      </Button>
+
+                      {canCancel(order) && (
+                        <Button
+                          variant="destructive"
+                          className="w-full"
+                          onClick={() => handleCancelOrder(order.id)}
+                          disabled={cancellingOrderId === order.id}
+                        >
+                          {cancellingOrderId === order.id ? (
+                            <>
+                              <Loader2 className="animate-spin h-4 w-4 mr-2 inline-block" />
+                              Cancelling...
+                            </>
+                          ) : (
+                            "Cancel Order"
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

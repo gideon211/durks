@@ -179,27 +179,30 @@ export const Modal: React.FC<ModalProps> = ({
               {/* Body */}
               <div className="mt-4 sm:mt-5">{renderChildren()}</div>
 
-              {/* Footer */}
-              <div className="mt-5 sm:mt-6 flex sm:flex-row items-end sm:items-center justify-end gap-2 sm:gap-3">
-                {footer ? (
-                  footer
-                ) : (
-                  <div className="flex gap-2 sm:gap-3">
-                    <button
-                      onClick={onClose}
-                      className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-md text-sm bg-slate-100 hover:bg-slate-200 text-slate-800"
-                    >
-                      Dismiss
-                    </button>
-                    <button
-                      onClick={onClose}
-                      className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-md text-sm bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md hover:scale-[1.02] transform transition"
-                    >
-                      Confirm
-                    </button>
-                  </div>
+                {/* Footer */}
+                {footer !== null && (
+                <div className="mt-5 sm:mt-6 flex sm:flex-row items-end sm:items-center justify-end gap-2 sm:gap-3">
+                    {footer ? (
+                    footer
+                    ) : (
+                    <div className="flex gap-2 sm:gap-3">
+                        <button
+                        onClick={onClose}
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-md text-sm bg-slate-100 hover:bg-slate-200 text-slate-800"
+                        >
+                        Dismiss
+                        </button>
+                        <button
+                        onClick={onClose}
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-md text-sm bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md hover:scale-[1.02] transition"
+                        >
+                        Confirm
+                        </button>
+                    </div>
+                    )}
+                </div>
                 )}
-              </div>
+
             </div>
           </motion.div>
         </motion.div>

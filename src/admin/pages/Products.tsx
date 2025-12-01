@@ -44,7 +44,7 @@ const categories = [
   
 ];
 
-const API_BASE = "https://duksshopback-end2-0.onrender.com/api";
+const API_BASE = "https://updated-duks-backend-1-0.onrender.com/api";
 const DRINKS_BASE = `${API_BASE}/drinks`;
 
 export default function Products() {

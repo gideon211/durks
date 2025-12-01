@@ -40,7 +40,7 @@ const categories = [
   
 ];
 
-const PRODUCTS_API = "https://duksshopback-end2-0.onrender.com/api/drinks/";
+const PRODUCTS_API = "https://updated-duks-backend-1-0.onrender.com/api/drinks/";
 
 /**
  * Normalize various backend `packs` shapes into PackEntry[]:
