@@ -1,41 +1,32 @@
 // src/pages/Orders.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Package, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/Authcontext";
-import axiosInstance from "@/api/axios"; // Make sure this axios instance has auth headers set
-
-interface OrderItem {
-  drinkId: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image?: string;
-}
+import axiosInstance from "@/api/axios";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface Order {
   id: string;
-  items: OrderItem[];
+  items: any[];
   totalAmount: number;
-  orderStatus: "pending" | "confirmed" | "completed" | "cancelled";
-  paymentStatus: "pending" | "paid" | "failed" | "refunded";
+  orderStatus: string;
+  paymentStatus: string;
   createdAt: string;
 }
 
 export default function Orders() {
   const navigate = useNavigate();
   const { user } = useAuth();
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -44,8 +35,8 @@ export default function Orders() {
       try {
         setLoading(true);
         const { data } = await axiosInstance.get("/orders/my-orders");
-        console.log("API response:", data);
-        const ordersFromApi = (data.orders || []).map((o: any) => ({
+
+        const parsed = (data.orders || []).map((o: any) => ({
           id: o._id,
           items: o.items || [],
           totalAmount: o.totalAmount ?? 0,
@@ -53,7 +44,13 @@ export default function Orders() {
           paymentStatus: o.paymentStatus,
           createdAt: o.createdAt,
         }));
-        setOrders(ordersFromApi);
+
+        // newest first
+        const sorted = parsed.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        setOrders(sorted);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
         toast.error("Failed to fetch your orders");
@@ -65,123 +62,83 @@ export default function Orders() {
     fetchOrders();
   }, [user]);
 
-  const statusText = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "Pending";
-      case "confirmed":
-        return "Processing";
-      case "completed":
-        return "Delivered";
-      case "cancelled":
-        return "Cancelled";
-      default:
-        return status;
-    }
-  };
-
   const statusClass = (status: string) => {
     switch (status) {
       case "completed":
-        return "text-accent font-semibold";
+        return "text-green-600 font-semibold";
       case "cancelled":
-        return "text-destructive font-semibold";
+        return "text-red-500 font-semibold";
       case "confirmed":
-        return "text-primary font-semibold";
+        return "text-blue-600 font-semibold";
       default:
-        return "text-foreground font-semibold";
+        return "text-yellow-600 font-semibold";
     }
   };
 
-  const canCancel = (order: Order) => {
-    // Allow cancellation only for pending/confirmed orders (not for completed/cancelled)
-    return order.orderStatus === "pending" || order.orderStatus === "confirmed";
+  const toggleExpand = (id: string) => {
+    setExpanded(expanded === id ? null : id);
   };
 
   const handleCancelOrder = async (orderId: string) => {
-    const ok = window.confirm("Are you sure you want to cancel this order? This action cannot be undone.");
+    const ok = window.confirm("Are you sure you want to cancel this order?");
     if (!ok) return;
 
     try {
       setCancellingOrderId(orderId);
-      // Call backend cancel route
-      const res = await axiosInstance.put(`/orders/cancel/${orderId}`);
-      // Backend should return updated order — if not, optimistically update
-      const updatedOrder = res.data.order;
-      if (updatedOrder) {
-        setOrders((prev) => prev.map((o) => (o.id === orderId ? {
-          id: updatedOrder._id ?? orderId,
-          items: updatedOrder.items ?? [],
-          totalAmount: updatedOrder.totalAmount ?? (prev.find(p => p.id === orderId)?.totalAmount ?? 0),
-          orderStatus: updatedOrder.orderStatus ?? "cancelled",
-          paymentStatus: updatedOrder.paymentStatus ?? "refunded",
-          createdAt: updatedOrder.createdAt ?? (prev.find(p => p.id === orderId)?.createdAt ?? new Date().toISOString()),
-        } : o)));
-      } else {
-        // fallback: set local order status to cancelled
-        setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, orderStatus: "cancelled", paymentStatus: "refunded" } : o)));
-      }
+      await axiosInstance.put(`/orders/cancel/${orderId}`);
 
-      toast.success("Order cancelled. Refund will be processed if applicable.");
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? { ...o, orderStatus: "cancelled", paymentStatus: "refunded" }
+            : o
+        )
+      );
+
+      toast.success("Order cancelled");
     } catch (err) {
-      console.error("Cancel order failed:", err);
-      toast.error("Failed to cancel order. Try again.");
+      console.error("Cancel error:", err);
+      toast.error("Failed to cancel order");
     } finally {
       setCancellingOrderId(null);
     }
   };
 
-  // UI states
+  // No user
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center px-4 py-16">
-          <div className="text-center max-w-md">
-            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-              <Package className="h-12 w-12 text-muted-foreground" />
-            </div>
-            <h1 className="font-heading font-bold text-3xl mb-4">Please sign in</h1>
-            <p className="text-muted-foreground mb-8">
-              You need an account to view your orders.
-            </p>
-            <Button onClick={() => navigate("/auth")}>Sign in</Button>
-          </div>
+        <main className="flex-1 flex items-center justify-center">
+          <Button onClick={() => navigate("/auth")}>Sign In</Button>
         </main>
       </div>
     );
   }
 
+  // Loading
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center px-4 py-16">
+        <main className="flex-1 flex items-center justify-center">
           <Loader2 className="animate-spin h-12 w-12 text-accent" />
         </main>
       </div>
     );
   }
 
-  if (!orders || orders.length === 0) {
+  // No orders
+  if (orders.length === 0) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center px-4 py-16">
-          <div className="text-center max-w-md">
-            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-              <Package className="h-12 w-12 text-muted-foreground" />
-            </div>
-            <h1 className="font-heading font-bold text-3xl mb-4">No orders yet</h1>
-            <p className="text-muted-foreground mb-8">
-              Looks like you haven't placed any orders yet.
-            </p>
-            <Button
-              onClick={() =>
-                navigate("/products", { state: { skipHero: true, scrollToTabs: true } })
-              }
-            >
-              Browse Products
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Package className="mx-auto h-14 w-14 text-muted-foreground" />
+            <h1 className="text-2xl font-bold mt-4">No orders yet</h1>
+            <Button className="mt-4" onClick={() => navigate("/products")}>
+              Browse Drinks
             </Button>
           </div>
         </main>
@@ -192,105 +149,97 @@ export default function Orders() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-4">
-        <h1 className="font-heading font-semibold text-3xl md:text-4xl mb-6">My Orders</h1>
+
+      <main className="container mx-auto px-4 py-6 mt-10">
+        <h1 className="font-heading text-3xl font-bold mb-6">My Orders</h1>
 
         <div className="space-y-4">
           {orders.map((order) => (
             <motion.div
               key={order.id}
-              initial={{ opacity: 0, y: 50 }}
+              initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
               className="bg-card border border-border rounded-xl p-4"
             >
-              <div className="flex items-start justify-between gap-4">
+              {/* Small Order ID */}
+              <p className="text-[10px] text-muted-foreground mb-1">
+                Order ID: {order.id}
+              </p>
+
+              <div className="flex justify-between items-center">
                 <div>
-                  <div className="text-sm text-muted-foreground">Order ID</div>
-                  <div className="font-heading font-semibold">{order.id}</div>
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground">
                     {new Date(order.createdAt).toLocaleString()}
-                  </div>
+                  </p>
+                  <p className="text-xs mt-1">
+                    {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+                  </p>
                 </div>
 
                 <div className="text-right">
-                  <div className={statusClass(order.orderStatus)}>
-                    {statusText(order.orderStatus)}
-                  </div>
-                  <div className="text-sm mt-2 font-heading font-bold">
+                  <p className={statusClass(order.orderStatus)}>
+                    {order.orderStatus.toUpperCase()}
+                  </p>
+                  <p className="font-medium text-sm mt-2">
                     ₵{order.totalAmount.toFixed(2)}
-                  </div>
+                  </p>
+
+                  {/* View More */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => toggleExpand(order.id)}
+                  >
+                    {expanded === order.id ? "Hide Items" : "View More"}
+                  </Button>
                 </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2 space-y-3">
-                  {order.items.map((item) => (
+              {/* EXPANDED ORDER ITEMS */}
+              <div
+                className={cn(
+                  "transition-all overflow-hidden mt-4",
+                  expanded === order.id ? "max-h-[600px]" : "max-h-0"
+                )}
+              >
+                <div className="space-y-3">
+                  {order.items.map((item, index) => (
                     <div
-                      key={item.drinkId}
-                      className="flex items-center gap-3 bg-muted border border-border rounded p-2"
+                      key={index}
+                      className="bg-gray-100 p-3 rounded-lg flex items-center gap-3"
                     >
-                      <div className="w-20 flex-shrink-0">
-                        <img
-                          src={item.image || "/placeholder.png"}
-                          alt={item.name}
-                          className="w-full h-20 object-cover rounded"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm truncate">{item.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          ₵{item.price.toFixed(2)} each
-                        </div>
-                        <div className="text-xs text-muted-foreground">Qty: {item.quantity}</div>
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-14 h-14 rounded object-cover"
+                      />
+                      <div>
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-sm text-gray-600">
+                          {item.quantity} × ₵{item.price}
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="bg-card border border-border rounded-xl p-4">
-                  <div className="text-muted-foreground text-sm">Order Summary</div>
-                  <div className="font-heading font-semibold text-lg mt-2">
-                    ₵{order.totalAmount.toFixed(2)}
-                  </div>
-
-                  <div className="mt-4 space-y-2">
+                {/* Cancel button inside expanded section */}
+                {order.orderStatus !== "completed" &&
+                  order.orderStatus !== "cancelled" && (
                     <Button
-                      className="w-full"
-                      onClick={() => navigate(`/orders/${order.id}`)}
+                      variant="destructive"
+                      className="mt-4 w-full"
+                      onClick={() => handleCancelOrder(order.id)}
+                      disabled={cancellingOrderId === order.id}
                     >
-                      View Details
-                    </Button>
-
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => navigator.clipboard?.writeText(order.id)}
-                      >
-                        Copy Order ID
-                      </Button>
-
-                      {canCancel(order) && (
-                        <Button
-                          variant="destructive"
-                          className="w-full"
-                          onClick={() => handleCancelOrder(order.id)}
-                          disabled={cancellingOrderId === order.id}
-                        >
-                          {cancellingOrderId === order.id ? (
-                            <>
-                              <Loader2 className="animate-spin h-4 w-4 mr-2 inline-block" />
-                              Cancelling...
-                            </>
-                          ) : (
-                            "Cancel Order"
-                          )}
-                        </Button>
+                      {cancellingOrderId === order.id ? (
+                        <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                      ) : (
+                        "Cancel Order"
                       )}
-                    </div>
-                  </div>
-                </div>
+                    </Button>
+                  )}
               </div>
             </motion.div>
           ))}

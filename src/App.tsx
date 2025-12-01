@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import Home from "./pages/Home"
+import PaymentSuccess from "./pages/PaymentSuccess"
 
 //admin
 
@@ -51,6 +52,8 @@ function AnimatedRoutes() {
             <Route path="/checkout" element={<Checkout />} />
             <Route path="*" element={<NotFound />} />
             <Route path="orders" element={<Orders />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+
 
 
                     

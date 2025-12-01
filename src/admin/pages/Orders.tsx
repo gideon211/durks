@@ -53,23 +53,35 @@ export default function OrdersAdminPage() {
     fetchAllOrders();
   }, []);
 
-  async function fetchAllOrders() {
-    try {
-      setLoading(true);
-      setFetchError(null);
-      const { data } = await axiosInstance.get("/orders");
-      const backendOrders = data.orders ?? data;
-      setOrders(Array.isArray(backendOrders) ? backendOrders : []);
-    } catch (err: any) {
-      console.error("Failed to fetch orders:", err);
-      const msg =
-        err?.response?.data?.message || err.message || "Failed to load orders";
-      setFetchError(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
+async function fetchAllOrders() {
+  try {
+    setLoading(true);
+    setFetchError(null);
+
+    const { data } = await axiosInstance.get("/orders");
+    const backendOrders = data.orders ?? data;
+
+    // ⭐ SORT LATEST FIRST (DESCENDING)
+    const sorted = Array.isArray(backendOrders)
+      ? backendOrders.sort((a, b) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // latest on top
+        })
+      : [];
+
+    setOrders(sorted);
+  } catch (err: any) {
+    console.error("Failed to fetch orders:", err);
+    const msg =
+      err?.response?.data?.message || err.message || "Failed to load orders";
+    setFetchError(msg);
+    toast.error(msg);
+  } finally {
+    setLoading(false);
   }
+}
+
 
   const rows: TableRow[] = useMemo(
     () =>
