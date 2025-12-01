@@ -44,6 +44,7 @@ export default function Orders() {
       try {
         setLoading(true);
         const { data } = await axiosInstance.get("/orders/my-orders");
+        console.log("API response:", data);
         const ordersFromApi = (data.orders || []).map((o: any) => ({
           id: o._id,
           items: o.items || [],
