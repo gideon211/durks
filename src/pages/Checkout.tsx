@@ -1,38 +1,35 @@
-"use client"
-
-import React, { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import axios from "axios"
-import Header from "@/components/Header"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { toast } from "sonner"
-import { useCartStore, CartItem } from "@/store/cartStore"
-import { CheckCircle, ChevronDownIcon } from "lucide-react"
-import * as SelectPrimitive from "@radix-ui/react-select"
-import { ChevronDown, Check } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { zones } from "@/data/zones"
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import Header from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { useCartStore, CartItem } from "@/store/cartStore";
+import { CheckCircle, ChevronDownIcon, Loader2, ChevronDown, Check } from "lucide-react";
+import * as SelectPrimitive from "@radix-ui/react-select";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { zones } from "@/data/zones";
 import { useAuth } from "@/context/Authcontext";
-
+import { Modal } from "@/components/Modal";
 
 interface Calendar24Props {
-  date?: Date
-  time?: string
-  onDateChange?: (date: Date) => void
-  onTimeChange?: (time: string) => void
+  date?: Date;
+  time?: string;
+  onDateChange?: (date: Date) => void;
+  onTimeChange?: (time: string) => void;
 }
 
 export function Calendar24({ date: propDate, time: propTime, onDateChange, onTimeChange }: Calendar24Props) {
-  const [open, setOpen] = useState(false)
-  const [date, setDate] = useState<Date | undefined>(propDate)
-  const [time, setTime] = useState<string>(propTime || "")
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState<Date | undefined>(propDate);
+  const [time, setTime] = useState<string>(propTime || "");
 
-  useEffect(() => setDate(propDate), [propDate])
-  useEffect(() => setTime(propTime || "10:30:00"), [propTime])
+  useEffect(() => setDate(propDate), [propDate]);
+  useEffect(() => setTime(propTime || "10:30:00"), [propTime]);
 
   return (
     <div className="flex gap-4 mt-4">
@@ -51,9 +48,9 @@ export function Calendar24({ date: propDate, time: propTime, onDateChange, onTim
               selected={date}
               captionLayout="dropdown"
               onSelect={(selectedDate) => {
-                setDate(selectedDate)
-                onDateChange?.(selectedDate)
-                setOpen(false)
+                setDate(selectedDate);
+                onDateChange?.(selectedDate);
+                setOpen(false);
               }}
             />
           </PopoverContent>
@@ -68,23 +65,18 @@ export function Calendar24({ date: propDate, time: propTime, onDateChange, onTim
           step="1"
           value={time}
           onChange={(e) => {
-            setTime(e.target.value)
-            onTimeChange?.(e.target.value)
+            setTime(e.target.value);
+            onTimeChange?.(e.target.value);
           }}
           className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
         />
       </div>
     </div>
-  )
+  );
 }
 
-// ----------------------
-// Radix Select (UI)
-// ----------------------
-const SelectTrigger = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+// (Radix Select UI helpers omitted in render below — they are unused in current form but kept in file for compatibility)
+const SelectTrigger = React.forwardRef<any, any>(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
@@ -98,13 +90,10 @@ const SelectTrigger = React.forwardRef<
       <ChevronDown className="h-4 w-4 text-muted-foreground" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
-))
-SelectTrigger.displayName = "SelectTrigger"
+));
+SelectTrigger.displayName = "SelectTrigger";
 
-const SelectContent = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+const SelectContent = React.forwardRef<any, any>(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
       ref={ref}
@@ -117,40 +106,46 @@ const SelectContent = React.forwardRef<
       <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
-))
-SelectContent.displayName = "SelectContent"
+));
+SelectContent.displayName = "SelectContent";
 
-const SelectItem = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex w-full cursor-pointer select-none items-center rounded-md px-3 py-2 text-sm outline-none focus:bg-muted focus:text-foreground data-[state=checked]:font-semibold",
-      className
-    )}
-    {...props}
-  >
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-    <SelectPrimitive.ItemIndicator className="absolute right-2 flex items-center">
-      <Check className="h-4 w-4" />
-    </SelectPrimitive.ItemIndicator>
-  </SelectPrimitive.Item>
-))
-SelectItem.displayName = "SelectItem"
+const SelectItem = React.forwardRef<any, { value: string; className?: string; children: React.ReactNode }>(
+  ({ className, children, value, ...props }, ref) => (
+    <SelectPrimitive.Item
+      ref={ref}
+      value={value} // <-- required
+      className={cn(
+        "relative flex w-full cursor-pointer select-none items-center rounded-md px-3 py-2 text-sm outline-none focus:bg-muted focus:text-foreground data-[state=checked]:font-semibold",
+        className
+      )}
+      {...props}
+    >
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemIndicator className="absolute right-2 flex items-center">
+        <Check className="h-4 w-4" />
+      </SelectPrimitive.ItemIndicator>
+    </SelectPrimitive.Item>
+  )
+);
+SelectItem.displayName = "SelectItem";
+
+SelectItem.displayName = "SelectItem";
 
 // ----------------------
 // Checkout
 // ----------------------
 export default function Checkout(): JSX.Element {
   const { user } = useAuth();
-  const navigate = useNavigate()
-  const cart = useCartStore((s) => s.cart) as CartItem[]
-  const totalPrice = useCartStore((s) => s.totalPrice) as () => number
-  const clearCart = useCartStore((s) => s.clearCart) as () => void
+  const navigate = useNavigate();
+  const cart = useCartStore((s) => s.cart) as CartItem[];
+  const subtotalFn = useCartStore((s) => s.totalPrice) as () => number;
+  const clearCart = useCartStore((s) => s.clearCart) as () => void;
 
-  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const [isRedirectModalOpen, setIsRedirectModalOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -162,97 +157,126 @@ export default function Checkout(): JSX.Element {
     paymentMethod: "card",
     deliveryDate: undefined as Date | undefined,
     deliveryTime: "",
-  })
-  const [shippingFee, setShippingFee] = useState(0)
+  });
+  const [shippingFee, setShippingFee] = useState(0);
 
   useEffect(() => {
-    if (cart.length === 0) navigate("/cart")
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }, [cart, navigate])
+    if (cart.length === 0) navigate("/cart");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [cart, navigate]);
 
   useEffect(() => {
-    const zone = zones.find((z) => z.name.toLowerCase() === formData.city.toLowerCase())
-    setShippingFee(zone ? zone.fee : 0)
-  }, [formData.city])
+    const zone = zones.find((z) => z.name.toLowerCase() === formData.city.toLowerCase());
+    setShippingFee(zone ? zone.fee : 0);
+  }, [formData.city]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const generateOrderId = () => "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase()
+  const generateOrderId = () => "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase();
 
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  if (!formData.fullName || !formData.email || !formData.address || !formData.city) {
-    toast.error("Please fill all required fields");
-    return;
-  }
+    if (!formData.fullName || !formData.email || !formData.address || !formData.city) {
+      toast.error("Please fill all required fields");
+      return;
+    }
 
-  const finalTotal = totalPrice() + shippingFee;
-  const orderId = generateOrderId();
+    const finalTotal = subtotalFn() + shippingFee;
+    const orderId = generateOrderId();
 
-  // Get cart directly from Zustand
-  const currentCart = useCartStore.getState().cart; // <-- this is the live cart from Zustand
-  if (!currentCart || currentCart.length === 0) {
-    toast.error("Your cart is empty");
-    return;
-  }
+    const currentCart = useCartStore.getState().cart;
+    if (!currentCart || currentCart.length === 0) {
+      toast.error("Your cart is empty");
+      return;
+    }
 
-  // Format cart if needed
-  const formattedCart = currentCart.map((item) => ({
-    productId: item.id, // match backend schema
-    qty: item.qty,
-  }));
+    // format for backend if needed
+    const formattedCart = currentCart.map((item) => ({
+      productId: item.drinkId ?? item.id,
+      qty: item.qty,
+      pack: item.pack,
+    }));
 
-  // Delivery payment
-  if (formData.paymentMethod === "delivery") {
+    // Pay on Delivery - save order normally (no redirect modal)
+    if (formData.paymentMethod === "delivery") {
+      try {
+        setIsProcessing(true);
+        await axios.post("http://localhost:5000/api/orders", {
+          total: finalTotal,
+          customer: formData,
+          orderId,
+          paymentMethod: "Pay on Delivery",
+          cart: formattedCart,
+        });
+        setShowConfirmation(true);
+        clearCart();
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to save order");
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
+    // Card payment (Paystack) -> show redirect modal, then initialize and redirect
+    if (!user || !user.token) {
+      toast.error("You must be logged in to pay with card");
+      return;
+    }
+
     try {
-      await axios.post("http://localhost:5000/api/orders", {
-        total: finalTotal,
-        customer: formData,
-        orderId,
-        paymentMethod: "Pay on Delivery",
-      });
-      setShowConfirmation(true);
-      clearCart();
+      // open modal immediately
+      setIsRedirectModalOpen(true);
+      setIsProcessing(true);
+
+      // small delay so modal is visible before heavy work / network
+      await new Promise((res) => setTimeout(res, 600));
+
+      const { data } = await axios.post(
+        "https://duksshopback-end.onrender.com/api/payments/initialize",
+        {
+          amount: Math.round(finalTotal * 100), // in smallest currency unit
+          email: formData.email || user.email,
+          orderId,
+          cart: formattedCart,
+          shipping: shippingFee,
+          customer: {
+            fullName: formData.fullName,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city,
+            country: formData.country,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+
+      // close modal (optional) then redirect — but redirect immediately is fine
+      setIsRedirectModalOpen(false);
+      setIsProcessing(false);
+
+      if (data?.authorization_url) {
+        window.location.href = data.authorization_url;
+      } else {
+        console.error("Missing authorization_url from init response", data);
+        toast.error("Payment initialization failed");
+      }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save order");
+      toast.error("Payment initialization failed");
+      setIsRedirectModalOpen(false);
+      setIsProcessing(false);
     }
-    return;
-  }
-
-  if (!user || !user.token) {
-    toast.error("You must be logged in to pay with card");
-    return;
-  }
-
-  try {
-    const { data } = await axios.post(
-      "https://duksshopback-end.onrender.com/api/payments/initialize",
-      {
-        amount: finalTotal * 100,
-        email: formData.email,
-        orderId,
-        cart, // send cart directly from Zustand
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      }
-    );
-
-    window.location.href = data.authorization_url;
-  } catch (err) {
-    console.error(err);
-    toast.error("Payment initialization failed");
-  }
-};
-
-
+  };
 
   if (showConfirmation) {
     return (
@@ -264,11 +288,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         </p>
         <Button size="lg" onClick={() => navigate("/products")}>Continue Shopping</Button>
       </div>
-    )
+    );
   }
 
-  const subtotal = totalPrice()
-  const grandTotal = subtotal + shippingFee
+  const subtotal = subtotalFn();
+  const grandTotal = subtotal + shippingFee;
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -282,15 +306,15 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
                 <Label>Full Name</Label>
-                <Input name="fullName" value={formData.fullName} onChange={handleChange} required />
+                <Input name="fullName" value={formData.fullName} onChange={handleChange} required disabled={isProcessing} />
               </div>
               <div>
                 <Label>Email</Label>
-                <Input name="email" type="email" value={formData.email} onChange={handleChange} required />
+                <Input name="email" type="email" value={formData.email} onChange={handleChange} required disabled={isProcessing} />
               </div>
               <div>
                 <Label>Phone</Label>
-                <Input name="phone" value={formData.phone} onChange={handleChange} required />
+                <Input name="phone" value={formData.phone} onChange={handleChange} required disabled={isProcessing} />
               </div>
               <div>
                 <Label>City / Zone</Label>
@@ -300,6 +324,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                   onChange={handleChange}
                   className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary"
                   required
+                  disabled={isProcessing}
                 >
                   <option value="">Select your area</option>
                   {zones.map((z) => (
@@ -317,6 +342,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 value={formData.address}
                 onChange={handleChange}
                 required
+                disabled={isProcessing}
               />
             </div>
 
@@ -329,8 +355,17 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
               />
             )}
 
-            <Button type="submit" size="md" className="w-full mt-4">
-              Confirm & Place Order
+
+
+            <Button type="submit" size="md" className="w-full mt-4" disabled={isProcessing}>
+              {isProcessing ? (
+                <>
+                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                  Processing...
+                </>
+              ) : (
+                "Confirm & Place Order"
+              )}
             </Button>
           </form>
 
@@ -348,13 +383,26 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
               {/* Totals */}
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span>Subtotal</span><span>₵{subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span>Shipping</span><span>₵{shippingFee.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span>Shipping fee</span><span className="font-medium text-xs">UPON DELIVERY</span></div>
                 <div className="flex justify-between font-bold mt-2 text-base"><span>Total</span><span>₵{grandTotal.toFixed(2)}</span></div>
               </div>
             </aside>
           </div>
         </div>
       </main>
+
+      {/* Redirect modal shown only for Paystack initialization */}
+      <Modal
+        isOpen={isRedirectModalOpen}
+        title="Please wait…"
+        onClose={() => {}}
+        footer={null}
+      >
+        <div className="flex flex-col items-center justify-center py-4">
+          <Loader2 className="h-6 w-6 animate-spin mb-3" />
+          <p className="text-center text-sm">Please wait — redirecting to payment.</p>
+        </div>
+      </Modal>
     </div>
-  )
+  );
 }

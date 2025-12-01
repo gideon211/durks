@@ -17,6 +17,7 @@ export default function Cart() {
   const cartItems = useCartStore((state) => state.cart);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const updateQty = useCartStore((state) => state.updateQty);
+  const updatePack = useCartStore((state) => state.updatePack);
   const clearCart = useCartStore((state) => state.clearCart);
   const totalPrice = useCartStore((state) => state.totalPrice);
   const setCart = useCartStore((state) => state.setCart);
@@ -149,9 +150,7 @@ export default function Cart() {
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
         <main className="flex-1 container mx-auto px-2 py-4 mt-16">
-          {/* Keep a 3-column grid so we can center the cart in the middle column on lg */}
           <div className="grid grid-cols-1 lg:grid-cols-3">
-            {/* Place cart into the center column on large screens */}
             <div className="space-y-3 lg:col-start-2 lg:col-span-1 max-w-3xl w-full mx-auto">
               {cartItems.map((item: CartItem) => {
                 const localQty = localQtyMap[item.id] ?? item.qty;
@@ -213,20 +212,15 @@ export default function Cart() {
                                 c.id === item.id ? { ...c, pack: newPack, price: newPrice } : c
                               );
                               setCart(updated);
+                              updatePack(item.id, newPack);
                             }}
                             className="border px-2 py-1 rounded text-sm font-semibold"
                           >
-                            {item.packs?.length
-                              ? item.packs.map((p) => (
-                                  <option key={p.pack} value={p.pack}>
-                                    {p.pack}
-                                  </option>
-                                ))
-                              : [6, 12, 24].map((val) => (
-                                  <option key={val} value={val}>
-                                    {val}
-                                  </option>
-                                ))}
+                            {item.packs?.map((p) => (
+                              <option key={p.pack} value={p.pack}>
+                                {p.pack}
+                              </option>
+                            ))}
                           </select>
 
                           <p className="text-xs">qty:</p>
@@ -252,7 +246,6 @@ export default function Cart() {
                 );
               })}
             </div>
-            {/* intentionally left empty to preserve 3-column layout and keep center column centered */}
             <div className="hidden lg:block" />
           </div>
         </main>
@@ -273,6 +266,7 @@ export default function Cart() {
           </div>
         </div>
 
+        {/* Improved Modal Design */}
         <Modal
           isOpen={isModalOpen}
           title={
@@ -296,7 +290,7 @@ export default function Cart() {
           <p className="text-sm">
             You need to be signed in to{" "}
             {pendingAction === "checkout" ? "complete checkout" : "request a bulk quote"}.
-            Signing in lets you save orders, view order history and manage shipping/payment details.
+            Signing in lets you save orders, view order history, and manage shipping/payment details.
           </p>
         </Modal>
       </motion.div>

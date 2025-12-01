@@ -3,6 +3,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axios from "axios";
 
+/**
+ * Cart store
+ * - keeps local and server state consistent
+ * - always stores `packs` (array of {pack, price})
+ * - optimistic updates for qty & pack, with safe fallbacks
+ */
 
 const axiosInstance = axios.create({
   baseURL: "https://duksshopback-end.onrender.com/api",
@@ -23,7 +29,6 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-
 export interface Product {
   id: string | number;
   name: string;
@@ -31,15 +36,17 @@ export interface Product {
   image?: string;
   category?: string;
   size?: string;
+  // optional packs when product is passed from frontend
+  packs?: { pack: number; price: number }[];
 }
 
 export interface CartItem extends Product {
   id: string | number;
   drinkId: string | number;
-  pack: number; // number of items per pack
+  pack: number; // selected pack
   qty: number; // number of packs
   _local?: boolean;
-  packs?: { pack: number; price: number }[]; 
+  packs?: { pack: number; price: number }[];
 }
 
 interface CartState {
@@ -51,11 +58,12 @@ interface CartState {
   mergeGuestIntoUser: (userId: string | number) => Promise<void>;
   saveToStorage: (items: CartItem[], userId?: string | number | null) => void;
 
-  // existing API / actions
+  // API / actions
   fetchCart: () => Promise<void>;
-  addToCart: (product: Product, pack?: number, qty?: number) => Promise<void>;
+  addToCart: (product: Partial<Product>, pack?: number, qty?: number) => Promise<void>;
   removeFromCart: (cartItemId: string | number) => Promise<void>;
   updateQty: (cartItemId: string | number, qty: number) => Promise<void>;
+  updatePack: (cartItemId: string | number, pack: number) => Promise<void>;
   clearCart: () => void;
   totalQty: () => number;
   totalPrice: () => number;
@@ -80,10 +88,8 @@ function getUserIdFromLocalStorage(): string | null {
 }
 
 /**
- * perUserStorage
- * - uses the `name` passed by zustand/persist as a base
- * - writes to: `${name}:<userId>` when a user exists OR `${name}:guest` otherwise
- * - guards against server-side usage by checking window
+ * perUserStorage for zustand/persist
+ * stores under name:<uid> or name:guest
  */
 const perUserStorage = {
   getItem: (name: string) => {
@@ -126,6 +132,21 @@ export const useCartStore = create<CartState>()(
 
       /* ---------- Persistence helpers ---------- */
 
+      saveToStorage: (items, userId) => {
+        try {
+          if (typeof window === "undefined") return;
+          if (userId) {
+            localStorage.setItem(`${USER_KEY_PREFIX}${userId}`, JSON.stringify(items));
+          } else {
+            const uid = getUserIdFromLocalStorage();
+            const dstKey = uid ? `${USER_KEY_PREFIX}${uid}` : `${"cart-storage"}:${GUEST_SUFFIX}`;
+            localStorage.setItem(dstKey, JSON.stringify(items));
+          }
+        } catch {
+          // ignore
+        }
+      },
+
       loadCartForUser: async (userId) => {
         try {
           // If offline, load local fallback and skip network attempt
@@ -147,15 +168,30 @@ export const useCartStore = create<CartState>()(
           if (userId) {
             try {
               const res = await axiosInstance.get("/cart");
-              const items: CartItem[] = (res.data?.cartItems || []).map((item: any) => ({
-                id: item.id,
-                drinkId: item.drinkId,
-                name: item.Drink?.name ?? item.name,
-                price: item.Drink?.price ?? item.price,
-                image: item.Drink?.image ?? item.image,
-                qty: item.quantity ?? item.qty ?? 1,
-                pack: item.pack ?? 12,
-              }));
+              const items: CartItem[] = (res.data?.cartItems || []).map((item: any) => {
+                // Prefer Drink.packs (complete list) if provided by backend.
+                const allPacks: { pack: number; price: number }[] =
+                  Array.isArray(item?.Drink?.packs) && item.Drink.packs.length > 0
+                    ? item.Drink.packs
+                    : Array.isArray(item?.packs) && item.packs.length > 0
+                    ? item.packs
+                    : [{ pack: item.Drink?.pack ?? item.pack ?? 12, price: item.Drink?.price ?? item.price ?? 0 }];
+
+                const selectedPack = item.pack ?? item.Drink?.pack ?? allPacks[0].pack;
+                const selectedPrice = allPacks.find((p: any) => Number(p.pack) === Number(selectedPack))?.price ?? item.price ?? 0;
+
+                return {
+                  id: item._id ?? item.id,
+                  drinkId: item.drinkId,
+                  name: item.Drink?.name ?? item.name,
+                  price: selectedPrice,
+                  image: item.Drink?.imageUrl ?? item.Drink?.image ?? item.image ?? "",
+                  qty: item.quantity ?? item.qty ?? 1,
+                  pack: selectedPack,
+                  packs: allPacks,
+                } as CartItem;
+              });
+
               set({ cart: items });
               get().saveToStorage(items, userId);
               return;
@@ -257,22 +293,7 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      saveToStorage: (items, userId) => {
-        try {
-          if (typeof window === "undefined") return;
-          if (userId) {
-            localStorage.setItem(`${USER_KEY_PREFIX}${userId}`, JSON.stringify(items));
-          } else {
-            const uid = getUserIdFromLocalStorage();
-            const dstKey = uid ? `${USER_KEY_PREFIX}${uid}` : `${"cart-storage"}:${GUEST_SUFFIX}`;
-            localStorage.setItem(dstKey, JSON.stringify(items));
-          }
-        } catch {
-          // ignore
-        }
-      },
-
-      /* ---------- Existing actions (persist to per-user storage after modifications) ---------- */
+      /* ---------- Basic setters ---------- */
 
       setCart: (items) => {
         set({ cart: items });
@@ -283,21 +304,34 @@ export const useCartStore = create<CartState>()(
         } catch {}
       },
 
+      /* ---------- Fetch / Add / Remove ---------- */
+
       fetchCart: async () => {
         try {
           const res = await axiosInstance.get("/cart");
-          const items: CartItem[] = (res.data?.cartItems || []).map((item: any) => ({
-            id: item.id,
-            drinkId: item.drinkId,
-            name: item.Drink?.name ?? item.name,
-            price: item.Drink?.price ?? item.price,
-            image: item.Drink?.image ?? item.image,
-            qty: item.quantity ?? item.qty ?? 1,
-            pack: item.pack || 12,
-            packs: item.Drink?.packs ?? [],
+          const items: CartItem[] = (res.data?.cartItems || []).map((item: any) => {
+            const allPacks: { pack: number; price: number }[] =
+              Array.isArray(item?.Drink?.packs) && item.Drink.packs.length > 0
+                ? item.Drink.packs
+                : Array.isArray(item?.packs) && item.packs.length > 0
+                ? item.packs
+                : [{ pack: item.Drink?.pack ?? item.pack ?? 12, price: item.Drink?.price ?? item.price ?? 0 }];
 
-            
-          }));
+            const selectedPack = item.pack ?? item.Drink?.pack ?? allPacks[0].pack;
+            const selectedPrice = allPacks.find((p: any) => Number(p.pack) === Number(selectedPack))?.price ?? item.price ?? 0;
+
+            return {
+              id: item._id ?? item.id,
+              drinkId: item.drinkId,
+              name: item.Drink?.name ?? item.name,
+              price: selectedPrice,
+              image: item.Drink?.imageUrl ?? item.Drink?.image ?? item.image ?? "",
+              qty: item.quantity ?? item.qty ?? 1,
+              pack: selectedPack,
+              packs: allPacks,
+            } as CartItem;
+          });
+
           set({ cart: items });
           try {
             const uid = getUserIdFromLocalStorage();
@@ -310,14 +344,13 @@ export const useCartStore = create<CartState>()(
       },
 
       addToCart: async (product, pack = 12, qty = 1) => {
-        const existingItem = get().cart.find(
-          (i) => i.drinkId === product.id && i.pack === pack
-        );
+        // product may be from ProductCard (with packs array) or a minimal product
+        const existingItem = get().cart.find((i) => String(i.drinkId) === String(product.id) && Number(i.pack) === Number(pack));
 
         const createLocalItem = () => {
           if (existingItem) {
             const updated = get().cart.map((item) =>
-              item.drinkId === product.id && item.pack === pack
+              String(item.drinkId) === String(product.id) && Number(item.pack) === Number(pack)
                 ? { ...item, qty: item.qty + qty }
                 : item
             );
@@ -327,31 +360,35 @@ export const useCartStore = create<CartState>()(
               const key = uid ? `${USER_KEY_PREFIX}${uid}` : `${"cart-storage"}:${GUEST_SUFFIX}`;
               localStorage.setItem(key, JSON.stringify(updated));
             } catch {}
-          } else {
-            const localItem: CartItem = {
+            return;
+          }
+
+          const packsFromProduct = Array.isArray((product as any).packs) ? (product as any).packs : [];
+
+          const priceForPack =
+            packsFromProduct.find((p: any) => Number(p.pack) === Number(pack))?.price ??
+            (product as any).price ??
+            0;
+
+          const localItem: CartItem = {
             id: `local-${Date.now()}`,
-            drinkId: product.id,
-            name: product.name,
-            // pick correct price based on selected pack
-            price:
-                (Array.isArray((product as any).packs)
-                ? (product as any).packs.find((p: any) => p.pack === pack)?.price
-                : product.price) ?? product.price,
+            drinkId: product.id!,
+            name: product.name ?? "Item",
+            price: priceForPack,
             image: product.image,
             pack,
             qty,
-            packs: (product as any).packs ?? [],
+            packs: packsFromProduct.length ? packsFromProduct : [{ pack, price: priceForPack }],
             _local: true,
-            };
+          };
 
-            const updated = [...get().cart, localItem];
-            set({ cart: updated });
-            try {
-              const uid = getUserIdFromLocalStorage();
-              const key = uid ? `${USER_KEY_PREFIX}${uid}` : `${"cart-storage"}:${GUEST_SUFFIX}`;
-              localStorage.setItem(key, JSON.stringify(updated));
-            } catch {}
-          }
+          const updated = [...get().cart, localItem];
+          set({ cart: updated });
+          try {
+            const uid = getUserIdFromLocalStorage();
+            const key = uid ? `${USER_KEY_PREFIX}${uid}` : `${"cart-storage"}:${GUEST_SUFFIX}`;
+            localStorage.setItem(key, JSON.stringify(updated));
+          } catch {}
         };
 
         if (!navigator.onLine) {
@@ -361,12 +398,14 @@ export const useCartStore = create<CartState>()(
 
         try {
           if (existingItem && !existingItem._local) {
+            // existing on server: update quantity (PUT or PATCH depending on your backend)
             await axiosInstance.put(`/cart/${existingItem.id}`, {
               quantity: existingItem.qty + qty,
               pack,
             });
+
             const updated = get().cart.map((item) =>
-              item.drinkId === product.id && item.pack === pack
+              String(item.drinkId) === String(product.id) && Number(item.pack) === Number(pack)
                 ? { ...item, qty: item.qty + qty }
                 : item
             );
@@ -377,6 +416,7 @@ export const useCartStore = create<CartState>()(
               localStorage.setItem(key, JSON.stringify(updated));
             } catch {}
           } else {
+            // create on server
             const res = await axiosInstance.post("/cart", {
               drinkId: product.id,
               quantity: qty,
@@ -384,24 +424,32 @@ export const useCartStore = create<CartState>()(
             });
 
             const item = res.data.cartItem;
-            const newItem: CartItem = {
-            id: item.id,
-            drinkId: item.drinkId,
-            name: item.Drink?.name ?? product.name,
-            price:
-                (Array.isArray((product as any).packs)
-                ? (product as any).packs.find((p: any) => p.pack === pack)?.price
-                : item.Drink?.price ?? product.price) ?? product.price,
-            image: item.Drink?.image ?? product.image,
-            pack: item.pack || pack,
-            qty: item.quantity,
-            packs: (product as any).packs ?? [],
-            };
+            const serverPacks = Array.isArray(item?.Drink?.packs) && item.Drink.packs.length > 0
+              ? item.Drink.packs
+              : Array.isArray((product as any).packs) && (product as any).packs.length > 0
+              ? (product as any).packs
+              : [{ pack: item?.pack ?? pack, price: item?.Drink?.price ?? (product as any).price ?? 0 }];
 
+            const priceForPack =
+              serverPacks.find((p: any) => Number(p.pack) === Number(item.pack ?? pack))?.price ??
+              item.Drink?.price ??
+              (product as any).price ??
+              0;
+
+            const newItem: CartItem = {
+              id: item._id ?? item.id,
+              drinkId: item.drinkId,
+              name: item.Drink?.name ?? (product as any).name ?? "Item",
+              price: priceForPack,
+              image: item.Drink?.imageUrl ?? item.Drink?.image ?? (product as any).image ?? "",
+              pack: item.pack ?? pack,
+              qty: item.quantity ?? qty,
+              packs: serverPacks,
+            };
 
             const updated = existingItem
               ? get().cart.map((i) =>
-                  i.drinkId === product.id && i.pack === pack
+                  String(i.drinkId) === String(product.id) && Number(i.pack) === Number(pack)
                     ? { ...i, qty: i.qty + qty }
                     : i
                 )
@@ -422,11 +470,11 @@ export const useCartStore = create<CartState>()(
 
       removeFromCart: async (cartItemId) => {
         const current = get().cart;
-        const item = current.find((i) => i.id === cartItemId);
+        const item = current.find((i) => String(i.id) === String(cartItemId));
         if (!item) return;
 
-        if (typeof cartItemId === "string" && cartItemId.startsWith("local-")) {
-          const updated = current.filter((i) => i.id !== cartItemId);
+        if (typeof cartItemId === "string" && String(cartItemId).startsWith("local-")) {
+          const updated = current.filter((i) => String(i.id) !== String(cartItemId));
           set({ cart: updated });
           try {
             const uid = getUserIdFromLocalStorage();
@@ -438,7 +486,7 @@ export const useCartStore = create<CartState>()(
 
         try {
           await axiosInstance.delete(`/cart/${cartItemId}`);
-          const updated = current.filter((i) => i.id !== cartItemId);
+          const updated = current.filter((i) => String(i.id) !== String(cartItemId));
           set({ cart: updated });
           try {
             const uid = getUserIdFromLocalStorage();
@@ -447,7 +495,7 @@ export const useCartStore = create<CartState>()(
           } catch {}
         } catch (err) {
           console.warn("Remove failed, removing locally:", err);
-          const updated = current.filter((i) => i.id !== cartItemId);
+          const updated = current.filter((i) => String(i.id) !== String(cartItemId));
           set({ cart: updated });
           try {
             const uid = getUserIdFromLocalStorage();
@@ -457,12 +505,15 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      updateQty: async (cartItemId, qty) => {
+      /* ---------- Update quantity ---------- */
+
+      updateQty: async (cartItemId: string, qty: number) => {
         if (qty <= 0) return;
 
-        const updateLocal = () => {
-          const updated = get().cart.map((item) =>
-            item.id === cartItemId ? { ...item, qty } : item
+        const updateLocal = (items?: CartItem[]) => {
+          const base = items ?? get().cart;
+          const updated = base.map((item) =>
+            String(item.id) === String(cartItemId) ? { ...item, qty } : item
           );
           set({ cart: updated });
           try {
@@ -472,17 +523,66 @@ export const useCartStore = create<CartState>()(
           } catch {}
         };
 
-        if (typeof cartItemId === "string" && cartItemId.startsWith("local-")) {
+        // local-only item
+        if (String(cartItemId).startsWith("local-")) {
           updateLocal();
           return;
         }
 
+        // optimistic
+        updateLocal();
+
         try {
-          await axiosInstance.put(`/cart/${cartItemId}`, { quantity: qty });
-          updateLocal();
+          await axiosInstance.patch(`/cart/${cartItemId}/quantity`, { quantity: qty });
         } catch (err) {
-          console.warn("Update failed, updating locally:", err);
-          updateLocal();
+          console.warn("Failed to update quantity on server:", err);
+          // already updated locally (optimistic), no further action
+        }
+      },
+
+      /* ---------- Update pack (tries server then falls back) ---------- */
+
+      updatePack: async (cartItemId: string, pack: number) => {
+        const updateLocal = (newPack?: number, newPrice?: number) => {
+          const updated = get().cart.map((item) => {
+            if (String(item.id) !== String(cartItemId)) return item;
+            const packs = item.packs ?? [];
+            const price = newPrice ?? packs.find((p) => Number(p.pack) === Number(newPack ?? pack))?.price ?? item.price;
+            return {
+              ...item,
+              pack: newPack ?? pack,
+              price,
+            };
+          });
+          set({ cart: updated });
+          try {
+            const uid = getUserIdFromLocalStorage();
+            const key = uid ? `${USER_KEY_PREFIX}${uid}` : `${"cart-storage"}:${GUEST_SUFFIX}`;
+            localStorage.setItem(key, JSON.stringify(updated));
+          } catch {}
+        };
+
+        // local-only
+        if (String(cartItemId).startsWith("local-")) {
+          updateLocal(pack);
+          return;
+        }
+
+        // optimistic
+        updateLocal(pack);
+
+        try {
+          // try dedicated pack endpoint
+          await axiosInstance.patch(`/cart/${cartItemId}/pack`, { pack });
+          // optionally you could read server response and merge, but optimistic is fine
+        } catch (err) {
+          // If dedicated endpoint not found, try updating via put to the cart item
+          try {
+            await axiosInstance.put(`/cart/${cartItemId}`, { pack });
+          } catch (err2) {
+            console.warn("Update pack failed on server (tried patch then put):", err, err2);
+            // already updated locally, so continue
+          }
         }
       },
 
@@ -495,10 +595,11 @@ export const useCartStore = create<CartState>()(
         } catch {}
       },
 
-      totalQty: () => get().cart.reduce((sum, item) => sum + item.qty, 0),
+      totalQty: () => get().cart.reduce((sum, item) => sum + (item.qty || 0), 0),
 
-      totalPrice: () =>
-        get().cart.reduce((sum, item) => sum + (item.price ?? 0) * (item.qty ?? 0), 0),
+      totalPrice: () => get().cart.reduce((sum, item) => sum + ((item.price ?? 0) * (item.qty ?? 0)), 0),
+
+      /* ---------- Sync offline local items ---------- */
 
       syncLocalItems: async () => {
         const localItems = get().cart.filter((i) => i._local);
@@ -513,18 +614,27 @@ export const useCartStore = create<CartState>()(
             });
 
             const saved = res.data.cartItem;
+            const allPacks: { pack: number; price: number }[] =
+              Array.isArray(saved?.Drink?.packs) && saved.Drink.packs.length > 0
+                ? saved.Drink.packs
+                : item.packs && item.packs.length > 0
+                ? item.packs
+                : [{ pack: saved?.pack ?? item.pack, price: saved?.Drink?.price ?? item.price ?? 0 }];
+
             const syncedItem: CartItem = {
-              id: saved.id,
+              id: saved._id ?? saved.id,
               drinkId: saved.drinkId,
               name: saved.Drink?.name ?? item.name,
-              price: saved.Drink?.price ?? item.price,
-              image: saved.Drink?.image ?? item.image,
-              pack: saved.pack || item.pack,
-              qty: saved.quantity,
+              price: allPacks.find((p) => Number(p.pack) === Number(saved.pack ?? item.pack))?.price ?? item.price,
+              image: saved.Drink?.imageUrl ?? saved.Drink?.image ?? item.image ?? "",
+              pack: saved.pack ?? item.pack,
+              qty: saved.quantity ?? item.qty,
+              packs: allPacks,
             };
 
+            // replace local id entry with synced item
             set({
-              cart: get().cart.map((i) => (i.id === item.id ? syncedItem : i)),
+              cart: get().cart.map((i) => (String(i.id) === String(item.id) ? syncedItem : i)),
             });
           }
 
@@ -539,14 +649,13 @@ export const useCartStore = create<CartState>()(
       },
     }),
     {
-    name: "cart-storage",
-    storage: perUserStorage as any,
+      name: "cart-storage",
+      storage: perUserStorage as any,
     }
-
   )
 );
 
-// Sync offline cart when back online
+// Sync offline cart when back online (attempt to sync local items)
 if (typeof window !== "undefined") {
   window.addEventListener("online", async () => {
     const store = useCartStore.getState();
@@ -557,3 +666,5 @@ if (typeof window !== "undefined") {
     }
   });
 }
+
+export default useCartStore;
