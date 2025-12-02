@@ -5,7 +5,6 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { useCartStore } from "@/store/cartStore";
 import { toast } from "sonner";
-import { useAuth } from "@/context/Authcontext";
 
 interface ProductCardProps {
   id: string | number;
@@ -15,7 +14,6 @@ interface ProductCardProps {
   price?: number;
   category?: string;
   size?: string;
-  // packs from backend
   packs?: { pack: number; price: number }[];
 }
 
@@ -42,55 +40,49 @@ export const ProductCard = ({
   packs = [{ pack: 12, price }],
 }: ProductCardProps) => {
   const addToCart = useCartStore((state) => state.addToCart);
-  const { user } = useAuth();
 
-  const initialPack = packs && packs.length ? packs[0].pack : 1;
-  const initialPrice = packs && packs.length ? packs[0].price : price;
+  const initialPack = packs.length ? packs[0].pack : 1;
+  const initialPrice = packs.length ? packs[0].price : price;
 
   const [selectedPack, setSelectedPack] = useState<number>(initialPack);
   const [selectedPrice, setSelectedPrice] = useState<number>(initialPrice);
   const [isLoading, setIsLoading] = useState(false);
   const [addedMessage, setAddedMessage] = useState(false);
 
- const handlePackChange = (pack: number) => {
-  setSelectedPack(pack);
-  const packObj = packs.find((p) => p.pack === pack);
-  if (packObj) setSelectedPrice(packObj.price);
-};
-
-
-const handleAddToCart = async (e: React.MouseEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
-
-  const productToAdd: CartProduct = {
-    id,
-    name,
-    image,
-    category,
-    size,
-    pack: selectedPack, // the selected pack number
-    packs,             // array of all packs for this product
-    qty: 1,
+  const handlePackChange = (pack: number) => {
+    setSelectedPack(pack);
+    const packObj = packs.find((p) => p.pack === pack);
+    if (packObj) setSelectedPrice(packObj.price);
   };
 
-  try {
-    // Now addToCart computes price based on selectedPack automatically
-    await addToCart(productToAdd, selectedPack, 1);
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-    setAddedMessage(true);
-    setTimeout(() => setAddedMessage(false), 3000);
-  } catch (err) {
-    console.error("Add to cart error:", err);
-    toast.error("Could not add to cart");
-  } finally {
-    setIsLoading(false);
-  }
-};
+    const productToAdd: CartProduct = {
+      id,
+      name,
+      image,
+      category,
+      size,
+      pack: selectedPack,
+      packs,
+      qty: 1,
+    };
 
+    try {
+      // Works for both guest + logged-in users
+      await addToCart(productToAdd, selectedPack, 1);
 
-
-
+      setAddedMessage(true);
+      setTimeout(() => setAddedMessage(false), 3000);
+    } catch (err) {
+      console.error("Add to cart error:", err);
+      toast.error("Could not add to cart");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const sizeLabel = size ?? "";
 
@@ -106,12 +98,8 @@ const handleAddToCart = async (e: React.MouseEvent) => {
         )}
 
         {sizeLabel && (
-          <div className="absolute left-2 bottom-2 flex items-center gap-2">
-            <span
-              className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold
-                         bg-black/70 text-white backdrop-blur-sm shadow"
-              aria-hidden="true"
-            >
+          <div className="absolute left-2 bottom-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-black/70 text-white backdrop-blur-sm shadow">
               {sizeLabel}
             </span>
           </div>
@@ -125,10 +113,12 @@ const handleAddToCart = async (e: React.MouseEvent) => {
           </Badge>
         )}
 
-        <h3 className="font-heading font-semibold text-sm text-foreground">{name}</h3>
+        <h3 className="font-heading font-semibold text-sm text-foreground">
+          {name}
+        </h3>
 
         <p className="font-heading font-semibold text-sm text-foreground mt-2">
-          ₵{Number(selectedPrice ?? 0).toFixed(2)}
+          ₵{Number(selectedPrice).toFixed(2)}
         </p>
 
         <div className="flex flex-col gap-2 mt-1.5">
