@@ -93,8 +93,8 @@ export default function Checkout(): JSX.Element {
     address: "",
     city: "Ghana",
     country: "Ghana",
-    orderType: "delivery", // you said you don't use delivery methods but keep field for compatibility
-    paymentMethod: "card", // "card" or "delivery"
+    orderType: "delivery",
+    paymentMethod: "card",
     deliveryDate: undefined as Date | undefined,
     deliveryTime: "",
   });
@@ -116,8 +116,7 @@ export default function Checkout(): JSX.Element {
   };
 
   const generateOrderId = () => "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-
-  const API_BASE = "https://duksshopback-end.onrender.com/api"; // adjust if you run locally
+  const API_BASE = "https://duksshopback-end.onrender.com/api";
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -131,26 +130,22 @@ export default function Checkout(): JSX.Element {
     const finalTotal = subtotal + shippingFee;
     const orderId = generateOrderId();
 
-    const currentCart = useCartStore.getState().cart;
-    if (!currentCart || currentCart.length === 0) {
+    if (!cart || cart.length === 0) {
       toast.error("Your cart is empty");
       return;
     }
 
-    // Build a robust items array for metadata (backend expects these fields)
-    const validCartItems = currentCart.map((item) => {
-      const quantity = (item as any).qty ?? (item as any).quantity ?? 1;
-      return {
-        drinkId: item.drinkId ?? item.id,
-        name: item.name ?? "Item",
-        price: Number(item.price ?? 0),
-        quantity,
-        pack: item.pack ?? null,
-        image: item.image ?? "",
-      };
-    });
+    // ✅ Normalize cart items
+    const validCartItems = cart.map((item) => ({
+      drinkId: item.drinkId || item.id,
+      name: item.name || "Item",
+      price: Number(item.price) || 0,
+      quantity: Number(item.qty ?? 1),
+      pack: item.pack ?? null,
+      image: item.image || "",
+    }));
 
-    // Pay on Delivery - save order directly on backend
+    // Pay on Delivery
     if (formData.paymentMethod === "delivery") {
       try {
         setIsProcessing(true);
@@ -168,14 +163,7 @@ export default function Checkout(): JSX.Element {
             },
             orderId,
             paymentMethod: "Pay on Delivery",
-            items: validCartItems.map((i) => ({
-              drinkId: i.drinkId,
-              quantity: i.quantity,
-              price: i.price,
-              pack: i.pack,
-              name: i.name,
-              image: i.image,
-            })),
+            items: validCartItems,
           },
           {
             headers: {
@@ -195,30 +183,25 @@ export default function Checkout(): JSX.Element {
       return;
     }
 
-    // Card payment (Paystack) -> initialize on backend and redirect
+    // Card payment (Paystack)
     if (!user || !user.token) {
       toast.error("You must be logged in to pay with card");
       return;
     }
 
     try {
-      // show modal while we init
       setIsRedirectModalOpen(true);
       setIsProcessing(true);
 
-      // Build the payload — include metadata so webhook can rely on it
       const userId = (user as any)?._id ?? (user as any)?.id ?? null;
 
       const payload: any = {
-        // top-level fields backend initializePayment uses: (your backend picks from req.body)
         email: formData.email || (user as any)?.email,
         fullName: formData.fullName,
         phone: formData.phone,
         address: formData.address,
-        amount: Math.round(finalTotal * 100), // smallest unit
-        // provider or extra fields are optional
+        amount: Math.round(finalTotal * 100),
         provider: "Paystack",
-        // but the important part for webhook: metadata
         metadata: {
           userId,
           email: formData.email || (user as any)?.email,
@@ -232,21 +215,17 @@ export default function Checkout(): JSX.Element {
         },
       };
 
-      // call backend initialize endpoint
       const { data } = await axios.post(`${API_BASE}/payments/initialize`, payload, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
+        headers: { Authorization: `Bearer ${user.token}` },
       });
 
       setIsRedirectModalOpen(false);
       setIsProcessing(false);
 
       if (data?.authorization_url) {
-        // redirect to Paystack
         window.location.href = data.authorization_url;
       } else {
-        console.error("Missing authorization_url from initialize:", data);
+        console.error("Missing authorization_url:", data);
         toast.error("Payment initialization failed");
       }
     } catch (err: any) {
@@ -278,7 +257,6 @@ export default function Checkout(): JSX.Element {
       <Header />
       <main className="flex-1 container py-16 bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left form */}
           <form onSubmit={handleSubmit} className="lg:col-span-2 rounded space-y-6">
             <h2 className="font-heading text-2xl font-bold mb-6 text-center">Checkout</h2>
 
@@ -346,14 +324,13 @@ export default function Checkout(): JSX.Element {
             </Button>
           </form>
 
-          {/* Right summary */}
           <div className="flex justify-center lg:items-start">
             <aside className="w-full max-w-sm border rounded-2xl p-4 bg-card shadow-sm h-fit">
               <h3 className="font-heading font-bold text-lg mb-3 text-center lg:text-left">Order Summary</h3>
 
               <div className="flex justify-between text-sm mb-4">
                 <span className="font-medium">ITEMS SELECTED:</span>
-                <span className="font-semibold">{cart.reduce((sum, item) => sum + ((item as any).qty ?? (item as any).quantity ?? 0), 0)}</span>
+                <span className="font-semibold">{cart.reduce((sum, item) => sum + (item.qty ?? 1), 0)}</span>
               </div>
 
               <div className="space-y-2 text-sm">
