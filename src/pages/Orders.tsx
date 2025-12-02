@@ -10,14 +10,25 @@ import axiosInstance from "@/api/axios";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+interface OrderItem {
+  image: string;
+  name: string;
+  quantity: number;
+  price: number;
+  pack?: string;
+  drinkId?: string;
+}
+
 interface Order {
   id: string;
-  items: any[];
+  items: OrderItem[];
   totalAmount: number;
   orderStatus: string;
   paymentStatus: string;
   createdAt: string;
+  deliveryDate?: string | null;
 }
+
 
 export default function Orders() {
   const navigate = useNavigate();
@@ -36,13 +47,14 @@ export default function Orders() {
         setLoading(true);
         const { data } = await axiosInstance.get("/orders/my-orders");
 
-        const parsed = (data.orders || []).map((o: any) => ({
-          id: o._id,
-          items: o.items || [],
-          totalAmount: o.totalAmount ?? 0,
-          orderStatus: o.orderStatus,
-          paymentStatus: o.paymentStatus,
-          createdAt: o.createdAt,
+        const parsed: Order[] = (data.orders || []).map((o: any) => ({
+        id: o._id,
+        items: o.items || [],
+        totalAmount: o.totalAmount ?? 0,
+        orderStatus: o.orderStatus,
+        paymentStatus: o.paymentStatus,
+        createdAt: o.createdAt,
+        deliveryDate: o.deliveryDate ?? null,
         }));
 
         // newest first
@@ -171,6 +183,12 @@ export default function Orders() {
                   <p className="text-xs text-muted-foreground">
                     {new Date(order.createdAt).toLocaleString()}
                   </p>
+                  {order.deliveryDate && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Delivery: {new Date(order.deliveryDate).toLocaleDateString()}
+                    </p>
+                    )}
+
                   <p className="text-xs mt-1">
                     {order.items.length} item{order.items.length !== 1 ? "s" : ""}
                   </p>
