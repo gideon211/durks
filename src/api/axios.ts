@@ -1,32 +1,28 @@
 import axios from "axios";
 
-const API_URL ="https://updated-duks-backend-1-0.onrender.com/api";
+const API_URL = "https://updated-duks-backend-1-0.onrender.com/api";
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
 });
 
-// ✅ Attach token to every request
+// attach token
 axiosInstance.interceptors.request.use(
   (config) => {
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      const { token } = JSON.parse(stored);
-      config.headers.Authorization = `Bearer ${token}`;
+    const raw = localStorage.getItem("user");
+    if (raw) {
+      const { token } = JSON.parse(raw);
+      if (token) config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// ✅ Handle expired tokens (401)
+// never force logout inside axios
 axiosInstance.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("user");
-      window.location.href = "/auth";
-    }
+  (error) => {
     return Promise.reject(error);
   }
 );
