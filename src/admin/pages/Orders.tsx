@@ -83,42 +83,55 @@ async function fetchAllOrders() {
 }
 
 
-  const rows: TableRow[] = useMemo(
-    () =>
-      orders.map((o: any) => {
-        const id = o._id ?? o.id ?? `ORD-${Date.now()}`;
-        const customer =
-          (o.userId && (o.userId.name || o.userId.email)) || o.customer || "Unknown";
+const rows: TableRow[] = useMemo(
+  () =>
+    orders.map((o: any) => {
+      const id = o._id; // USE BACKEND _id ONLY
 
-        const itemsArr = Array.isArray(o.items) ? o.items : o.items || [];
-        const itemsSummary =
-          itemsArr.length > 0
-            ? itemsArr
-                .slice(0, 3)
-                .map((it: any) => `${it.name} x ${it.quantity}`)
-                .join(", ") + (itemsArr.length > 3 ? ` +${itemsArr.length - 3} more` : "")
-            : "—";
-        const qty = itemsArr.reduce((s: number, it: any) => s + (it.quantity || 0), 0);
-        const totalAmount = o.totalAmount ?? o.total ?? o.amount ?? 0;
-        const payment = (o.paymentStatus || "pending").toLowerCase();
-        const fulfillment = (o.orderStatus || "pending").toLowerCase();
-        const createdAt = o.createdAt ?? o.createdAt ?? o.createdAt;
-        const date = createdAt ? new Date(createdAt).toLocaleDateString() : "—";
+      const customer =
+        o.customer?.fullName ||
+        o.customer?.email ||
+        "Unknown";
 
-        return {
-          id,
-          customer,
-          items: itemsSummary,
-          qty,
-          total: `GH₵ ${Number(totalAmount || 0).toFixed(2)}`,
-          payment,
-          fulfillment,
-          date,
-          _raw: o,
-        } as TableRow;
-      }),
-    [orders]
-  );
+      const itemsArr = o.items || [];
+
+      const itemsSummary =
+        itemsArr.length > 0
+          ? itemsArr
+              .slice(0, 3)
+              .map((it: any) => `${it.name} x ${it.quantity}`)
+              .join(", ") +
+            (itemsArr.length > 3 ? ` +${itemsArr.length - 3} more` : "")
+          : "—";
+
+      const qty = itemsArr.reduce(
+        (s: number, it: any) => s + (it.quantity || 0),
+        0
+      );
+
+      const totalAmount = o.totalAmount || 0;
+
+      const payment = (o.paymentStatus || "pending").toLowerCase();
+      const fulfillment = (o.orderStatus || "pending").toLowerCase();
+
+      const date = o.createdAt
+        ? new Date(o.createdAt).toLocaleDateString()
+        : "—";
+
+      return {
+        id,
+        customer,
+        items: itemsSummary,
+        qty,
+        total: `GH₵ ${totalAmount.toFixed(2)}`,
+        payment,
+        fulfillment,
+        date,
+        _raw: o,
+      } as TableRow;
+    }),
+  [orders]
+);
 
   const filteredRows = useMemo(() => {
     return rows.filter((r) => {

@@ -180,7 +180,7 @@ export default function Orders() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="container mx-auto px-4 py-6 mt-10">
+      <main className="container mx-auto px-4 py-6 mt-14">
         <h1 className="font-heading text-center text-md font-semibold mb-6">MY ORDERS</h1>
 
         <div className="space-y-4">
