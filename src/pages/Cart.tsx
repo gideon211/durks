@@ -15,73 +15,31 @@ export default function Cart() {
   const { user } = useAuth();
 
   const cartItems = useCartStore((state) => state.cart);
+  const fetchCart = useCartStore((state) => state.fetchCart);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const updateQty = useCartStore((state) => state.updateQty);
   const updatePack = useCartStore((state) => state.updatePack);
   const clearCart = useCartStore((state) => state.clearCart);
   const totalPrice = useCartStore((state) => state.totalPrice);
-  const setCart = useCartStore((state) => state.setCart);
-  const loadCartForUser = useCartStore((state) => state.loadCartForUser);
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState<"checkout" | "bulk" | null>(null);
-  const [localQtyMap, setLocalQtyMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  // Load cart from backend on mount (and when user changes)
   useEffect(() => {
     (async () => {
       try {
-        if (user) {
-          await loadCartForUser(user.id);
-        } else {
-          await loadCartForUser(null);
-        }
+        await fetchCart();
       } catch (err) {
-        console.warn("Failed to load cart for user change:", err);
+        console.warn("Failed fetching cart:", err);
       }
     })();
-  }, [user, loadCartForUser]);
-
-  useEffect(() => {
-    try {
-      const pendingCartRaw = localStorage.getItem("pendingCart");
-      if (user && pendingCartRaw) {
-        const parsed = JSON.parse(pendingCartRaw) as CartItem[] | undefined;
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setCart(parsed);
-          toast.success("Restored your saved cart after signing in");
-        }
-        localStorage.removeItem("pendingCart");
-      }
-    } catch (err) {
-      console.warn("Error restoring pendingCart", err);
-    }
-  }, [user, setCart]);
-
-  useEffect(() => {
-    if (!user) return;
-    try {
-      const pending = localStorage.getItem("pendingCheckout");
-      if (pending) {
-        localStorage.removeItem("pendingCheckout");
-        setTimeout(() => navigate("/checkout"), 250);
-      }
-    } catch (err) {
-      console.warn("Error handling pendingCheckout", err);
-    }
-  }, [user, navigate]);
-
-  useEffect(() => {
-    const map: Record<string, number> = {};
-    cartItems.forEach((item) => {
-      map[item.id] = item.qty;
-    });
-    setLocalQtyMap(map);
-  }, [cartItems]);
+  }, [user?.id, fetchCart]);
 
   const openAuthModal = (action: "checkout" | "bulk") => {
     setPendingAction(action);
@@ -94,21 +52,17 @@ export default function Cart() {
       return;
     }
     toast.success("Proceeding to checkout...");
-    setTimeout(() => navigate("/checkout"), 2000);
+    navigate("/checkout");
   };
 
   const handleSignInFromModal = () => {
     setIsLoading(true);
-    localStorage.setItem(
-      "pendingCheckout",
-      JSON.stringify({ from: "/cart", action: pendingAction ?? "checkout" })
-    );
-
+    // redirect to auth, preserving origin
     setTimeout(() => {
       setIsLoading(false);
       setModalOpen(false);
-      navigate("/auth", { state: { from: "/cart" } });
-    }, 600);
+      navigate("/auth", { state: { from: "/cart", action: pendingAction ?? "checkout" } });
+    }, 400);
   };
 
   if (cartItems.length === 0) {
@@ -127,9 +81,7 @@ export default function Cart() {
             <Button
               variant="hero"
               size="lg"
-              onClick={() =>
-                navigate("/products", { state: { skipHero: true, scrollToTabs: true } })
-              }
+              onClick={() => navigate("/products", { state: { skipHero: true, scrollToTabs: true } })}
             >
               Browse Products
             </Button>
@@ -153,23 +105,10 @@ export default function Cart() {
           <div className="grid grid-cols-1 lg:grid-cols-3">
             <div className="space-y-3 lg:col-start-2 lg:col-span-1 max-w-3xl w-full mx-auto">
               {cartItems.map((item: CartItem) => {
-                const localQty = localQtyMap[item.id] ?? item.qty;
-
                 const handleQtyChange = (val: string) => {
-                  if (val === "") {
-                    setLocalQtyMap((prev) => ({ ...prev, [item.id]: 0 }));
-                    return;
-                  }
-                  const newQty = Math.max(1, Number(val));
-                  setLocalQtyMap((prev) => ({ ...prev, [item.id]: newQty }));
-                  updateQty(item.id, newQty);
-                };
-
-                const handleQtyBlur = () => {
-                  if (!localQty || localQty < 1) {
-                    updateQty(item.id, 1);
-                    setLocalQtyMap((prev) => ({ ...prev, [item.id]: 1 }));
-                  }
+                  const newQty = Number(val);
+                  if (!newQty || newQty < 1) return;
+                  updateQty(item.id, Math.floor(newQty));
                 };
 
                 return (
@@ -179,9 +118,14 @@ export default function Cart() {
                   >
                     <div className="w-24 flex-shrink-0">
                       <img
-                        src={item.image}
+                        src={item.image || ""}
                         alt={item.name}
                         className="w-full h-24 object-cover rounded border"
+                        onError={(e) => {
+                          // fallback if image fails
+                          (e.currentTarget as HTMLImageElement).src =
+                            "/placeholder-image.png";
+                        }}
                       />
                     </div>
 
@@ -202,16 +146,9 @@ export default function Cart() {
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <select
-                            value={item.pack}
+                            value={String(item.pack)}
                             onChange={(e) => {
                               const newPack = Number(e.target.value);
-                              const selectedPack = item.packs?.find((p) => p.pack === newPack);
-                              const newPrice = selectedPack ? selectedPack.price : item.price;
-
-                              const updated = cartItems.map((c) =>
-                                c.id === item.id ? { ...c, pack: newPack, price: newPrice } : c
-                              );
-                              setCart(updated);
                               updatePack(item.id, newPack);
                             }}
                             className="border px-2 py-1 rounded text-sm font-semibold"
@@ -227,9 +164,8 @@ export default function Cart() {
                           <input
                             type="number"
                             min={1}
-                            value={localQty || ""}
+                            value={item.qty}
                             onChange={(e) => handleQtyChange(e.target.value)}
-                            onBlur={handleQtyBlur}
                             className="border px-2 py-1 w-16 text-center rounded text-sm font-semibold"
                           />
                         </div>
@@ -237,7 +173,7 @@ export default function Cart() {
                         <div className="text-right min-w-[80px]">
                           <div className="text-xs text-muted-foreground">Total</div>
                           <div className="font-heading font-semibold text-sm">
-                            ₵{(item.price * (localQty || 1)).toFixed(2)}
+                            ₵{(item.price * (item.qty || 1)).toFixed(2)}
                           </div>
                         </div>
                       </div>
@@ -260,13 +196,30 @@ export default function Cart() {
                 ₵{totalPrice().toFixed(2)}
               </span>
             </div>
-            <Button size="md" onClick={handleCheckout} className="w-full sm:w-auto">
-              Proceed to Checkout
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                onClick={async () => {
+                  try {
+                    await clearCart();
+                    toast.success("Cart cleared");
+                  } catch (err) {
+                    console.error("clearCart error:", err);
+                    toast.error("Failed to clear cart");
+                  }
+                }}
+              >
+                Clear Cart
+              </Button>
+
+              <Button size="md" onClick={handleCheckout} className="w-full sm:w-auto">
+                Proceed to Checkout
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Improved Modal Design */}
+        {/* Sign-in modal for checkout/bulk actions */}
         <Modal
           isOpen={isModalOpen}
           title={

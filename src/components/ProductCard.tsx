@@ -7,13 +7,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/Authcontext";
 
-
 interface ProductCardProps {
   id: string | number;
   name: string;
   description?: string;
   image?: string;
-  price?: number; 
+  price?: number;
   category?: string;
   size?: string;
   // Dynamic packs from backend: array of pack sizes and their prices
@@ -30,8 +29,8 @@ interface CartProduct {
   size?: string;
   pack?: number;
   packs?: { pack: number; price: number }[]; // <-- add this line
+  qty?: number;
 }
-
 
 export const ProductCard = ({
   id,
@@ -67,18 +66,23 @@ export const ProductCard = ({
         size,
         pack: selectedPack,
         packs,
-
-
+        qty: 1,
       };
 
-      await addToCart(productToAdd, selectedPack);
+      // call addToCart (store accepts object or id)
+      await addToCart(productToAdd, selectedPack, 1);
 
-      // Persist pending cart if user isn't logged in
+      // Persist pending add if user isn't logged in (Authcontext listens for pendingAdd)
       if (!user) {
         try {
+          localStorage.setItem(
+            "pendingAdd",
+            JSON.stringify({ product: productToAdd, quantity: 1, from: "/cart" })
+          );
+          // also save guest cart snapshot (optional)
           localStorage.setItem("pendingCart", JSON.stringify(cart));
         } catch (err) {
-          console.warn("Could not persist pendingCart to localStorage", err);
+          console.warn("Could not persist pendingAdd to localStorage", err);
         }
       }
 

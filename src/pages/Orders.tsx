@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface OrderItem {
-  image: string;
+  image?: string | null;
   name: string;
   quantity: number;
   price: number;
@@ -29,7 +29,6 @@ interface Order {
   deliveryDate?: string | null;
 }
 
-
 export default function Orders() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -40,21 +39,34 @@ export default function Orders() {
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.token) return;
 
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const { data } = await axiosInstance.get("/orders/my-orders");
+
+        // Send token explicitly (axiosInstance may already include it, but safe to add)
+        const { data } = await axiosInstance.get("/orders/my-orders", {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+
+        console.debug("Orders response:", data);
 
         const parsed: Order[] = (data.orders || []).map((o: any) => ({
-        id: o._id,
-        items: o.items || [],
-        totalAmount: o.totalAmount ?? 0,
-        orderStatus: o.orderStatus,
-        paymentStatus: o.paymentStatus,
-        createdAt: o.createdAt,
-        deliveryDate: o.deliveryDate ?? null,
+          id: o._id,
+          items: Array.isArray(o.items) ? o.items.map((it: any) => ({
+            image: it.image ?? it.imageUrl ?? null,
+            name: it.name ?? "Item",
+            quantity: it.quantity ?? it.qty ?? 1,
+            price: Number(it.price ?? 0),
+            pack: it.pack ?? null,
+            drinkId: it.drinkId ? String(it.drinkId) : undefined,
+          })) : [],
+          totalAmount: Number(o.totalAmount ?? 0),
+          orderStatus: o.orderStatus ?? "confirmed",
+          paymentStatus: o.paymentStatus ?? "pending",
+          createdAt: o.createdAt ?? new Date().toISOString(),
+          deliveryDate: o.deliveryDate ?? null,
         }));
 
         // newest first
@@ -63,16 +75,23 @@ export default function Orders() {
         );
 
         setOrders(sorted);
-      } catch (err) {
-        console.error("Failed to fetch orders:", err);
-        toast.error("Failed to fetch your orders");
+      } catch (err: any) {
+        console.error("Failed to fetch orders:", err?.response ?? err);
+        if (err?.response?.status === 401) {
+          toast.error("You are not authorized. Please sign in again.");
+          // optionally clear local user and redirect — handled elsewhere
+          navigate("/auth");
+        } else {
+          toast.error("Failed to fetch your orders");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrders();
-  }, [user]);
+    // re-run when user token changes
+  }, [user?.token, navigate]);
 
   const statusClass = (status: string) => {
     switch (status) {
@@ -88,22 +107,31 @@ export default function Orders() {
   };
 
   const toggleExpand = (id: string) => {
-    setExpanded(expanded === id ? null : id);
+    setExpanded((prev) => (prev === id ? null : id));
   };
 
   const handleCancelOrder = async (orderId: string) => {
     const ok = window.confirm("Are you sure you want to cancel this order?");
     if (!ok) return;
 
+    if (!user?.token) {
+      toast.error("You must be signed in to cancel an order");
+      navigate("/auth");
+      return;
+    }
+
     try {
       setCancellingOrderId(orderId);
-      await axiosInstance.put(`/orders/cancel/${orderId}`);
+
+      await axiosInstance.put(
+        `/orders/cancel/${orderId}`,
+        {},
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
 
       setOrders((prev) =>
         prev.map((o) =>
-          o.id === orderId
-            ? { ...o, orderStatus: "cancelled", paymentStatus: "refunded" }
-            : o
+          o.id === orderId ? { ...o, orderStatus: "cancelled", paymentStatus: "refunded" } : o
         )
       );
 
@@ -116,7 +144,7 @@ export default function Orders() {
     }
   };
 
-  // No user
+  // Not signed in
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -173,7 +201,6 @@ export default function Orders() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-card border border-border rounded-xl p-4"
             >
-              {/* Small Order ID */}
               <p className="text-[10px] text-muted-foreground mb-1">
                 Order ID: {order.id}
               </p>
@@ -183,11 +210,12 @@ export default function Orders() {
                   <p className="text-xs text-muted-foreground">
                     {new Date(order.createdAt).toLocaleString()}
                   </p>
+
                   {order.deliveryDate && (
                     <p className="text-xs text-muted-foreground mt-1">
-                        Delivery: {new Date(order.deliveryDate).toLocaleDateString()}
+                      Delivery: {new Date(order.deliveryDate).toLocaleDateString()}
                     </p>
-                    )}
+                  )}
 
                   <p className="text-xs mt-1">
                     {order.items.length} item{order.items.length !== 1 ? "s" : ""}
@@ -199,10 +227,9 @@ export default function Orders() {
                     {order.orderStatus.toUpperCase()}
                   </p>
                   <p className="font-medium text-sm mt-2">
-                    ₵{order.totalAmount.toFixed(2)}
+                    ₵{Number(order.totalAmount ?? 0).toFixed(2)}
                   </p>
 
-                  {/* View More */}
                   <Button
                     variant="outline"
                     size="sm"
@@ -214,7 +241,6 @@ export default function Orders() {
                 </div>
               </div>
 
-              {/* EXPANDED ORDER ITEMS */}
               <div
                 className={cn(
                   "transition-all overflow-hidden mt-4",
@@ -224,40 +250,38 @@ export default function Orders() {
                 <div className="space-y-3">
                   {order.items.map((item, index) => (
                     <div
-                      key={index}
+                      key={item.drinkId ?? `${order.id}-item-${index}`}
                       className="bg-gray-100 p-3 rounded-lg flex items-center gap-3"
                     >
                       <img
-                        src={item.image}
+                        src={item.image ?? "/placeholder.png"}
                         alt={item.name}
                         className="w-14 h-14 rounded object-cover"
                       />
                       <div>
                         <p className="font-medium">{item.name}</p>
                         <p className="text-sm text-gray-600">
-                          {item.quantity} × ₵{item.price}
+                          {item.quantity} × ₵{Number(item.price ?? 0).toFixed(2)}
                         </p>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Cancel button inside expanded section */}
-                {order.orderStatus !== "completed" &&
-                  order.orderStatus !== "cancelled" && (
-                    <Button
-                      variant="destructive"
-                      className="mt-4 w-full"
-                      onClick={() => handleCancelOrder(order.id)}
-                      disabled={cancellingOrderId === order.id}
-                    >
-                      {cancellingOrderId === order.id ? (
-                        <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                      ) : (
-                        "Cancel Order"
-                      )}
-                    </Button>
-                  )}
+                {order.orderStatus !== "completed" && order.orderStatus !== "cancelled" && (
+                  <Button
+                    variant="destructive"
+                    className="mt-4 w-full"
+                    onClick={() => handleCancelOrder(order.id)}
+                    disabled={cancellingOrderId === order.id}
+                  >
+                    {cancellingOrderId === order.id ? (
+                      <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                    ) : (
+                      "Cancel Order"
+                    )}
+                  </Button>
+                )}
               </div>
             </motion.div>
           ))}

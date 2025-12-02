@@ -108,7 +108,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       activeUser = refreshed;
     }
 
-    await addToCart(pending.product, pending.quantity);
+    // pending.product can be full product object; addToCart accepts that
+    await addToCart(pending.product, pending.product.pack ?? 12, pending.quantity);
     localStorage.removeItem("pendingAdd");
     navigate(pending.from || "/cart");
     return true;
