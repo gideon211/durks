@@ -27,7 +27,7 @@ interface Order {
   paymentStatus: string;
   createdAt: string;
   deliveryDate?: string | null;
-  deliveryTime?: string | null; // <- add this
+  deliveryTime?: string | null;
 }
 
 export default function Orders() {
@@ -45,24 +45,22 @@ export default function Orders() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-
-        // Send token explicitly (axiosInstance may already include it, but safe to add)
         const { data } = await axiosInstance.get("/orders/my-orders", {
           headers: { Authorization: `Bearer ${user.token}` },
         });
 
-        console.debug("Orders response:", data);
-
         const parsed: Order[] = (data.orders || []).map((o: any) => ({
           id: o._id,
-          items: Array.isArray(o.items) ? o.items.map((it: any) => ({
-            image: it.image ?? it.imageUrl ?? null,
-            name: it.name ?? "Item",
-            quantity: it.quantity ?? it.qty ?? 1,
-            price: Number(it.price ?? 0),
-            pack: it.pack ?? null,
-            drinkId: it.drinkId ? String(it.drinkId) : undefined,
-          })) : [],
+          items: Array.isArray(o.items)
+            ? o.items.map((it: any) => ({
+                image: it.image ?? it.imageUrl ?? null,
+                name: it.name ?? "Item",
+                quantity: Number(it.quantity ?? it.qty ?? 1),
+                price: Number(it.price ?? 0),
+                pack: it.pack ?? null,
+                drinkId: it.drinkId ? String(it.drinkId) : undefined,
+              }))
+            : [],
           totalAmount: Number(o.totalAmount ?? 0),
           orderStatus: o.orderStatus ?? "confirmed",
           paymentStatus: o.paymentStatus ?? "pending",
@@ -71,17 +69,13 @@ export default function Orders() {
           deliveryTime: o.deliveryTime ?? null,
         }));
 
-        // newest first
-        const sorted = parsed.sort(
+        setOrders(parsed.sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-
-        setOrders(sorted);
+        ));
       } catch (err: any) {
         console.error("Failed to fetch orders:", err?.response ?? err);
         if (err?.response?.status === 401) {
           toast.error("You are not authorized. Please sign in again.");
-          // optionally clear local user and redirect — handled elsewhere
           navigate("/auth");
         } else {
           toast.error("Failed to fetch your orders");
@@ -92,7 +86,6 @@ export default function Orders() {
     };
 
     fetchOrders();
-    // re-run when user token changes
   }, [user?.token, navigate]);
 
   const statusClass = (status: string) => {
@@ -109,13 +102,11 @@ export default function Orders() {
   };
 
   const toggleExpand = (id: string) => {
-    setExpanded((prev) => (prev === id ? null : id));
+    setExpanded(prev => (prev === id ? null : id));
   };
 
   const handleCancelOrder = async (orderId: string) => {
-    const ok = window.confirm("Are you sure you want to cancel this order?");
-    if (!ok) return;
-
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
     if (!user?.token) {
       toast.error("You must be signed in to cancel an order");
       navigate("/auth");
@@ -124,16 +115,17 @@ export default function Orders() {
 
     try {
       setCancellingOrderId(orderId);
-
       await axiosInstance.put(
-        `/orders/${orderId}/cancel`, 
+        `/orders/${orderId}/cancel`,
         {},
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id === orderId ? { ...o, orderStatus: "cancelled", paymentStatus: "refunded" } : o
+      setOrders(prev =>
+        prev.map(o =>
+          o.id === orderId
+            ? { ...o, orderStatus: "cancelled", paymentStatus: "refunded" }
+            : o
         )
       );
 
@@ -146,7 +138,6 @@ export default function Orders() {
     }
   };
 
-  // Not signed in
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -158,7 +149,6 @@ export default function Orders() {
     );
   }
 
-  // Loading
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -170,7 +160,6 @@ export default function Orders() {
     );
   }
 
-  // No orders
   if (orders.length === 0) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -191,12 +180,11 @@ export default function Orders() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-
       <main className="container mx-auto px-4 py-6 mt-10">
         <h1 className="font-heading text-center text-md font-semibold mb-6">MY ORDERS</h1>
 
         <div className="space-y-4">
-          {orders.map((order) => (
+          {orders.map(order => (
             <motion.div
               key={order.id}
               initial={{ opacity: 0, y: 40 }}
@@ -270,7 +258,8 @@ export default function Orders() {
                   ))}
                 </div>
 
-                {order.orderStatus !== "completed" && order.orderStatus !== "cancelled" && (
+                {order.orderStatus !== "completed" &&
+                 order.orderStatus !== "cancelled" && (
                   <Button
                     variant="destructive"
                     className="mt-4 w-full"
