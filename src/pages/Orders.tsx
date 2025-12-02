@@ -27,6 +27,7 @@ interface Order {
   paymentStatus: string;
   createdAt: string;
   deliveryDate?: string | null;
+  deliveryTime?: string | null; // <- add this
 }
 
 export default function Orders() {
@@ -67,6 +68,7 @@ export default function Orders() {
           paymentStatus: o.paymentStatus ?? "pending",
           createdAt: o.createdAt ?? new Date().toISOString(),
           deliveryDate: o.deliveryDate ?? null,
+          deliveryTime: o.deliveryTime ?? null,
         }));
 
         // newest first
@@ -124,7 +126,7 @@ export default function Orders() {
       setCancellingOrderId(orderId);
 
       await axiosInstance.put(
-        `/orders/cancel/${orderId}`,
+        `/orders/${orderId}/cancel`, 
         {},
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
