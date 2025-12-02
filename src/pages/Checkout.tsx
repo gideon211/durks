@@ -116,7 +116,7 @@ export default function Checkout(): JSX.Element {
   };
 
   const generateOrderId = () => "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-  const API_BASE = "https://duksshopback-end.onrender.com/api";
+  const API_BASE = "https://updated-duks-backend-1-0.onrender.com/api";
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

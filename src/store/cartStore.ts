@@ -64,7 +64,7 @@ interface CartState {
 }
 
 const axiosInstance = axios.create({
-  baseURL: "https://duksshopback-end.onrender.com/api",
+  baseURL: "https://updated-duks-backend-1-0.onrender.com/api",
   timeout: 5000,
 });
 
