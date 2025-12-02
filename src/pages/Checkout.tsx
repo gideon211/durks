@@ -1,7 +1,7 @@
 // src/pages/Checkout.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "@/api/axios"; 
+import axiosInstance from "@/api/axios";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,20 @@ interface Calendar24Props {
   onTimeChange?: (time: string) => void;
 }
 
-export function Calendar24({ date: propDate, time: propTime, onDateChange, onTimeChange }: Calendar24Props) {
+interface User {
+  _id: string;
+  fullName: string;
+  email: string;
+  token?: string;
+  // ...any other props
+}
+
+export function Calendar24({
+  date: propDate,
+  time: propTime,
+  onDateChange,
+  onTimeChange,
+}: Calendar24Props) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(propDate);
   const [time, setTime] = useState<string>(propTime || "");
@@ -33,7 +46,9 @@ export function Calendar24({ date: propDate, time: propTime, onDateChange, onTim
   return (
     <div className="flex gap-4 mt-4">
       <div className="flex flex-col gap-3">
-        <Label htmlFor="date-picker" className="px-1">Date</Label>
+        <Label htmlFor="date-picker" className="px-1">
+          Date
+        </Label>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" id="date-picker" className="w-32 justify-between font-normal">
@@ -57,7 +72,9 @@ export function Calendar24({ date: propDate, time: propTime, onDateChange, onTim
       </div>
 
       <div className="flex flex-col gap-3">
-        <Label htmlFor="time-picker" className="px-1">Time</Label>
+        <Label htmlFor="time-picker" className="px-1">
+          Time
+        </Label>
         <Input
           type="time"
           id="time-picker"
@@ -78,7 +95,6 @@ export default function Checkout(): JSX.Element {
   const { user } = useAuth();
   const navigate = useNavigate();
   const cart = useCartStore((s) => s.cart) as CartItem[];
-  const subtotalFn = useCartStore((s) => s.totalPrice) as () => number;
   const clearCart = useCartStore((s) => s.clearCart) as () => void;
 
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -116,6 +132,37 @@ export default function Checkout(): JSX.Element {
 
   const generateOrderId = () => "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase();
 
+  // Build normalized items from cart: ALWAYS use item.price and item.qty (these reflect selected pack)
+  const validCartItems = useMemo(() => {
+    return cart.map((item) => {
+      const price = Number(item.price ?? 0);
+      const qty = Number(item.qty ?? 1);
+      return {
+        drinkId: item.drinkId || item.id,
+        name: item.name ?? "Item",
+        price,
+        quantity: qty,
+        pack: item.pack ?? null,
+        image: item.image ?? "",
+        total: price * qty,
+      };
+    });
+  }, [cart]);
+
+  // Sum totals using the computed totals — this **ensures selected pack price is used**.
+  const itemsTotal = useMemo(() => {
+    return validCartItems.reduce((s, it) => s + (Number(it.total) || 0), 0);
+  }, [validCartItems]);
+
+  const finalTotal = itemsTotal + (shippingFee || 0);
+
+  // Debug logs you can remove later
+  useEffect(() => {
+    console.debug("Checkout - cart:", cart);
+    console.debug("Checkout - validCartItems:", validCartItems);
+    console.debug("Checkout - itemsTotal:", itemsTotal, "shippingFee:", shippingFee, "finalTotal:", finalTotal);
+  }, [cart, validCartItems, itemsTotal, shippingFee, finalTotal]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -124,24 +171,12 @@ export default function Checkout(): JSX.Element {
       return;
     }
 
-    const subtotal = subtotalFn();
-    const finalTotal = subtotal + shippingFee;
-    const orderId = generateOrderId();
-
     if (!cart || cart.length === 0) {
       toast.error("Your cart is empty");
       return;
     }
 
-    // Normalize cart items
-    const validCartItems = cart.map((item) => ({
-      drinkId: item.drinkId || item.id,
-      name: item.name || "Item",
-      price: Number(item.price) || 0,
-      quantity: Number(item.qty ?? 1),
-      pack: item.pack ?? null,
-      image: item.image || "",
-    }));
+    const orderId = generateOrderId();
 
     try {
       setIsProcessing(true);
@@ -170,7 +205,7 @@ export default function Checkout(): JSX.Element {
       }
 
       // Card payment (Paystack)
-      if (!user || !user.token) {
+      if (!user || !(user as any).token) {
         toast.error("You must be logged in to pay with card");
         setIsProcessing(false);
         return;
@@ -180,12 +215,13 @@ export default function Checkout(): JSX.Element {
 
       const userId = (user as any)?._id ?? (user as any)?.id ?? null;
 
+      // Payload must use the computed finalTotal (itemsTotal + shipping)
       const payload: any = {
         email: formData.email || (user as any)?.email,
         fullName: formData.fullName,
         phone: formData.phone,
         address: formData.address,
-        amount: Math.round(finalTotal * 100),
+        amount: Math.round(finalTotal * 100), // Paystack expects smallest currency unit
         provider: "Paystack",
         metadata: {
           userId,
@@ -195,17 +231,22 @@ export default function Checkout(): JSX.Element {
           address: formData.address,
           provider: "Paystack",
           items: validCartItems,
+          itemsTotal,
+          shippingFee,
+          finalTotal,
           deliveryDate: formData.deliveryDate ? formData.deliveryDate.toISOString() : null,
           deliveryTime: formData.deliveryTime || null,
         },
       };
 
+      // Initialize payment
       const { data } = await axiosInstance.post("/payments/initialize", payload);
 
       setIsRedirectModalOpen(false);
       setIsProcessing(false);
 
       if (data?.authorization_url) {
+        // Redirect user to Paystack
         window.location.href = data.authorization_url;
       } else {
         console.error("Missing authorization_url:", data);
@@ -227,13 +268,14 @@ export default function Checkout(): JSX.Element {
         <p className="text-muted-foreground text-center max-w-md mb-6">
           Thank you for your purchase. We’re processing your order and will contact you soon.
         </p>
-        <Button size="lg" onClick={() => navigate("/products")}>Continue Shopping</Button>
+        <Button size="lg" onClick={() => navigate("/products")}>
+          Continue Shopping
+        </Button>
       </div>
     );
   }
 
-  const subtotal = subtotalFn();
-  const grandTotal = subtotal + shippingFee;
+  const itemsCount = cart.reduce((sum, item) => sum + (Number(item.qty ?? 1) || 0), 0);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -246,11 +288,24 @@ export default function Checkout(): JSX.Element {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
                 <Label>Full Name</Label>
-                <Input name="fullName" value={formData.fullName} onChange={handleChange} required disabled={isProcessing} />
+                <Input
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  required
+                  disabled={isProcessing}
+                />
               </div>
               <div>
                 <Label>Email</Label>
-                <Input name="email" type="email" value={formData.email} onChange={handleChange} required disabled={isProcessing} />
+                <Input
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  disabled={isProcessing}
+                />
               </div>
               <div>
                 <Label>Phone</Label>
@@ -268,7 +323,9 @@ export default function Checkout(): JSX.Element {
                 >
                   <option value="">Select your area</option>
                   {zones.map((z) => (
-                    <option key={z.name} value={z.name}>{z.name}</option>
+                    <option key={z.name} value={z.name}>
+                      {z.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -313,25 +370,29 @@ export default function Checkout(): JSX.Element {
 
               <div className="flex justify-between text-sm mb-4">
                 <span className="font-medium">ITEMS SELECTED:</span>
-                <span className="font-semibold">{cart.reduce((sum, item) => sum + (item.qty ?? 1), 0)}</span>
+                <span className="font-semibold">{itemsCount}</span>
               </div>
 
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span>Subtotal</span><span>₵{subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span>Shipping fee</span><span className="font-medium text-xs">UPON DELIVERY</span></div>
-                <div className="flex justify-between font-bold mt-2 text-base"><span>Total</span><span>₵{grandTotal.toFixed(2)}</span></div>
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>₵{itemsTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Shipping fee</span>
+                  <span>₵{shippingFee.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-bold mt-2 text-base">
+                  <span>Total</span>
+                  <span>₵{finalTotal.toFixed(2)}</span>
+                </div>
               </div>
             </aside>
           </div>
         </div>
       </main>
 
-      <Modal
-        isOpen={isRedirectModalOpen}
-        title="Please wait…"
-        onClose={() => {}}
-        footer={null}
-      >
+      <Modal isOpen={isRedirectModalOpen} title="Please wait…" onClose={() => {}} footer={null}>
         <div className="flex flex-col items-center justify-center py-4">
           <Loader2 className="h-6 w-6 animate-spin" />
           <p className="text-center text-sm">Please wait.. redirecting to payment.</p>

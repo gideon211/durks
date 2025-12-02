@@ -45,9 +45,7 @@ export default function Orders() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const { data } = await axiosInstance.get("/orders/my-orders", {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
+        const { data } = await axiosInstance.get("/orders/my-orders");
 
         const parsed: Order[] = (data.orders || []).map((o: any) => ({
           id: o._id,
@@ -107,19 +105,10 @@ export default function Orders() {
 
   const handleCancelOrder = async (orderId: string) => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
-    if (!user?.token) {
-      toast.error("You must be signed in to cancel an order");
-      navigate("/auth");
-      return;
-    }
 
     try {
       setCancellingOrderId(orderId);
-      await axiosInstance.put(
-        `/orders/${orderId}/cancel`,
-        {},
-        { headers: { Authorization: `Bearer ${user.token}` } }
-      );
+      await axiosInstance.put(`/orders/${orderId}/cancel`);
 
       setOrders(prev =>
         prev.map(o =>

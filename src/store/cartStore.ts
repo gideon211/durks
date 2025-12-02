@@ -89,29 +89,72 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
-  addToCart: async (productOrId, pack = 12, qty = 1) => {
-    try {
-      let drinkId: string | number | null = null;
-      let quantity = qty;
-      let packToSend = pack;
+ addToCart: async (productOrId, pack = 12, qty = 1) => {
+  try {
+    let drinkId: string | number | null = null;
+    let quantity = qty;
+    // prefer explicit pack argument, fall back to product.pack
+    let packToSend = pack;
 
-      if (typeof productOrId === "object" && productOrId !== null) {
-        drinkId = productOrId.id ?? productOrId.drinkId ?? null;
-        quantity = productOrId.qty ?? productOrId.quantity ?? quantity;
-        packToSend = productOrId.pack ?? packToSend;
-      } else {
-        drinkId = productOrId;
-      }
+    let packsArray: { pack: number; price: number }[] | undefined;
+    let name = "";
+    let image = "";
+    let providedPrice: number | undefined;
 
-      if (!drinkId) throw new Error("Invalid product id");
-
-      await axiosInstance.post("/cart", { drinkId, quantity, pack: packToSend });
-      await get().fetchCart();
-    } catch (err) {
-      console.error("addToCart failed:", err);
-      throw err;
+    if (typeof productOrId === "object" && productOrId !== null) {
+      drinkId = productOrId.id ?? productOrId.drinkId ?? null;
+      quantity = productOrId.qty ?? productOrId.quantity ?? quantity;
+      packToSend = pack ?? productOrId.pack ?? packToSend;
+      packsArray = productOrId.packs;
+      name = productOrId.name ?? "";
+      image = productOrId.image ?? "";
+      providedPrice = typeof productOrId.price === "number" ? productOrId.price : undefined;
+    } else {
+      drinkId = productOrId;
     }
-  },
+
+    if (!drinkId) throw new Error("Invalid product id");
+
+    // compute price from packs array if possible, else use providedPrice or 0
+    const packObj = packsArray?.find((p) => String(p.pack) === String(packToSend));
+    const computedPrice = providedPrice ?? packObj?.price ?? 0;
+
+    // optimistic local add (gives immediate UI feedback)
+    const optimisticId = `local-${Math.random().toString(36).slice(2, 9)}`;
+    set({
+      cart: [
+        ...get().cart,
+        {
+          id: optimisticId,
+          drinkId,
+          name,
+          image,
+          price: Number(computedPrice),
+          qty: quantity,
+          pack: packToSend,
+          packs: packsArray,
+        },
+      ],
+    });
+
+    // include price when calling backend so server can persist chosen pack/price
+    await axiosInstance.post("/cart", {
+      drinkId,
+      quantity,
+      pack: packToSend,
+      price: Number(computedPrice),
+    });
+
+    // reconcile with server (fetch authoritative cart)
+    await get().fetchCart();
+  } catch (err) {
+    console.error("addToCart failed:", err);
+    // on error re-fetch server-side cart to stay consistent
+    await get().fetchCart();
+    throw err;
+  }
+},
+
 
   removeFromCart: async (cartItemId) => {
     try {
@@ -142,26 +185,80 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
-  updatePack: async (cartItemId, pack) => {
-    try {
-      set({
-        cart: get().cart.map((item) => {
-          if (String(item.id) !== String(cartItemId)) return item;
-          const packs = item.packs ?? [];
-          const price = packs.find((p) => String(p.pack) === String(pack))?.price ?? item.price;
-          return { ...item, pack, price };
-        }),
-      });
+updatePack: async (cartItemId, pack) => {
+  try {
+    // find current cart & item
+    const cart = get().cart;
+    const idx = cart.findIndex((it) => String(it.id) === String(cartItemId));
+    const item = idx > -1 ? cart[idx] : undefined;
+
+    // compute new price from packs[] if available
+    const packObj = item?.packs?.find((p) => String(p.pack) === String(pack));
+    const newPrice = packObj ? packObj.price : item?.price ?? 0;
+
+    // optimistic UI update
+    set({
+      cart: cart.map((it) =>
+        String(it.id) === String(cartItemId) ? { ...it, pack, price: newPrice } : it
+      ),
+    });
+
+    // If this is a local/guest item (no server id) persist to pendingCart and return
+    if (String(cartItemId).startsWith("local-") || !item) {
       try {
-        await axiosInstance.patch(`/cart/${cartItemId}/pack`, { pack });
-      } catch {
-        await axiosInstance.put(`/cart/${cartItemId}`, { pack });
+        const raw = typeof window !== "undefined" ? localStorage.getItem("pendingCart") : null;
+        const existing = raw ? (JSON.parse(raw) as any[]) : [];
+
+        let updated = false;
+        const updatedList = (Array.isArray(existing) ? existing : []).map((pi) => {
+          // try matching by id or drinkId
+          if (String(pi.id ?? pi._id ?? pi.drinkId) === String(cartItemId) || (item && String(pi.drinkId) === String(item.drinkId))) {
+            updated = true;
+            return { ...pi, pack, price: newPrice };
+          }
+          return pi;
+        });
+
+        // if not found in existing pending list, add it (use item props if available)
+        if (!updated && item) {
+          updatedList.unshift({
+            id: item.id,
+            drinkId: item.drinkId,
+            name: item.name,
+            image: item.image,
+            pack,
+            price: newPrice,
+            qty: item.qty,
+            packs: item.packs,
+          });
+        }
+
+        localStorage.setItem("pendingCart", JSON.stringify(updatedList));
+      } catch (e) {
+        console.warn("Failed to persist pendingCart:", e);
       }
-    } catch (err) {
-      console.error("updatePack failed:", err);
-      await get().fetchCart();
+      return;
     }
-  },
+
+    // Persist change to backend — include price so backend can validate/recalculate if needed
+    try {
+      await axiosInstance.patch(`/cart/${cartItemId}/pack`, { pack, price: newPrice });
+    } catch (err) {
+      // fallback to PUT if PATCH unsupported
+      try {
+        await axiosInstance.put(`/cart/${cartItemId}`, { pack, price: newPrice });
+      } catch (err2) {
+        console.warn("updatePack backend failed:", err2);
+        // reconcile by re-fetching cart from server
+        await get().fetchCart();
+      }
+    }
+  } catch (err) {
+    console.error("updatePack failed (store):", err);
+    await get().fetchCart();
+  }
+},
+
 
   clearCart: async () => {
     try {

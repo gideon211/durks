@@ -14,11 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, Eye, Package, X } from "lucide-react";
+import { Search, Filter, Eye, Package, X, Loader2 as LoaderIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/api/axios"; // make sure your axios instance includes auth token
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { Modal } from "@/components/Modal";
 
 type RawOrder = any;
 
@@ -49,89 +50,92 @@ export default function OrdersAdminPage() {
 
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
+  // Modal state
+  const [selectedOrder, setSelectedOrder] = useState<RawOrder | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   useEffect(() => {
     fetchAllOrders();
   }, []);
 
-async function fetchAllOrders() {
-  try {
-    setLoading(true);
-    setFetchError(null);
+  async function fetchAllOrders() {
+    try {
+      setLoading(true);
+      setFetchError(null);
 
-    const { data } = await axiosInstance.get("/orders");
-    const backendOrders = data.orders ?? data;
+      const { data } = await axiosInstance.get("/orders");
+      const backendOrders = data.orders ?? data;
 
-    // ⭐ SORT LATEST FIRST (DESCENDING)
-    const sorted = Array.isArray(backendOrders)
-      ? backendOrders.sort((a, b) => {
-          const dateA = new Date(a.createdAt).getTime();
-          const dateB = new Date(b.createdAt).getTime();
-          return dateB - dateA; // latest on top
-        })
-      : [];
+      // ⭐ SORT LATEST FIRST (DESCENDING)
+      const sorted = Array.isArray(backendOrders)
+        ? backendOrders.sort((a, b) => {
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return dateB - dateA; // latest on top
+          })
+        : [];
 
-    setOrders(sorted);
-  } catch (err: any) {
-    console.error("Failed to fetch orders:", err);
-    const msg =
-      err?.response?.data?.message || err.message || "Failed to load orders";
-    setFetchError(msg);
-    toast.error(msg);
-  } finally {
-    setLoading(false);
+      setOrders(sorted);
+    } catch (err: any) {
+      console.error("Failed to fetch orders:", err);
+      const msg =
+        err?.response?.data?.message || err.message || "Failed to load orders";
+      setFetchError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
+  const rows: TableRow[] = useMemo(
+    () =>
+      orders.map((o: any) => {
+        const id = o._id;
 
-const rows: TableRow[] = useMemo(
-  () =>
-    orders.map((o: any) => {
-      const id = o._id; // USE BACKEND _id ONLY
+        const customer =
+          o.customer?.fullName?.trim() && o.customer?.fullName !== "null null"
+            ? o.customer.fullName
+            : o.customer?.email || "Unknown";
 
-      const customer =
-        o.customer?.fullName ||
-        o.customer?.email ||
-        "Unknown";
+        const itemsArr = o.items || [];
 
-      const itemsArr = o.items || [];
+        const itemsSummary =
+          itemsArr.length > 0
+            ? itemsArr
+                .slice(0, 3)
+                .map((it: any) => `${it.name} x ${it.quantity}`)
+                .join(", ") +
+              (itemsArr.length > 3 ? ` +${itemsArr.length - 3} more` : "")
+            : "—";
 
-      const itemsSummary =
-        itemsArr.length > 0
-          ? itemsArr
-              .slice(0, 3)
-              .map((it: any) => `${it.name} x ${it.quantity}`)
-              .join(", ") +
-            (itemsArr.length > 3 ? ` +${itemsArr.length - 3} more` : "")
+        const qty = itemsArr.reduce(
+          (s: number, it: any) => s + (it.quantity || 0),
+          0
+        );
+
+        const totalAmount = o.totalAmount || 0;
+
+        const payment = (o.paymentStatus || "pending").toLowerCase();
+        const fulfillment = (o.orderStatus || "pending").toLowerCase();
+
+        const date = o.createdAt
+          ? new Date(o.createdAt).toLocaleDateString()
           : "—";
 
-      const qty = itemsArr.reduce(
-        (s: number, it: any) => s + (it.quantity || 0),
-        0
-      );
-
-      const totalAmount = o.totalAmount || 0;
-
-      const payment = (o.paymentStatus || "pending").toLowerCase();
-      const fulfillment = (o.orderStatus || "pending").toLowerCase();
-
-      const date = o.createdAt
-        ? new Date(o.createdAt).toLocaleDateString()
-        : "—";
-
-      return {
-        id,
-        customer,
-        items: itemsSummary,
-        qty,
-        total: `GH₵ ${totalAmount.toFixed(2)}`,
-        payment,
-        fulfillment,
-        date,
-        _raw: o,
-      } as TableRow;
-    }),
-  [orders]
-);
+        return {
+          id,
+          customer,
+          items: itemsSummary,
+          qty,
+          total: `GH₵ ${Number(totalAmount || 0).toFixed(2)}`,
+          payment,
+          fulfillment,
+          date,
+          _raw: o,
+        } as TableRow;
+      }),
+    [orders]
+  );
 
   const filteredRows = useMemo(() => {
     return rows.filter((r) => {
@@ -170,6 +174,25 @@ const rows: TableRow[] = useMemo(
     });
   }, [rows, search, statusFilter, paymentFilter, dateRange]);
 
+  function openOrderModal(order: RawOrder | undefined | null) {
+    if (!order) return;
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+  }
+
+  function closeOrderModal() {
+    setSelectedOrder(null);
+    setIsModalOpen(false);
+  }
+
+  // Helper to format delivery date/time safely
+  function formatDeliveryDate(dateStr?: string | null) {
+    if (!dateStr) return "—";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr; // fallback if not ISO
+    return d.toLocaleDateString();
+  }
+
   async function handleMarkCompleted(orderId?: string) {
     if (!orderId) return;
     const ok = window.confirm("Mark this order as completed/delivered?");
@@ -177,7 +200,8 @@ const rows: TableRow[] = useMemo(
 
     try {
       setUpdatingOrderId(orderId);
-      const res = await axiosInstance.put(`/orders/${orderId}`, { orderStatus: "completed" });
+      // NOTE: backend expects PUT /orders/:id/status with { orderStatus }
+      const res = await axiosInstance.put(`/orders/${orderId}/status`, { orderStatus: "completed" });
       const updatedOrder = res.data.order ?? res.data;
       setOrders((prev) =>
         prev.map((o) =>
@@ -202,7 +226,8 @@ const rows: TableRow[] = useMemo(
 
     try {
       setUpdatingOrderId(orderId);
-      const res = await axiosInstance.put(`/orders/cancel/${orderId}`);
+      // NOTE: backend expects PUT /orders/:id/cancel
+      const res = await axiosInstance.put(`/orders/${orderId}/cancel`);
       const updatedOrder = res.data.order ?? res.data;
       setOrders((prev) =>
         prev.map((o) =>
@@ -265,7 +290,7 @@ const rows: TableRow[] = useMemo(
         const rowId = row?.id;
         return (
           <div className="flex gap-2 justify-center">
-            <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/orders/${rowId}`)}>
+            <Button variant="ghost" size="sm" onClick={() => openOrderModal(row?._raw)}>
               <Eye className="h-4 w-4" />
             </Button>
             <Button
@@ -275,7 +300,7 @@ const rows: TableRow[] = useMemo(
               disabled={updatingOrderId === rowId || !row}
               title="Mark Completed"
             >
-              {updatingOrderId === rowId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Package className="h-4 w-4" />}
+              {updatingOrderId === rowId ? <LoaderIcon className="h-4 w-4 animate-spin" /> : <Package className="h-4 w-4" />}
             </Button>
             <Button
               variant="ghost"
@@ -285,6 +310,9 @@ const rows: TableRow[] = useMemo(
               title="Cancel Order"
             >
               <X className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/orders/${rowId}`)} title="Open order page">
+              <span className="text-xs">Open</span>
             </Button>
           </div>
         );
@@ -372,6 +400,72 @@ const rows: TableRow[] = useMemo(
             )}
           </div>
         </div>
+
+        {/* Order Details Modal */}
+        <Modal
+          isOpen={isModalOpen}
+          title={`Order ${selectedOrder?.orderNumber || selectedOrder?._id || ""}`}
+          onClose={closeOrderModal}
+          footer={
+            <div className="flex gap-2 w-full">
+              <Button variant="ghost" onClick={closeOrderModal} className="flex-1">Close</Button>
+
+            </div>
+          }
+        >
+          <div className="space-y-3 py-2">
+            <div>
+              <h3 className="text-sm font-medium">Customer</h3>
+              <p className="text-sm">{selectedOrder?.customer?.fullName ?? selectedOrder?.customer?.email ?? "—"}</p>
+              <p className="text-xs text-muted-foreground">{selectedOrder?._id}</p>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium">Contact</h3>
+              <p className="text-sm">Phone: {selectedOrder?.customer?.phone || "—"}</p>
+              <p className="text-sm">Email: {selectedOrder?.customer?.email || "—"}</p>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium">Address</h3>
+              <p className="text-sm">
+                {selectedOrder?.customer?.address && selectedOrder?.customer?.address !== "Not provided"
+                  ? selectedOrder.customer.address
+                  : "—"}
+                {selectedOrder?.customer?.city ? `, ${selectedOrder.customer.city}` : ""}
+                {selectedOrder?.customer?.country ? `, ${selectedOrder.customer.country}` : ""}
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium">Delivery</h3>
+              <p className="text-sm">Date: {formatDeliveryDate(selectedOrder?.deliveryDate)}</p>
+              <p className="text-sm">Time: {selectedOrder?.deliveryTime || "—"}</p>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium">Items</h3>
+              {selectedOrder?.items?.length ? (
+                <ul className="list-disc pl-5 text-sm max-h-40 overflow-auto">
+                  {selectedOrder.items.map((it: any, idx: number) => (
+                    <li key={idx}>
+                      {it.quantity} × {it.name} {it.pack ? `(${it.pack})` : ""} — GH₵ {Number(it.price || 0).toFixed(2)}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm">—</p>
+              )}
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium">Totals</h3>
+              <p className="text-sm">Total: GH₵ {Number(selectedOrder?.totalAmount || 0).toFixed(2)}</p>
+              <p className="text-sm">Payment status: {selectedOrder?.paymentStatus || "—"}</p>
+              <p className="text-sm">Order status: {selectedOrder?.orderStatus || "—"}</p>
+            </div>
+          </div>
+        </Modal>
       </div>
     </AdminLayout>
   );

@@ -197,20 +197,6 @@ export default function Cart() {
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                onClick={async () => {
-                  try {
-                    await clearCart();
-                    toast.success("Cart cleared");
-                  } catch (err) {
-                    console.error("clearCart error:", err);
-                    toast.error("Failed to clear cart");
-                  }
-                }}
-              >
-                Clear Cart
-              </Button>
 
               <Button size="md" onClick={handleCheckout} className="w-full sm:w-auto">
                 Proceed to Checkout

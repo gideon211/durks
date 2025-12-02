@@ -1,9 +1,9 @@
 // src/components/ProductCard.tsx
+import React, { useState } from "react";
 import { ShoppingCart, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { useCartStore } from "@/store/cartStore";
-import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/Authcontext";
 
@@ -15,20 +15,19 @@ interface ProductCardProps {
   price?: number;
   category?: string;
   size?: string;
-  // Dynamic packs from backend: array of pack sizes and their prices
+  // packs from backend
   packs?: { pack: number; price: number }[];
 }
 
-// Extend Product type in cart store if necessary
 interface CartProduct {
-  id: string | number;
-  name: string;
-  price: number;
+  id?: string | number;
+  name?: string;
+  price?: number;
   image?: string;
   category?: string;
   size?: string;
-  pack?: number;
-  packs?: { pack: number; price: number }[]; // <-- add this line
+  pack?: number | string;
+  packs?: { pack: number; price: number }[];
   qty?: number;
 }
 
@@ -40,74 +39,64 @@ export const ProductCard = ({
   price = 0,
   category,
   size,
-  packs = [{ pack: 12, price: price }], // default pack
+  packs = [{ pack: 12, price }],
 }: ProductCardProps) => {
   const addToCart = useCartStore((state) => state.addToCart);
-  const cart = useCartStore((state) => state.cart);
-  const [selectedPack, setSelectedPack] = useState<number>(packs[0].pack);
-  const [selectedPrice, setSelectedPrice] = useState<number>(packs[0].price);
+  const { user } = useAuth();
+
+  const initialPack = packs && packs.length ? packs[0].pack : 1;
+  const initialPrice = packs && packs.length ? packs[0].price : price;
+
+  const [selectedPack, setSelectedPack] = useState<number>(initialPack);
+  const [selectedPrice, setSelectedPrice] = useState<number>(initialPrice);
   const [isLoading, setIsLoading] = useState(false);
   const [addedMessage, setAddedMessage] = useState(false);
 
-  const { user } = useAuth();
+ const handlePackChange = (pack: number) => {
+  setSelectedPack(pack);
+  const packObj = packs.find((p) => p.pack === pack);
+  if (packObj) setSelectedPrice(packObj.price);
+};
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    try {
-      setIsLoading(true);
 
-      // Create a product object compatible with cart store
-      const productToAdd: CartProduct = {
-        id,
-        name,
-        price: selectedPrice,
-        image,
-        category,
-        size,
-        pack: selectedPack,
-        packs,
-        qty: 1,
-      };
 
-      // call addToCart (store accepts object or id)
-      await addToCart(productToAdd, selectedPack, 1);
+const handleAddToCart = async (e: React.MouseEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-      // Persist pending add if user isn't logged in (Authcontext listens for pendingAdd)
-      if (!user) {
-        try {
-          localStorage.setItem(
-            "pendingAdd",
-            JSON.stringify({ product: productToAdd, quantity: 1, from: "/cart" })
-          );
-          // also save guest cart snapshot (optional)
-          localStorage.setItem("pendingCart", JSON.stringify(cart));
-        } catch (err) {
-          console.warn("Could not persist pendingAdd to localStorage", err);
-        }
-      }
-
-      setAddedMessage(true);
-      setTimeout(() => setAddedMessage(false), 4000);
-    } catch (err) {
-      console.error("Add to cart failed", err);
-      toast.error("Could not add to cart");
-    } finally {
-      setIsLoading(false);
-    }
+  const productToAdd: CartProduct = {
+    id,
+    name,
+    price: selectedPrice,    
+    image,
+    category,
+    size,
+    pack: selectedPack,       
+    packs,
+    qty: 1,
   };
 
-  const handlePackChange = (pack: number) => {
-    setSelectedPack(pack);
-    const packObj = packs.find((p) => p.pack === pack);
-    if (packObj) setSelectedPrice(packObj.price);
-  };
+  try {
+    // pass the product object AND selectedPack explicitly (keeps backwards compat)
+    await addToCart(productToAdd, selectedPack, 1);
 
-  const sizeLabel = size ? size : "";
+    setAddedMessage(true);
+    setTimeout(() => setAddedMessage(false), 3000);
+  } catch (err) {
+    console.error("Add to cart error:", err);
+    toast.error("Could not add to cart");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+
+  const sizeLabel = size ?? "";
 
   return (
     <div className="bg-card rounded-xl border-2 border-green-200 overflow-hidden hover:border-green-300 hover:shadow-xl transition-all duration-150 flex flex-col h-full">
       <div className="relative aspect-square overflow-hidden bg-muted block">
-        {/* Image */}
         {image ? (
           <img src={image} alt={name} className="w-full h-full object-cover" />
         ) : (
@@ -116,7 +105,6 @@ export const ProductCard = ({
           </div>
         )}
 
-        {/* Size badge */}
         {sizeLabel && (
           <div className="absolute left-2 bottom-2 flex items-center gap-2">
             <span
@@ -139,15 +127,13 @@ export const ProductCard = ({
 
         <h3 className="font-heading font-semibold text-sm text-foreground">{name}</h3>
 
-        {/* Price */}
         <p className="font-heading font-semibold text-sm text-foreground mt-2">
-          ₵{selectedPrice.toFixed(2)}
+          ₵{Number(selectedPrice ?? 0).toFixed(2)}
         </p>
 
         <div className="flex flex-col gap-2 mt-1.5">
-          {/* Pack dropdown */}
           <select
-            value={selectedPack}
+            value={String(selectedPack)}
             onChange={(e) => handlePackChange(Number(e.target.value))}
             className="w-full border rounded px-2 py-1 text-center focus:outline-none focus:ring-1 focus:ring-primary font-bold"
           >
@@ -183,3 +169,5 @@ export const ProductCard = ({
     </div>
   );
 };
+
+export default ProductCard;
