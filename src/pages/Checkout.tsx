@@ -22,14 +22,6 @@ interface Calendar24Props {
   onTimeChange?: (time: string) => void;
 }
 
-interface User {
-  _id: string;
-  fullName: string;
-  email: string;
-  token?: string;
-  // ...any other props
-}
-
 export function Calendar24({
   date: propDate,
   time: propTime,
@@ -94,8 +86,11 @@ export function Calendar24({
 export default function Checkout(): JSX.Element {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // store hooks
   const cart = useCartStore((s) => s.cart) as CartItem[];
   const clearCart = useCartStore((s) => s.clearCart) as () => void;
+  const fetchCart = useCartStore((s) => s.fetchCart) as () => Promise<void>;
 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -132,7 +127,10 @@ export default function Checkout(): JSX.Element {
 
   const generateOrderId = () => "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase();
 
-  // Build normalized items from cart: ALWAYS use item.price and item.qty (these reflect selected pack)
+  // Use local cart for UI summary (keeps responsiveness)
+  // But critical: when the user hits submit we re-fetch server cart to be authoritative.
+
+  // Build normalized items from store cart for display / basic summary
   const validCartItems = useMemo(() => {
     return cart.map((item) => {
       const price = Number(item.price ?? 0);
@@ -149,18 +147,17 @@ export default function Checkout(): JSX.Element {
     });
   }, [cart]);
 
-  // Sum totals using the computed totals — this **ensures selected pack price is used**.
   const itemsTotal = useMemo(() => {
     return validCartItems.reduce((s, it) => s + (Number(it.total) || 0), 0);
   }, [validCartItems]);
 
   const finalTotal = itemsTotal + (shippingFee || 0);
 
-  // Debug logs you can remove later
+  // Debug logs for dev
   useEffect(() => {
-    console.debug("Checkout - cart:", cart);
-    console.debug("Checkout - validCartItems:", validCartItems);
-    console.debug("Checkout - itemsTotal:", itemsTotal, "shippingFee:", shippingFee, "finalTotal:", finalTotal);
+    console.debug("Checkout - UI cart:", cart);
+    console.debug("Checkout - UI validCartItems:", validCartItems);
+    console.debug("Checkout - UI itemsTotal:", itemsTotal, "shippingFee:", shippingFee, "finalTotal:", finalTotal);
   }, [cart, validCartItems, itemsTotal, shippingFee, finalTotal]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -171,20 +168,54 @@ export default function Checkout(): JSX.Element {
       return;
     }
 
-    if (!cart || cart.length === 0) {
-      toast.error("Your cart is empty");
-      return;
-    }
-
-    const orderId = generateOrderId();
-
     try {
       setIsProcessing(true);
 
-      // Pay on Delivery
+      // === CRITICAL: reconcile with server BEFORE computing final amount ===
+      // This ensures any optimistic/local state is reconciled and we use authoritative pack/price.
+      await fetchCart();
+
+      // Read latest authoritative cart out of the store
+      const latestCart = useCartStore.getState().cart as CartItem[];
+
+      if (!latestCart || latestCart.length === 0) {
+        toast.error("Your cart is empty");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Compute per-item packPrice (if packs[] available match pack -> price),
+      // otherwise fall back to item.price
+        const authoritativeItems = latestCart.map((item) => {
+        const quantity = Number(item.qty ?? 1);
+        const packPrice = Number(item.price ?? 0); // always use the price stored in cart
+
+        return {
+            drinkId: item.drinkId || item.id,
+            name: item.name ?? "Item",
+            pack: item.pack ?? null,
+            packPrice,
+            quantity,
+            image: item.image ?? "",
+            total: packPrice * quantity,
+        };
+        });
+
+
+      const authoritativeItemsTotal = authoritativeItems.reduce((s, it) => s + Number(it.total || 0), 0);
+      const authoritativeFinalTotal = authoritativeItemsTotal + (shippingFee || 0);
+
+      // Debug: show what we'll send to payments endpoint
+      console.info("Checkout - authoritativeItems:", authoritativeItems);
+      console.info("Checkout - authoritativeItemsTotal:", authoritativeItemsTotal);
+      console.info("Checkout - authoritativeFinalTotal:", authoritativeFinalTotal);
+
+      const orderId = generateOrderId();
+
+      // PAY ON DELIVERY
       if (formData.paymentMethod === "delivery") {
         await axiosInstance.post("/orders", {
-          totalAmount: finalTotal,
+          totalAmount: authoritativeFinalTotal,
           customer: {
             fullName: formData.fullName,
             email: formData.email,
@@ -195,7 +226,15 @@ export default function Checkout(): JSX.Element {
           },
           orderId,
           paymentMethod: "Pay on Delivery",
-          items: validCartItems,
+          items: authoritativeItems.map((it) => ({
+            drinkId: it.drinkId,
+            name: it.name,
+            pack: it.pack,
+            packPrice: it.packPrice,
+            quantity: it.quantity,
+            total: it.total,
+            image: it.image,
+          })),
         });
 
         setShowConfirmation(true);
@@ -204,7 +243,7 @@ export default function Checkout(): JSX.Element {
         return;
       }
 
-      // Card payment (Paystack)
+      // CARD PAYMENT (Paystack)
       if (!user || !(user as any).token) {
         toast.error("You must be logged in to pay with card");
         setIsProcessing(false);
@@ -215,13 +254,23 @@ export default function Checkout(): JSX.Element {
 
       const userId = (user as any)?._id ?? (user as any)?.id ?? null;
 
-      // Payload must use the computed finalTotal (itemsTotal + shipping)
+      // Build metadata/items using authoritative values (packPrice included)
+      const metadataItems = authoritativeItems.map((it) => ({
+        drinkId: it.drinkId,
+        name: it.name,
+        pack: it.pack,
+        packPrice: it.packPrice,
+        quantity: it.quantity,
+        total: it.total,
+        image: it.image,
+      }));
+
       const payload: any = {
         email: formData.email || (user as any)?.email,
         fullName: formData.fullName,
         phone: formData.phone,
         address: formData.address,
-        amount: Math.round(finalTotal * 100), // Paystack expects smallest currency unit
+        amount: Math.round(authoritativeFinalTotal * 100), // Paystack expects smallest currency unit
         provider: "Paystack",
         metadata: {
           userId,
@@ -230,23 +279,25 @@ export default function Checkout(): JSX.Element {
           phone: formData.phone,
           address: formData.address,
           provider: "Paystack",
-          items: validCartItems,
-          itemsTotal,
+          items: metadataItems,
+          itemsTotal: authoritativeItemsTotal,
           shippingFee,
-          finalTotal,
+          finalTotal: authoritativeFinalTotal,
           deliveryDate: formData.deliveryDate ? formData.deliveryDate.toISOString() : null,
           deliveryTime: formData.deliveryTime || null,
         },
       };
 
-      // Initialize payment
+      // Debug: what we send to the server to initialize payment
+      console.info("Checkout - initializing payment payload:", payload);
+
       const { data } = await axiosInstance.post("/payments/initialize", payload);
 
       setIsRedirectModalOpen(false);
       setIsProcessing(false);
 
       if (data?.authorization_url) {
-        // Redirect user to Paystack
+        // redirect to paystack
         window.location.href = data.authorization_url;
       } else {
         console.error("Missing authorization_url:", data);

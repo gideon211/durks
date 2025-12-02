@@ -59,7 +59,6 @@ export const ProductCard = ({
 };
 
 
-
 const handleAddToCart = async (e: React.MouseEvent) => {
   e.preventDefault();
   setIsLoading(true);
@@ -67,17 +66,16 @@ const handleAddToCart = async (e: React.MouseEvent) => {
   const productToAdd: CartProduct = {
     id,
     name,
-    price: selectedPrice,    
     image,
     category,
     size,
-    pack: selectedPack,       
-    packs,
+    pack: selectedPack, // the selected pack number
+    packs,             // array of all packs for this product
     qty: 1,
   };
 
   try {
-    // pass the product object AND selectedPack explicitly (keeps backwards compat)
+    // Now addToCart computes price based on selectedPack automatically
     await addToCart(productToAdd, selectedPack, 1);
 
     setAddedMessage(true);
@@ -89,6 +87,8 @@ const handleAddToCart = async (e: React.MouseEvent) => {
     setIsLoading(false);
   }
 };
+
+
 
 
 
