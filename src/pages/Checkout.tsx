@@ -1,7 +1,7 @@
 // src/pages/Checkout.tsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "@/api/axios"; 
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useCartStore, CartItem } from "@/store/cartStore";
 import { CheckCircle, Loader2, ChevronDownIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { zones } from "@/data/zones";
@@ -116,7 +115,6 @@ export default function Checkout(): JSX.Element {
   };
 
   const generateOrderId = () => "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-  const API_BASE = "https://updated-duks-backend-1-0.onrender.com/api";
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -135,7 +133,7 @@ export default function Checkout(): JSX.Element {
       return;
     }
 
-    // ✅ Normalize cart items
+    // Normalize cart items
     const validCartItems = cart.map((item) => ({
       drinkId: item.drinkId || item.id,
       name: item.name || "Item",
@@ -145,53 +143,40 @@ export default function Checkout(): JSX.Element {
       image: item.image || "",
     }));
 
-    // Pay on Delivery
-    if (formData.paymentMethod === "delivery") {
-      try {
-        setIsProcessing(true);
-        await axios.post(
-          `${API_BASE}/orders`,
-          {
-            totalAmount: finalTotal,
-            customer: {
-              fullName: formData.fullName,
-              email: formData.email,
-              phone: formData.phone,
-              address: formData.address,
-              city: formData.city,
-              country: formData.country,
-            },
-            orderId,
-            paymentMethod: "Pay on Delivery",
-            items: validCartItems,
+    try {
+      setIsProcessing(true);
+
+      // Pay on Delivery
+      if (formData.paymentMethod === "delivery") {
+        await axiosInstance.post("/orders", {
+          totalAmount: finalTotal,
+          customer: {
+            fullName: formData.fullName,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city,
+            country: formData.country,
           },
-          {
-            headers: {
-              Authorization: user?.token ? `Bearer ${user.token}` : undefined,
-            },
-          }
-        );
+          orderId,
+          paymentMethod: "Pay on Delivery",
+          items: validCartItems,
+        });
 
         setShowConfirmation(true);
         await clearCart();
-      } catch (err: any) {
-        console.error("Pay on Delivery error:", err?.response?.data ?? err);
-        toast.error("Failed to save order");
-      } finally {
         setIsProcessing(false);
+        return;
       }
-      return;
-    }
 
-    // Card payment (Paystack)
-    if (!user || !user.token) {
-      toast.error("You must be logged in to pay with card");
-      return;
-    }
+      // Card payment (Paystack)
+      if (!user || !user.token) {
+        toast.error("You must be logged in to pay with card");
+        setIsProcessing(false);
+        return;
+      }
 
-    try {
       setIsRedirectModalOpen(true);
-      setIsProcessing(true);
 
       const userId = (user as any)?._id ?? (user as any)?.id ?? null;
 
@@ -215,9 +200,7 @@ export default function Checkout(): JSX.Element {
         },
       };
 
-      const { data } = await axios.post(`${API_BASE}/payments/initialize`, payload, {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
+      const { data } = await axiosInstance.post("/payments/initialize", payload);
 
       setIsRedirectModalOpen(false);
       setIsProcessing(false);
@@ -229,8 +212,8 @@ export default function Checkout(): JSX.Element {
         toast.error("Payment initialization failed");
       }
     } catch (err: any) {
-      console.error("Payment initialization error:", err?.response?.data ?? err);
-      toast.error("Payment initialization failed");
+      console.error("Checkout error:", err?.response?.data ?? err);
+      toast.error("Failed to process order");
       setIsRedirectModalOpen(false);
       setIsProcessing(false);
     }
