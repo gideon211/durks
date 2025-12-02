@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// src/pages/Checkout.tsx
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Header from "@/components/Header";
@@ -7,8 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useCartStore, CartItem } from "@/store/cartStore";
-import { CheckCircle, ChevronDownIcon, Loader2, ChevronDown, Check } from "lucide-react";
-import * as SelectPrimitive from "@radix-ui/react-select";
+import { CheckCircle, Loader2, ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -75,65 +75,6 @@ export function Calendar24({ date: propDate, time: propTime, onDateChange, onTim
   );
 }
 
-// (Radix Select UI helpers omitted in render below — they are unused in current form but kept in file for compatibility)
-const SelectTrigger = React.forwardRef<any, any>(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      "flex w-full items-center justify-between rounded-lg border border-border bg-card p-3 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary hover:border-primary hover:bg-muted/50 transition-all",
-      className
-    )}
-    {...props}
-  >
-    {children}
-    <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-    </SelectPrimitive.Icon>
-  </SelectPrimitive.Trigger>
-));
-SelectTrigger.displayName = "SelectTrigger";
-
-const SelectContent = React.forwardRef<any, any>(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Portal>
-    <SelectPrimitive.Content
-      ref={ref}
-      className={cn(
-        "z-50 min-w-[8rem] overflow-hidden rounded-lg border border-border bg-popover shadow-md animate-in fade-in-0 zoom-in-95",
-        className
-      )}
-      {...props}
-    >
-      <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
-    </SelectPrimitive.Content>
-  </SelectPrimitive.Portal>
-));
-SelectContent.displayName = "SelectContent";
-
-const SelectItem = React.forwardRef<any, { value: string; className?: string; children: React.ReactNode }>(
-  ({ className, children, value, ...props }, ref) => (
-    <SelectPrimitive.Item
-      ref={ref}
-      value={value} // <-- required
-      className={cn(
-        "relative flex w-full cursor-pointer select-none items-center rounded-md px-3 py-2 text-sm outline-none focus:bg-muted focus:text-foreground data-[state=checked]:font-semibold",
-        className
-      )}
-      {...props}
-    >
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-      <SelectPrimitive.ItemIndicator className="absolute right-2 flex items-center">
-        <Check className="h-4 w-4" />
-      </SelectPrimitive.ItemIndicator>
-    </SelectPrimitive.Item>
-  )
-);
-SelectItem.displayName = "SelectItem";
-
-SelectItem.displayName = "SelectItem";
-
-// ----------------------
-// Checkout
-// ----------------------
 export default function Checkout(): JSX.Element {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -143,7 +84,6 @@ export default function Checkout(): JSX.Element {
 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-
   const [isRedirectModalOpen, setIsRedirectModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -153,8 +93,8 @@ export default function Checkout(): JSX.Element {
     address: "",
     city: "Ghana",
     country: "Ghana",
-    orderType: "delivery",
-    paymentMethod: "card",
+    orderType: "delivery", // you said you don't use delivery methods but keep field for compatibility
+    paymentMethod: "card", // "card" or "delivery"
     deliveryDate: undefined as Date | undefined,
     deliveryTime: "",
   });
@@ -177,6 +117,8 @@ export default function Checkout(): JSX.Element {
 
   const generateOrderId = () => "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase();
 
+  const API_BASE = "https://duksshopback-end.onrender.com/api"; // adjust if you run locally
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -185,7 +127,8 @@ export default function Checkout(): JSX.Element {
       return;
     }
 
-    const finalTotal = subtotalFn() + shippingFee;
+    const subtotal = subtotalFn();
+    const finalTotal = subtotal + shippingFee;
     const orderId = generateOrderId();
 
     const currentCart = useCartStore.getState().cart;
@@ -194,28 +137,57 @@ export default function Checkout(): JSX.Element {
       return;
     }
 
-    // format for backend if needed
-    const formattedCart = currentCart.map((item) => ({
-      productId: item.drinkId ?? item.id,
-      qty: item.qty,
-      pack: item.pack,
-    }));
+    // Build a robust items array for metadata (backend expects these fields)
+    const validCartItems = currentCart.map((item) => {
+      const quantity = (item as any).qty ?? (item as any).quantity ?? 1;
+      return {
+        drinkId: item.drinkId ?? item.id,
+        name: item.name ?? "Item",
+        price: Number(item.price ?? 0),
+        quantity,
+        pack: item.pack ?? null,
+        image: item.image ?? "",
+      };
+    });
 
-    // Pay on Delivery - save order normally (no redirect modal)
+    // Pay on Delivery - save order directly on backend
     if (formData.paymentMethod === "delivery") {
       try {
         setIsProcessing(true);
-        await axios.post("http://localhost:5000/api/orders", {
-          total: finalTotal,
-          customer: formData,
-          orderId,
-          paymentMethod: "Pay on Delivery",
-          cart: formattedCart,
-        });
+        await axios.post(
+          `${API_BASE}/orders`,
+          {
+            totalAmount: finalTotal,
+            customer: {
+              fullName: formData.fullName,
+              email: formData.email,
+              phone: formData.phone,
+              address: formData.address,
+              city: formData.city,
+              country: formData.country,
+            },
+            orderId,
+            paymentMethod: "Pay on Delivery",
+            items: validCartItems.map((i) => ({
+              drinkId: i.drinkId,
+              quantity: i.quantity,
+              price: i.price,
+              pack: i.pack,
+              name: i.name,
+              image: i.image,
+            })),
+          },
+          {
+            headers: {
+              Authorization: user?.token ? `Bearer ${user.token}` : undefined,
+            },
+          }
+        );
+
         setShowConfirmation(true);
-        clearCart();
-      } catch (err) {
-        console.error(err);
+        await clearCart();
+      } catch (err: any) {
+        console.error("Pay on Delivery error:", err?.response?.data ?? err);
         toast.error("Failed to save order");
       } finally {
         setIsProcessing(false);
@@ -223,55 +195,62 @@ export default function Checkout(): JSX.Element {
       return;
     }
 
-    // Card payment (Paystack) -> show redirect modal, then initialize and redirect
+    // Card payment (Paystack) -> initialize on backend and redirect
     if (!user || !user.token) {
       toast.error("You must be logged in to pay with card");
       return;
     }
 
     try {
-      // open modal immediately
+      // show modal while we init
       setIsRedirectModalOpen(true);
       setIsProcessing(true);
 
-      // small delay so modal is visible before heavy work / network
-      await new Promise((res) => setTimeout(res, 600));
+      // Build the payload — include metadata so webhook can rely on it
+      const userId = (user as any)?._id ?? (user as any)?.id ?? null;
 
-      const { data } = await axios.post(
-        "https://duksshopback-end.onrender.com/api/payments/initialize",
-        {
-          amount: Math.round(finalTotal * 100), // in smallest currency unit
-          email: formData.email || user.email,
-          orderId,
-          cart: formattedCart,
-          shipping: shippingFee,
-          customer: {
-            fullName: formData.fullName,
-            phone: formData.phone,
-            address: formData.address,
-            city: formData.city,
-            country: formData.country,
-          },
+      const payload: any = {
+        // top-level fields backend initializePayment uses: (your backend picks from req.body)
+        email: formData.email || (user as any)?.email,
+        fullName: formData.fullName,
+        phone: formData.phone,
+        address: formData.address,
+        amount: Math.round(finalTotal * 100), // smallest unit
+        // provider or extra fields are optional
+        provider: "Paystack",
+        // but the important part for webhook: metadata
+        metadata: {
+          userId,
+          email: formData.email || (user as any)?.email,
+          fullName: formData.fullName,
+          phone: formData.phone,
+          address: formData.address,
+          provider: "Paystack",
+          items: validCartItems,
+          deliveryDate: formData.deliveryDate ? formData.deliveryDate.toISOString() : null,
+          deliveryTime: formData.deliveryTime || null,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
-      );
+      };
 
-      // close modal (optional) then redirect — but redirect immediately is fine
+      // call backend initialize endpoint
+      const { data } = await axios.post(`${API_BASE}/payments/initialize`, payload, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
       setIsRedirectModalOpen(false);
       setIsProcessing(false);
 
       if (data?.authorization_url) {
+        // redirect to Paystack
         window.location.href = data.authorization_url;
       } else {
-        console.error("Missing authorization_url from init response", data);
+        console.error("Missing authorization_url from initialize:", data);
         toast.error("Payment initialization failed");
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error("Payment initialization error:", err?.response?.data ?? err);
       toast.error("Payment initialization failed");
       setIsRedirectModalOpen(false);
       setIsProcessing(false);
@@ -355,8 +334,6 @@ export default function Checkout(): JSX.Element {
               />
             )}
 
-
-
             <Button type="submit" size="md" className="w-full mt-4" disabled={isProcessing}>
               {isProcessing ? (
                 <>
@@ -369,18 +346,16 @@ export default function Checkout(): JSX.Element {
             </Button>
           </form>
 
-          {/* Right summary - centered */}
+          {/* Right summary */}
           <div className="flex justify-center lg:items-start">
             <aside className="w-full max-w-sm border rounded-2xl p-4 bg-card shadow-sm h-fit">
               <h3 className="font-heading font-bold text-lg mb-3 text-center lg:text-left">Order Summary</h3>
 
-              {/* Total items selected */}
               <div className="flex justify-between text-sm mb-4">
                 <span className="font-medium">ITEMS SELECTED:</span>
-                <span className="font-semibold">{cart.reduce((sum, item) => sum + item.qty, 0)}</span>
+                <span className="font-semibold">{cart.reduce((sum, item) => sum + ((item as any).qty ?? (item as any).quantity ?? 0), 0)}</span>
               </div>
 
-              {/* Totals */}
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span>Subtotal</span><span>₵{subtotal.toFixed(2)}</span></div>
                 <div className="flex justify-between"><span>Shipping fee</span><span className="font-medium text-xs">UPON DELIVERY</span></div>
@@ -391,7 +366,6 @@ export default function Checkout(): JSX.Element {
         </div>
       </main>
 
-      {/* Redirect modal shown only for Paystack initialization */}
       <Modal
         isOpen={isRedirectModalOpen}
         title="Please wait…"
@@ -400,7 +374,7 @@ export default function Checkout(): JSX.Element {
       >
         <div className="flex flex-col items-center justify-center py-4">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <p className="text-center text-sm">Please wait..  redirecting to payment.</p>
+          <p className="text-center text-sm">Please wait.. redirecting to payment.</p>
         </div>
       </Modal>
     </div>
