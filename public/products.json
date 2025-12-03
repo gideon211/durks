@@ -1,5 +1,24 @@
 [
-  { "id": "1", "size": "200ml", "name": "Orange Sunrise", "description": "Fresh-pressed orange juice packed with vitamin C and natural sweetness", "image": "/images/orangefull.jpg", "price": 8.5, "category": "Pure Juice", "categorySlug": "pure-juice", "bulkTiers": [{ "minQty": 1, "maxQty": 9, "discount": 0 }, { "minQty": 10, "maxQty": 49, "discount": 8 }, { "minQty": 50, "maxQty": 999, "discount": 12 }] },
+{
+"id": "1",
+"size": "200ml",
+"name": "Orange Sunrise",
+"description": "Fresh-pressed orange juice packed with vitamin C and natural sweetness",
+"image": "/images/orangefull.jpg",
+"price": 8.5,
+"category": "Pure Juice",
+"categorySlug": "pure-juice",
+"bulkTiers": [
+{ "minQty": 1, "maxQty": 9, "discount": 0 },
+{ "minQty": 10, "maxQty": 49, "discount": 8 },
+{ "minQty": 50, "maxQty": 999, "discount": 12 }
+],
+"packs": [
+{ "pack": 6, "price": 15 },
+{ "pack": 12, "price": 28 },
+{ "pack": 24, "price": 50 }
+]
+},
   { "id": "2", "name": "Orange Sunrise", "description": "Fresh-pressed orange juice packed with vitamin C and natural sweetness", "image": "/images/orangefull.jpg", "price": 8.5, "category": "Pure Juice", "categorySlug": "pure-juice", "bulkTiers": [{ "minQty": 1, "maxQty": 9, "discount": 0 }, { "minQty": 10, "maxQty": 49, "discount": 8 }, { "minQty": 50, "maxQty": 999, "discount": 12 }] },
   { "id": "3", "name": "Orange Sunrise", "description": "Fresh-pressed orange juice packed with vitamin C and natural sweetness", "image": "/images/orangefull.jpg", "price": 8.5, "category": "Pure Juice", "categorySlug": "pure-juice", "bulkTiers": [{ "minQty": 1, "maxQty": 9, "discount": 0 }, { "minQty": 10, "maxQty": 49, "discount": 8 }, { "minQty": 50, "maxQty": 999, "discount": 12 }] },
   { "id": "4", "name": "Orange Sunrise", "description": "Fresh-pressed orange juice packed with vitamin C and natural sweetness", "image": "/images/orangefull.jpg", "price": 8.5, "category": "Pure Juice", "categorySlug": "pure-juice", "bulkTiers": [{ "minQty": 1, "maxQty": 9, "discount": 0 }, { "minQty": 10, "maxQty": 49, "discount": 8 }, { "minQty": 50, "maxQty": 999, "discount": 12 }] },

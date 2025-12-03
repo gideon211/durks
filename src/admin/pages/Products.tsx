@@ -25,58 +25,307 @@ interface Product {
   category: string;
   size?: string;
   description?: string;
-  stock?: number;
-  price: number;
   status?: string;
   imageUrl?: string;
+  packs?: { pack: number; price: number }[];
 }
 
 const categories = [
   { id: "all", name: "ALL PRODUCTS", slug: "all" },
+  {id: "bundles", name:"BUNDLES", slug: "bundle"},
   { id: "pure-juice", name: "PURE JUICES", slug: "pure-juice" },
-  { id: "cleanse", name: "CLEANSE JUICES ", slug: "cleanse" },
+  { id: "cleanse", name: "CLEANSE JUICES", slug: "cleanse" },
+  { id: "shots", name: "WELLNESS SHOTS", slug: "shots" },
   { id: "smoothies", name: "SMOOTHIES", slug: "smoothies" },
+  { id: "flavors", name: "FLAVORS", slug: "flavor" },
   { id: "cut-fruits", name: "CUT FRUITS", slug: "cut-fruits" },
   { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs" },
   { id: "events", name: "EVENTS", slug: "events" },
-  { id: "WORKOUT", name: "WORKOUT SHOTS", slug: "shots" }
+  
 ];
 
-const API_BASE = "https://duksshopbackend1-0.onrender.com/api/drinks";
+const API_BASE = "https://updated-duks-backend-1-0.onrender.com/api";
+const DRINKS_BASE = `${API_BASE}/drinks`;
 
 export default function Products() {
-  const { user } = useAuth();
-  const token = user?.token;
+  // include logout + login to persist refreshed token
+  const { user, login, tryRefreshToken, logout } = useAuth();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | number | null>(null);
-  const [form, setForm] = useState({ name: "", price: "", category: "", size: "", description: "", status: "Active" });
+
+  // form.packs uses strings so inputs can be empty/deleted
+  const [form, setForm] = useState({
+    name: "",
+    category: "",
+    size: "",
+    description: "",
+    status: "Active",
+    packs: [{ pack: "", price: "" }] as { pack: string; price: string }[],
+  });
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  if (!token) toast.error("No token found. Please login again.");
+  // track selected pack per product (for grid dropdown)
+  const [selectedPackByProduct, setSelectedPackByProduct] = useState<Record<string, number | "">>({});
 
+  // Helper: safe read of stored user object (local copy)
+  const getStoredUser = () =>
+    user ??
+    (() => {
+      try {
+        const raw = localStorage.getItem("user");
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    })();
+
+  // Get token; if expired try tryRefreshToken (keeps backwards compatibility)
+  const getToken = async (): Promise<string | null> => {
+    const u = getStoredUser();
+    if (!u) return null;
+    if (!u.token) {
+      // try context refresh if available
+      try {
+        const refreshed = await tryRefreshToken();
+        return refreshed?.token ?? null;
+      } catch {
+        return null;
+      }
+    }
+
+    // try decode exp
+    try {
+      const parts = u.token.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        const exp = payload?.exp;
+        const now = Math.floor(Date.now() / 1000);
+        if (exp && exp < now) {
+          // expired -> try context refresh
+          try {
+            const refreshed = await tryRefreshToken();
+            return refreshed?.token ?? null;
+          } catch {
+            return null;
+          }
+        }
+      }
+    } catch {
+      // decode failed -> attempt refresh
+      try {
+        const refreshed = await tryRefreshToken();
+        return refreshed?.token ?? null;
+      } catch {
+        return null;
+      }
+    }
+
+    return u.token;
+  };
+
+  // Build headers merging simple shapes
+  const mergeHeaders = (base?: RequestInit["headers"]) => {
+    const headers: Record<string, string> = {};
+    if (!base) return headers;
+    if (base instanceof Headers) {
+      base.forEach((v, k) => (headers[k] = v));
+      return headers;
+    }
+    if (Array.isArray(base)) {
+      (base as Array<[string, string]>).forEach(([k, v]) => (headers[k] = v));
+      return headers;
+    }
+    Object.assign(headers, base as Record<string, string>);
+    return headers;
+  };
+
+  // IMPORTANT: direct refresh call used here so we control request shape and persist token immediately
+  const callRefreshEndpoint = async () => {
+    const u = getStoredUser();
+    if (!u?.refreshToken) return null;
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // many backends expect { refreshToken } in body — change if your backend expects something else
+        body: JSON.stringify({ refreshToken: u.refreshToken }),
+      });
+
+      const text = await res.text();
+      let data: any = null;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = text;
+      }
+
+      console.log("callRefreshEndpoint response:", res.status, data);
+
+      if (!res.ok) {
+        return null;
+      }
+
+      // Determine where token lives in response
+      // Common shapes: { token }, { accessToken }, { data: { token } }
+      let newToken: string | undefined;
+      if (data?.token) newToken = data.token;
+      else if (data?.accessToken) newToken = data.accessToken;
+      else if (data?.data?.token) newToken = data.data.token;
+      else if (typeof data === "string") {
+        // backend might return plain token string (rare)
+        newToken = data;
+      }
+
+      if (!newToken) {
+        console.warn("callRefreshEndpoint: refresh returned 200 but no token found", data);
+        return null;
+      }
+
+      // persist new token in context (and localStorage) using login()
+      try {
+        // Preserve other user fields and update token
+        const updatedUser = { ...(u as any), token: newToken };
+        login(updatedUser);
+        return updatedUser;
+      } catch (e) {
+        console.error("callRefreshEndpoint: failed to persist refreshed token", e);
+        return null;
+      }
+    } catch (err) {
+      console.error("callRefreshEndpoint error:", err);
+      return null;
+    }
+  };
+
+  // fetch wrapper that injects Authorization header and retries once on 401/403
+  const fetchWithAuth = async (input: RequestInfo | URL, init: RequestInit = {}) => {
+    // Get token (may trigger tryRefreshToken)
+    let token = await getToken();
+    if (!token) throw new Error("No active token. Please login.");
+
+    // Build headers for initial request
+    const headers = mergeHeaders(init.headers);
+    headers["Authorization"] = `Bearer ${token}`;
+
+    const initToSend: RequestInit = { ...init, headers };
+
+    let res = await fetch(input, initToSend);
+
+    // If initial unauthorized, attempt refresh via dedicated call then retry once
+    if (res.status === 401 || res.status === 403) {
+      // attempt to read server message for debugging
+      try {
+        const t = await res.text();
+        console.warn("fetchWithAuth: initial request unauthorized. response body:", t);
+      } catch (e) {
+        console.warn("fetchWithAuth: couldn't read initial 401 body", e);
+      }
+
+      // Call our refresh endpoint directly and persist token
+      const refreshedUser = await callRefreshEndpoint();
+      if (!refreshedUser || !refreshedUser.token) {
+        // refresh failed -> force logout and throw
+        try { logout(); } catch {}
+        throw new Error("Session expired. Please login again.");
+      }
+
+      // Retry original request with refreshed token
+      const retryHeaders = mergeHeaders(init.headers);
+      retryHeaders["Authorization"] = `Bearer ${refreshedUser.token}`;
+      const retryInit: RequestInit = { ...init, headers: retryHeaders };
+
+      const retryRes = await fetch(input, retryInit);
+
+      if (retryRes.status === 401 || retryRes.status === 403) {
+        // read body to show server message
+        let body = "Unauthorized";
+        try {
+          const t = await retryRes.text();
+          try { body = JSON.parse(t).message ?? t; } catch { body = t; }
+        } catch {}
+        try { logout(); } catch {}
+        throw new Error(body || "Session expired. Please login again.");
+      }
+
+      return retryRes;
+    }
+
+    return res;
+  };
+
+  // helper to normalize backend drink -> Product
+  const normalizeDrink = (p: any): Product => ({
+    id: p._id ?? p.id,
+    name: p.name ?? "",
+    category: p.category ?? "",
+    size: p.size ?? "",
+    description: p.description ?? "",
+    status: p.status ?? "Active",
+    imageUrl: p.imageUrl ?? p.image ?? "",
+    packs: Array.isArray(p.packs) ? p.packs.map((x: any) => ({ pack: x.pack, price: x.price })) : [],
+  });
+
+  // Initial fetch
   useEffect(() => {
-    fetchProducts();
+    let mounted = true;
+    const fetchInitial = async () => {
+      try {
+        setLoading(true);
+
+        const res = await fetchWithAuth(`${DRINKS_BASE}/`);
+        if (!mounted) return;
+        if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+        const payload = await res.json();
+
+        // payload might be: { success, count, drinks: [...] }
+        const rawItems = Array.isArray(payload) ? payload : payload?.drinks ?? [];
+
+        const normalized: Product[] = rawItems.map((item: any) => normalizeDrink(item));
+        setProducts(normalized);
+      } catch (err) {
+        console.error("fetchInitial error:", err);
+        toast.error("Could not load products. Check backend connection or login.");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    (async () => {
+      try {
+        await fetchInitial();
+      } catch (e) {
+        // handled above
+      }
+    })();
+
     return () => {
+      mounted = false;
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetchWithAuth(`${DRINKS_BASE}/`);
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
-      const data = await res.json();
-      setProducts(Array.isArray(data) ? data : []);
+      const payload = await res.json();
+      const rawItems = Array.isArray(payload) ? payload : payload?.drinks ?? [];
+      const normalized: Product[] = rawItems.map((item: any) => normalizeDrink(item));
+      setProducts(normalized);
     } catch (err) {
-      console.error(err);
-      toast.error("Could not load products. Check backend connection.");
+      console.error("fetchProducts error:", err);
+      toast.error("Could not load products. Check backend connection or login.");
     } finally {
       setLoading(false);
     }
@@ -84,7 +333,7 @@ export default function Products() {
 
   const openNew = () => {
     setEditingId(null);
-    setForm({ name: "", price: "", category: "", size: "", description: "", status: "Active" });
+    setForm({ name: "", category: "", size: "", description: "", status: "Active", packs: [{ pack: "", price: "" }] });
     clearSelectedFile();
     setOpenModal(true);
   };
@@ -93,11 +342,12 @@ export default function Products() {
     setEditingId(product.id);
     setForm({
       name: product.name,
-      price: product.price.toString(),
       category: product.category,
       size: product.size ?? "",
       description: product.description ?? "",
       status: product.status ?? "Active",
+      // store as strings so inputs can be empty/edited
+      packs: product.packs && product.packs.length > 0 ? product.packs.map(p => ({ pack: String(p.pack), price: String(p.price) })) : [{ pack: "", price: "" }],
     });
     setPreviewUrl(product.imageUrl ?? null);
     clearSelectedFile();
@@ -126,83 +376,79 @@ export default function Products() {
   };
 
   const handleSaveProduct = async () => {
-    if (!token) return;
-    if (!form.name.trim() || !form.price || !form.category) {
-      toast.error("Please fill name, price, and category.");
+    if (!form.name.trim() || !form.category || form.packs.length === 0) {
+      toast.error("Please fill name, category, and at least one pack.");
       return;
     }
+
     setSaving(true);
     try {
       const fd = new FormData();
       fd.append("name", form.name.trim());
-      fd.append("price", String(parseFloat(form.price)));
       fd.append("category", form.category);
-      if (form.size) fd.append("size", form.size);
-      if (form.description) fd.append("description", form.description);
+      fd.append("description", form.description || "");
       fd.append("status", form.status);
+      fd.append("size", form.size || ""); 
       if (selectedFile) fd.append("image", selectedFile);
 
-      let res;
+      // Filter out packs where pack (size) is empty
+      const packsToSend = form.packs
+        .filter(p => p.pack !== "")
+        .map(p => ({ pack: Number(p.pack), price: parseFloat(p.price) }));
+
+      fd.append("packs", JSON.stringify(packsToSend));
+
+      let res: Response;
       if (editingId) {
-        res = await fetch(`${API_BASE}/${editingId}`, { method: "PUT", body: fd, headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error(`Update failed: ${res.status}`);
-        const updatedData = await res.json();
-        const drink = { ...updatedData.drink, image: updatedData.drink.imageUrl };
-        setProducts((prev) => prev.map((p) => (p.id === editingId ? drink : p)));
-        toast.success("Product updated");
+        res = await fetchWithAuth(`${DRINKS_BASE}/${editingId}`, {
+          method: "PUT",
+          body: fd,
+        });
       } else {
-        res = await fetch(`${API_BASE}/add`, { method: "POST", body: fd, headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error(await res.text());
-        const createdData = await res.json();
-        const drink = { ...createdData.drink, image: createdData.drink.imageUrl };
-        setProducts((prev) => [...prev, drink]);
-        toast.success("Product added");
+        res = await fetchWithAuth(`${DRINKS_BASE}/add`, {
+          method: "POST",
+          body: fd,
+        });
       }
 
+      if (!res.ok) {
+        let text = await res.text();
+        try {
+          const parsed = JSON.parse(text);
+          text = parsed?.message ?? text;
+        } catch {}
+        throw new Error(text || `Save failed: ${res.status}`);
+      }
+
+      toast.success("Product saved successfully");
       setOpenModal(false);
-      setEditingId(null);
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      setForm({ name: "", price: "", category: "", size: "", description: "", status: "Active" });
+      await fetchProducts();
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to save product. Check backend and token.");
+      console.error("handleSaveProduct error:", err);
+      toast.error((err as Error).message || "Failed to save product. Check backend and token.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string | number) => {
-    if (!token) return;
     const ok = window.confirm("Delete this product? This action cannot be undone.");
     if (!ok) return;
+
     try {
-      const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetchWithAuth(`${DRINKS_BASE}/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+      setProducts(prev => prev.filter(p => p.id !== id));
       toast.success("Product deleted");
     } catch (err) {
-      console.error(err);
+      console.error("handleDelete error:", err);
       toast.error("Failed to delete product. Check backend.");
     }
   };
 
-  const patchProduct = async (id: string | number, patch: Partial<Product>) => {
-    if (!token) return;
-    try {
-      const res = await fetch(`${API_BASE}/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(patch),
-      });
-      if (!res.ok) throw new Error("Patch failed");
-      const updated = await res.json();
-      setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updated } : p)));
-      toast.success("Product updated");
-    } catch (err) {
-      console.error(err);
-      toast.error("Could not update product.");
-    }
+  // Handler to update selected pack for a product in the grid
+  const onSelectPackForProduct = (productId: string | number, packValue: string) => {
+    setSelectedPackByProduct(prev => ({ ...prev, [`${productId}`]: packValue === "" ? "" : Number(packValue) }));
   };
 
   return (
@@ -226,279 +472,185 @@ export default function Products() {
           </div>
         </div>
 
-        {loading && (
-          <div className="p-6 bg-muted/30 rounded text-center w-full">Loading products...</div>
+        {loading && <div className="p-6 bg-muted/30 rounded text-center w-full">Loading products...</div>}
+        {!loading && products.length === 0 && <div className="p-6 bg-muted/30 rounded text-center w-full">No products found. Click Add Product to seed your catalog.</div>}
+
+        {viewMode === "grid" && products.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 w-full">
+            {products.map(product => {
+              const key = `${product.id}`;
+              const selectedPack = selectedPackByProduct[key] ?? "";
+              const selectedPackObj = product.packs?.find(p => p.pack === selectedPack) ?? null;
+
+              return (
+                <Card key={product.id} className="hover:border-primary/40 border-2 transition-all duration-150 relative flex flex-col">
+                  <CardContent className="p-3 sm:p-4 flex flex-col h-full">
+                    <div className="aspect-square bg-muted rounded-lg mb-3 overflow-hidden relative w-full">
+                      {product.imageUrl ? (
+                        <img src={product.imageUrl} alt={product.name ?? "Product image"} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <ImageIcon className="h-6 w-6" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col flex-grow text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
+                        <Badge variant={product.status === "Active" ? "default" : "destructive"} className="text-xs">
+                          {product.status ?? "Active"}
+                        </Badge>
+                      </div>
+
+                      <h3 className="font-semibold text-sm sm:text-base truncate">{product.name}</h3>
+                      <p className="text-xs text-muted-foreground truncate">{product.category}</p>
+                      {product.size && <p className="text-xs text-muted-foreground truncate">Size: {product.size}</p>}
+
+                      {/* PACKS DROPDOWN (no default price shown) */}
+                      {product.packs && product.packs.length > 0 && (
+                        <div className="mt-2 w-full">
+                          <label htmlFor={`pack-select-${key}`} className="sr-only">Select pack</label>
+                          <select
+                            id={`pack-select-${key}`}
+                            value={selectedPack === "" ? "" : String(selectedPack)}
+                            onChange={(e) => onSelectPackForProduct(key, e.target.value)}
+                            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                          >
+                            <option value="">Select pack</option>
+                            {product.packs.map((p, idx) => (
+                              <option key={idx} value={String(p.pack)}>
+                                {p.pack}-pack — ₵{p.price}
+                              </option>
+                            ))}
+                          </select>
+
+                          {/* show selected pack price only when a pack is chosen */}
+                          {selectedPackObj && (
+                            <p className="font-semibold mt-2 text-foreground">
+                              Selected: {selectedPackObj.pack}-pack — ₵{selectedPackObj.price}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex gap-2 justify-center flex-wrap">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(product)} className="flex-1 min-w-[100px]">
+                          <Edit2 className="h-4 w-4 mr-2" /> Edit
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(product.id)} className="flex-1 min-w-[100px]">
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
 
-        {!loading && products.length === 0 && (
-          <div className="p-6 bg-muted/30 rounded text-center w-full">No products found. Click Add Product to seed your catalog.</div>
-        )}
+        <Dialog open={openModal} onOpenChange={setOpenModal}>
+          <DialogContent className="w-full rounded-md px-6 max-w-lg overflow-y-auto" style={{ maxHeight: "90vh" }}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-between text-base sm:text-lg font-semibold">
+                {editingId ? "Edit Product" : "Add Product"}
+              </DialogTitle>
+            </DialogHeader>
 
-    {/* Grid View */}
-    {viewMode === "grid" && products.length > 0 && (
-    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 w-full">
-        {products.map((product) => (
-        <Card key={product.id} className="hover:border-primary/40 border-2 transition-all duration-150 relative flex flex-col">
-            <CardContent className="p-3 sm:p-4 flex flex-col h-full">
-            <div className="aspect-square bg-muted rounded-lg mb-3 overflow-hidden relative w-full">
-            {product.imageUrl ? (
-            <img
-                src={product.imageUrl}
-                alt={product.name ?? "Product image"}
-                className="w-full h-full object-cover"
-            />
-            ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                <ImageIcon className="h-6 w-6" />
-            </div>
-            )}
-
-            </div>
-            <div className="flex flex-col flex-grow text-center">
-                <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
-                <Badge variant={product.status === "Active" ? "default" : "destructive"} className="text-xs">
-                    {product.status ?? "Active"}
-                </Badge>
-
-                </div>
-                <h3 className="font-semibold text-sm sm:text-base truncate">{product.name}</h3>
-                <p className="text-xs text-muted-foreground truncate">{product.category}</p>
-                {product.size && <p className="text-xs text-muted-foreground truncate">Size: {product.size}</p>}
-                <p className="font-bold text-base sm:text-lg mt-1">₵{Number(product.price).toFixed(2)}</p>
-                <div className="mt-3 flex gap-2 justify-center flex-wrap">
-                <Button variant="ghost" size="sm" onClick={() => openEdit(product)} className="flex-1 min-w-[100px]">
-                    <Edit2 className="h-4 w-4 mr-2" /> Edit
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => handleDelete(product.id)} className="flex-1 min-w-[100px]">
-                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                </Button>
-                </div>
-            </div>
-            </CardContent>
-        </Card>
-        ))}
-    </div>
-    )}
-
-    {/* List View */}
-{viewMode === "list" && products.length > 0 && (
-  <div className="flex flex-col  w-full divide-y divide-border rounded-md border overflow-hidden ">
-    {products.map((product) => (
-      <div
-        key={product.id}
-        className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-all"
-      >
-        {/* Left section (image + info) */}
-        <div className="flex  items-center gap-3 min-w-0 ">
-          <div className="w-12 h-12 rounded-md bg-muted overflow-hidden flex-shrink-0">
-            {product.imageUrl ? (
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                <ImageIcon className="h-5 w-5" />
+            <form className="space-y-2" onSubmit={e => { e.preventDefault(); handleSaveProduct(); }}>
+              {/* NAME */}
+              <div>
+                <Label htmlFor="name" className="text-sm font-medium">Name</Label>
+                <Input id="name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Drink name" className="mt-1 w-full" required />
               </div>
-            )}
-          </div>
 
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-semibold text-sm truncate">{product.name}</h3>
-              <Badge
-                variant={
-                  product.status === "Active" ? "default" : "destructive"
-                }
-                className="text-[10px] px-1.5 py-0.5"
-              >
-                {product.status ?? "Active"}
-              </Badge>
+              {/* SIZE + CATEGORY */}
+              <div className="flex sm:gap-3 flex-col sm:flex-row">
+                <div className="flex-1">
+                  <Label htmlFor="size" className="text-sm font-medium">Size</Label>
+                  <Input id="size" placeholder="e.g. 300ml / Small" value={form.size} onChange={e => setForm({ ...form, size: e.target.value })} className="mt-1 w-full" />
+                </div>
 
-            </div>
-            <p className="text-xs text-muted-foreground truncate">
-              {product.category} {product.size && `· Size: ${product.size}`}
-            </p>
-          </div>
-        </div>
+                <div className="flex-1">
+                  <Label htmlFor="category" className="text-sm font-medium">Category</Label>
+                  <select id="category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="mt-1 w-full rounded-md border px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    <option value="">Select category</option>
+                    {categories.map(c => <option key={c.id} value={c.slug}>{c.name}</option>)}
+                  </select>
+                </div>
+              </div>
 
-        {/* Middle section (price + stock) */}
+              {/* IMAGE */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex-shrink-0">
+                  {previewUrl ? (
+                    <img src={previewUrl} alt="Preview" className="w-28 h-28 object-cover rounded-md border" />
+                  ) : (
+                    <div className="w-28 h-28 rounded-md border bg-muted flex items-center justify-center text-muted-foreground">No image</div>
+                  )}
+                </div>
 
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">Image</Label>
+                  <input type="file" accept="image/*" ref={fileInputRef} onChange={onFileChange} className="mt-1 w-full text-sm" aria-label="Upload product image" />
+                  <p className="text-xs text-muted-foreground mt-2">Recommended: JPG/PNG. Max 2MB.</p>
+                </div>
+              </div>
 
-        {/* Right section (actions) */}
-        <div className="flex gap-2 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => openEdit(product)}
-            className="text-xs"
-          >
-            <Edit2 className="h-4 w-4 mr-1" /> Edit
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => handleDelete(product.id)}
-            className="text-xs"
-          >
-            <Trash2 className="h-4 w-4 mr-1" /> Delete
-          </Button>
-        </div>
-      </div>
-    ))}
-  </div>
-)}
+              {/* PACKS */}
+              <div>
+                <Label className="text-sm font-medium">Available Packs</Label>
+                {form.packs.map((p, idx) => (
+                  <div key={idx} className="flex gap-2 mt-1">
+                    {/* pack stored as string so it can be empty and deletable */}
+                    <Input
+                      type="number"
+                      placeholder="Pack size"
+                      value={p.pack}
+                      onChange={e => {
+                        const newPacks = [...form.packs];
+                        newPacks[idx].pack = e.target.value; // store as string
+                        setForm({ ...form, packs: newPacks });
+                      }}
+                      className="w-1/2"
+                      step={1}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Price"
+                      value={p.price}
+                      onChange={e => {
+                        const newPacks = [...form.packs];
+                        newPacks[idx].price = e.target.value;
+                        setForm({ ...form, packs: newPacks });
+                      }}
+                      className="w-1/2"
+                      step={0.01}
+                    />
+                    <Button variant="destructive" onClick={() => setForm({ ...form, packs: form.packs.filter((_, i) => i !== idx) })} size="icon">&times;</Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setForm({ ...form, packs: [...form.packs, { pack: "", price: "" }] })}
+                  className="mt-2"
+                >
+                  + Add Pack
+                </Button>
+              </div>
 
+              {/* ACTIONS */}
+              <div className="mt-4 mb-4 flex sm:flex sm:justify-end gap-2 sticky bottom-0 bg-background p-2 z-10">
+                <Button type="button" variant="outline" onClick={() => setOpenModal(false)} className="w-full sm:w-auto">Cancel</Button>
+                <Button type="submit" className="w-full sm:w-auto" aria-busy={saving} disabled={saving}>
+                  {saving ? "Saving..." : editingId ? "Update Product" : "Add Product"}
+                </Button>
+              </div>
+            </form>
 
-
-<Dialog open={openModal} onOpenChange={(v) => setOpenModal(v)}>
-  <DialogContent className="w-full  rounded-md px-6 max-w-lg  overflow-y-auto">
-    <DialogHeader>
-      <DialogTitle className="flex items-center justify-between text-base sm:text-lg font-semibold">
-        {editingId ? "Edit Product" : "Add Product"}
-      </DialogTitle>
-    </DialogHeader>
-
-    <form className=" space-y-2" onSubmit={(e) => { e.preventDefault(); handleSaveProduct(); }}>
-      {/* NAME */}
-      <div>
-        <Label htmlFor="name" className="text-sm font-medium">Name</Label>
-        <Input
-          id="name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          placeholder="Drink name"
-          className="mt-1 w-full"
-          required
-        />
-      </div>
-
-      {/* PRICE + SIZE (side-by-side on sm+) */}
-      <div className="flex  sm:grid-cols-2 gap-3">
-        <div>
-          <Label htmlFor="price" className="text-sm font-medium">Price (₵)</Label>
-          <div className="mt-1 relative rounded-md shadow-sm">
-            <span className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center text-sm text-muted-foreground">₵</span>
-            <input
-              id="price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              className="w-full pl-8 pr-3 py-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              aria-label="Price in Ghana cedi"
-              required
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="size" className="text-sm font-medium">Size</Label>
-          <Input
-            id="size"
-            placeholder="e.g. 300ml / Small"
-            value={form.size}
-            onChange={(e) => setForm({ ...form, size: e.target.value })}
-            className="mt-1 w-full"
-          />
-        </div>
-      </div>
-
-      {/* CATEGORY */}
-      <div>
-        <Label htmlFor="category" className="text-sm font-medium">Category</Label>
-        <select
-          id="category"
-          value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-          className="mt-1 w-full rounded-md border px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          required
-        >
-          <option value="">Select category</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.slug}>{c.name}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* DESCRIPTION */}
-      <div>
-        <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-        <Textarea
-          id="description"
-          placeholder="Optional"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="mt-1 w-full min-h-[96px]"
-        />
-      </div>
-
-      {/* STATUS */}
-      <div>
-        <Label htmlFor="status" className="text-sm font-medium">Status</Label>
-        <select
-          id="status"
-          value={form.status}
-          onChange={(e) => setForm({ ...form, status: e.target.value })}
-          className="mt-1 w-full rounded-md border px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-          <option value="Low Stock">Low Stock</option>
-        </select>
-      </div>
-
-      {/* IMAGE: preview left, input right on sm+ */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex-shrink-0">
-          {previewUrl ? (
-            <img src={previewUrl} alt="Preview" className="w-28 h-28 object-cover rounded-md border" />
-          ) : (
-            <div className="w-28 h-28 rounded-md border bg-muted flex items-center justify-center text-muted-foreground">No image</div>
-          )}
-        </div>
-
-        <div className="flex-1">
-          <Label className="text-sm font-medium">Image</Label>
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={onFileChange}
-            className="mt-1 w-full text-sm"
-            aria-label="Upload product image"
-          />
-          <p className="text-xs text-muted-foreground mt-2">Recommended: JPG/PNG. Max 2MB.</p>
-        </div>
-      </div>
-
-      {/* ACTIONS */}
-      <div className="mt-4 mb-4 flex sm:flex sm:justify-end gap-2 sticky bottom-0 bg-background p-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setOpenModal(false)}
-          className="w-full sm:w-auto"
-        >
-          Cancel
-        </Button>
-
-        <Button
-          type="submit"
-          onClick={() => {}}
-          className="w-full sm:w-auto"
-          aria-busy={saving}
-          disabled={saving}
-        >
-          {saving ? "Saving..." : editingId ? "Update Product" : "Add Product"}
-        </Button>
-      </div>
-    </form>
-  </DialogContent>
-</Dialog>
-
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

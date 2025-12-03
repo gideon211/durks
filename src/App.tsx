@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import Home from "./pages/Home"
+import PaymentSuccess from "./pages/PaymentSuccess"
 
 //admin
 
@@ -36,38 +37,40 @@ function AnimatedRoutes() {
   const location = useLocation();
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<Home />} />
-        <Route path="/" element={<Products />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/products/:category" element={<Products />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/csr" element={<CSR />} />
-        <Route path="/csr/cup-foundation" element={<CSR />} />
-        <Route path="/csr/project-unforgotten" element={<CSR />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/bulk-quote" element={<BulkQuote />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="*" element={<NotFound />} />
-        <Route path="orders" element={<Orders />} />
+        <Routes location={location} key={location.pathname}>
+            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Products />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:category" element={<Products />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/csr" element={<CSR />} />
+            <Route path="/csr/cup-foundation" element={<CSR />} />
+            <Route path="/csr/project-unforgotten" element={<CSR />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/bulk-quote" element={<BulkQuote />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="*" element={<NotFound />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
 
 
-                  
-          {/* Admin Routes */}
-          <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/orders" element={<Oorders />} />
-          <Route path="/admin/preorders" element={<Preorders />} />
-          <Route path="/admin" element={<AdminProducts />} />
-          {/* <Route path="/admin/products" element={<AdminProducts />} /> */}
-          <Route path="/admin/inventory" element={<Inventory />} />
-          <Route path="/admin/customers" element={<Customers />} />
-          <Route path="/admin/quotes" element={<Quotes />} />
-          <Route path="/admin/payments" element={<Payments />} />
-          <Route path="/admin/csr" element={<CSRReports />} />
-          <Route path="/admin/analytics" element={<Analytics />} />
-          <Route path="/admin/users" element={<Users />} />
-          <Route path="/admin/settings" element={<Settings />} />
+
+                    
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={<Dashboard />} />
+            <Route path="/admin/orders" element={<Oorders />} />
+            <Route path="/admin/preorders" element={<Preorders />} />
+            <Route path="/admin" element={<AdminProducts />} />
+            {/* <Route path="/admin/products" element={<AdminProducts />} /> */}
+            <Route path="/admin/inventory" element={<Inventory />} />
+            <Route path="/admin/customers" element={<Customers />} />
+            <Route path="/admin/quotes" element={<Quotes />} />
+            <Route path="/admin/payments" element={<Payments />} />
+            <Route path="/admin/csr" element={<CSRReports />} />
+            <Route path="/admin/analytics" element={<Analytics />} />
+            <Route path="/admin/users" element={<Users />} />
+        <Route path="/admin/settings" element={<Settings />} />
       </Routes>
     </AnimatePresence>
   );

@@ -25,6 +25,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const addToCart = useCartStore((s) => s.addToCart);
+  const loadCartForUser = useCartStore((s) => s.loadCartForUser);
+  const mergeGuestIntoUser = useCartStore((s) => s.mergeGuestIntoUser);
+  const switchToGuestCart = useCartStore((s) => s.switchToGuestCart);
 
   const [user, setUser] = useState<User | null>(() => {
     try {
@@ -35,17 +38,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   });
 
-  const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
-  };
+  const login = async (userData: User) => {
+    try {
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
 
-  
+      await mergeGuestIntoUser(userData.id);
+      await loadCartForUser(userData.id);
+    } catch {
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
+      try {
+        await loadCartForUser(userData.id);
+      } catch {}
+    }
+  };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
-    
+
+    try {
+      switchToGuestCart();
+    } catch {
+      try {
+        useCartStore.getState().clearCart();
+      } catch {}
+    }
+
+    navigate("/");
   };
 
   const tryRefreshToken = async (): Promise<User | null> => {
@@ -65,6 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const processPendingAdd = async (currentUser: User | null) => {
     const raw = localStorage.getItem("pendingAdd");
     if (!raw) return false;
+
     const pending = JSON.parse(raw);
     if (!pending?.product || !pending?.quantity) {
       localStorage.removeItem("pendingAdd");
@@ -72,6 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     let activeUser = currentUser;
+
     if (!activeUser) {
       const refreshed = await tryRefreshToken();
       if (!refreshed) {
@@ -82,7 +105,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       activeUser = refreshed;
     }
 
-    addToCart(pending.product, pending.quantity);
+    await addToCart(pending.product, pending.product.pack ?? 12, pending.quantity);
+
     localStorage.removeItem("pendingAdd");
     navigate(pending.from || "/cart");
     return true;
@@ -92,8 +116,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     (async () => {
       if (!user) {
         const refreshed = await tryRefreshToken();
-        if (refreshed) await processPendingAdd(refreshed);
+        if (refreshed) {
+          await loadCartForUser(refreshed.id);
+          await processPendingAdd(refreshed);
+        } else {
+          try {
+            switchToGuestCart();
+            await processPendingAdd(null);
+          } catch {}
+        }
       } else {
+        await loadCartForUser(user.id);
         await processPendingAdd(user);
       }
     })();
@@ -101,7 +134,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!user) return;
-    (async () => await processPendingAdd(user))();
+
+    (async () => {
+      try {
+        await mergeGuestIntoUser(user.id);
+        await loadCartForUser(user.id);
+        await processPendingAdd(user);
+      } catch {}
+    })();
   }, [user]);
 
   return (

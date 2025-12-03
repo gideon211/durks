@@ -122,7 +122,6 @@ All colors MUST be HSL.
   h5,
   h6 {
     @apply font-heading;
-    font-family: National2Condensed;
   }
 
   .calendar-day.today {
@@ -203,4 +202,19 @@ All colors MUST be HSL.
     scrollbar-width: none; /* Firefox */
     -webkit-overflow-scrolling: touch; /* iOS smooth scroll */
   }
+
+
+
+
+
+    select {
+    /* -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none; */
+    background-color: white;
+    }
+
+
+
+
 }

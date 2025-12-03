@@ -290,9 +290,7 @@ export default function Auth() {
                         </Button>
                       </motion.div>
 
-                      <div className="text-center text-xs text-muted-foreground">
-                        Or continue with
-                      </div>
+
                     </div>
                   </form>
                 </TabsContent>
