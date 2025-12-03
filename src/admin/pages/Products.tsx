@@ -463,7 +463,7 @@ export default function Products() {
             <Button variant="outline" size="icon" onClick={() => setViewMode("list")} className={viewMode === "list" ? "bg-muted" : ""}>
               <List className="h-5 w-5 sm:h-4 sm:w-4" />
             </Button>
-            <Button onClick={openNew} className="hidden sm:flex items-center">
+            <Button onClick={openNew} className="hidden sm:flex items-center p-6">
               <Plus className="h-4 w-4 mr-2" /> Add Product
             </Button>
             <Button onClick={openNew} size="icon" className="sm:hidden" aria-label="Add product">

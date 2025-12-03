@@ -285,7 +285,7 @@ export default function Auth() {
 
                     <div className="space-y-3">
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button type="submit" className="w-full" disabled={isLoading}>
+                        <Button type="submit" className="w-full p-6" disabled={isLoading}>
                           {isLoading ? "Logging in..." : "Log In"}
                         </Button>
                       </motion.div>

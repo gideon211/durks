@@ -100,7 +100,7 @@ export default function Checkout(): JSX.Element {
     email: "",
     phone: "",
     address: "",
-    city: "Ghana",
+    city: "",
     country: "Ghana",
     orderType: "delivery",
     paymentMethod: "card",
@@ -344,13 +344,13 @@ export default function Checkout(): JSX.Element {
                 <Input name="phone" value={formData.phone} onChange={handleChange} required disabled={isProcessing} />
               </div>
               <div>
-                <Label>City / Zone</Label>
+                <Label>City / Town</Label>
                 <Input
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
-                  placeholder="Enter your city or zone"
-                  className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Enter your city or town"
+                  className="w-full border rounded-lg p-3 focus:outline-none focus:ring-1 focus:ring-primary"
                   required
                   disabled={isProcessing}
                 />
@@ -361,7 +361,7 @@ export default function Checkout(): JSX.Element {
               <Label>Address</Label>
               <Input
                 name="address"
-                placeholder="14 Mango Street, East Legon"
+                placeholder="your specific location"
                 value={formData.address}
                 onChange={handleChange}
                 required
@@ -406,7 +406,7 @@ export default function Checkout(): JSX.Element {
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping fee</span>
-                  <span>₵{shippingFee.toFixed(2)}</span>
+                  <span className="font-medium">UPON DELIVERY</span>
                 </div>
                 <div className="flex justify-between font-bold mt-2 text-base">
                   <span>Total</span>

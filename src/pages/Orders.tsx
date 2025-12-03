@@ -184,7 +184,7 @@ export default function Orders() {
 
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-md text-muted-foreground">
                     {new Date(order.createdAt).toLocaleString()}
                   </p>
 
