@@ -106,26 +106,27 @@ export const ProductCard = ({
         )}
       </div>
 
-      <div className="p-4 flex flex-col flex-grow text-center">
+      <div className="p-4 flex flex-col gap-4 flex-grow text-center">
         {category && (
           <Badge variant="outline" className="mb-0.5 mx-auto text-xs">
             {category}
           </Badge>
         )}
 
-        <h3 className="font-heading font-semibold text-sm text-foreground">
+        <h3 className="font-heading text-left line-clamp-2 font-semibold text-sm text-foreground">
           {name}
         </h3>
 
-        <p className="font-heading font-semibold text-sm text-foreground mt-2">
+        <p className="font-heading text-left font-semibold text-sm text-foreground mt-2">
           ₵{Number(selectedPrice).toFixed(2)}
         </p>
 
-        <div className="flex flex-col gap-2 mt-1.5">
+        <div className="flex max-md:flex-col gap-2 mt-1.5">
           <select
+            title="selct pack"
             value={String(selectedPack)}
             onChange={(e) => handlePackChange(Number(e.target.value))}
-            className="w-full border rounded px-2 py-1 text-center focus:outline-none focus:ring-1 focus:ring-primary font-bold"
+            className="w-20 max-md:w-full border rounded px-2 py-1 text-center focus:outline-none focus:ring-1 focus:ring-primary font-bold"
           >
             {packs.map((p) => (
               <option key={p.pack} value={p.pack}>
