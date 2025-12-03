@@ -1,4 +1,24 @@
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { motion, Variants, easeOut, useAnimationFrame } from "framer-motion";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Link } from "react-router-dom";
@@ -39,6 +59,8 @@ import tiktok1 from "@/assets/tiktok-1.jpg";
 import tiktok2 from "@/assets/tiktok-2.jpg";
 import tiktok3 from "@/assets/tiktok-3.jpg";
 import tiktok4 from "@/assets/tiktok-4.jpg";
+import waveDivider from "../assets/wave-haikei.svg";
+import MarqueeBanner from "@/components/ui/MarqueeBanner";
 import { useRef, useState, useEffect } from "react";
 
 const productCategories = [
@@ -58,6 +80,11 @@ const productCategories = [
     name: "PURE JUICES",
     slug: "pure-juice",
     image: pureJuiceImage,
+    description:
+      "Experience nature's finest with our cold-pressed pure juices. Made from 100% fresh fruits with zero additives, each bottle captures the vibrant flavors of oranges, apples, watermelons, and pineapples.",
+    fruits: "Oranges, Apples, Watermelon, Pineapple, Grapes",
+    benefit: "High in Vitamin C & Natural Energy",
+    bgColor: "bg-[#007a56]",
     fruits: "Oranges, Apples, Watermelon, Pineapple, Grapes",
   },
 
@@ -67,6 +94,11 @@ const productCategories = [
     name: "CLEANSE JUICES",
     slug: "cleanse",
     image: cleanseJuiceImage,
+    description:
+      "Detoxify and rejuvenate your body with our specially crafted cleanse juices. Expertly blended combinations of leafy greens, cucumber, celery, lemon, and ginger work together to flush toxins and boost metabolism.",
+    fruits: "Kale, Spinach, Cucumber, Celery, Lemon, Ginger, Green Apple",
+    benefit: "Natural Detox & Metabolism Boost",
+    bgColor: "bg-[#eb2e4f]",
     fruits: "Kale, Spinach, Cucumber, Celery, Lemon, Ginger, Green Apple",
   },
 
@@ -84,6 +116,12 @@ const productCategories = [
     id: "smoothies",
     name: "SMOOTHIES",
     slug: "smoothies",
+    image: smoothiesImage,
+    description:
+      "Creamy, dreamy, and packed with nutrition! Our smoothies blend premium fruits with Greek yogurt, oats, and superfoods like chia seeds. Perfect for breakfast or post-workout fuel.",
+    fruits: "Bananas, Berries, Mangos, Avocado, Dates, Coconut",
+    benefit: "Protein-Rich & Sustained Energy",
+    bgColor: "bg-[#ff7017]",
     images: [smoothie1, smoothie2, smoothie3, smoothie4],
     fruits: "Bananas, Strawberries, Blueberries, Mangos, Avocado, Dates, Coconut",
   },
@@ -102,6 +140,12 @@ const productCategories = [
     id: "cut-fruits",
     name: "CUT FRUITS",
     slug: "cut-fruits",
+    image: cutFruitsImage,
+    description:
+      "Fresh, hand-cut fruits ready to enjoy! Our fruit cups feature a colorful medley of seasonal fruits, perfectly portioned for snacking. Washed, cut, and packed fresh daily.",
+    fruits: "Pineapple, Watermelon, Cantaloupe, Berries, Grapes, Kiwi",
+    benefit: "Convenient & Vitamin-Packed Snacking",
+    bgColor: "bg-[#054525]",
     images: [cutFruit1, cutFruit2, cutFruit3, cutFruit4],
     fruits: "Pineapple, Watermelon, Cantaloupe, Berries, Grapes, Kiwi",
   },
@@ -111,6 +155,12 @@ const productCategories = [
     id: "gift-packs",
     name: "GIFT PACKS",
     slug: "gift-packs",
+    image: giftPacksImage,
+    description:
+      "Share the gift of health with our beautifully curated gift packs. Each collection features an assortment of our bestselling juices, smoothies, and wellness shots, elegantly packaged.",
+    fruits: "Assorted Premium Selection",
+    benefit: "Thoughtful Wellness Gifting",
+    bgColor: "bg-[#007a56]",
     images: [gift1, gift2, gift3, gift4],
     fruits: "Premium Assorted Selection: Berries, Pineapple, Grapes, Citrus Mix, Exotic Fruits",
   },
@@ -121,6 +171,61 @@ const productCategories = [
     name: "EVENTS",
     slug: "events",
     image: eventsImage,
+    description:
+      "Elevate your events with our bulk juice catering service. From corporate wellness programs to weddings and festivals, we provide fresh, custom juice bars with professional service.",
+    fruits: "Custom Event-Based Selection",
+    benefit: "Professional Catering & Bulk Orders",
+    bgColor: "bg-[#eb2e4f]",
+  },
+  {
+    id: "shots",
+    name: "WORKOUT SHOTS",
+    slug: "shots",
+    image: pureJuiceImage,
+    description:
+      "Power-packed 2oz wellness shots designed for peak performance. Concentrated blends deliver instant energy, reduce inflammation, and accelerate recovery. Perfect pre or post-workout fuel.",
+    fruits: "Turmeric, Ginger, Beetroot, Wheatgrass, Cayenne",
+    benefit: "Performance & Quick Recovery",
+    bgColor: "bg-[#ff7017]",
+  },
+];
+
+const testimonials = [
+  {
+    name: "Sarah Martinez",
+    category: "Pure Juices",
+    rating: 5,
+    text: "The pure orange juice from Duk's is incredible! You can taste the freshness in every sip. My kids actually prefer this over sugary drinks now.",
+    location: "Los Angeles, CA",
+  },
+  {
+    name: "James Chen",
+    category: "Cleanse Juices",
+    rating: 5,
+    text: "I completed their 3-day cleanse program and felt absolutely amazing. My energy levels skyrocketed and I lost 5 pounds!",
+    location: "San Francisco, CA",
+  },
+  {
+    name: "Emily Johnson",
+    category: "Smoothies",
+    rating: 5,
+    text: "These smoothies are a lifesaver! The berry blast smoothie is my post-workout ritual. Creamy, delicious, and keeps me full for hours.",
+    location: "Austin, TX",
+  },
+  {
+    name: "Michael Roberts",
+    category: "Workout Shots",
+    rating: 5,
+    text: "These wellness shots are game-changers! The turmeric ginger shot gives me such a boost. Less joint pain and faster recovery times.",
+    location: "Miami, FL",
+  },
+  {
+    name: "Priya Patel",
+    category: "Events",
+    rating: 5,
+    text: "We hired Duk's for our corporate wellness event and they were phenomenal! The juice bar was a huge hit with our employees!",
+    location: "New York, NY",
+  },
     fruits: "Custom Event-Based Selection (Bulk Packs, Party Trays, Juice Stations)",
   },
 ];
@@ -136,6 +241,31 @@ const messages = [
 const baseSpeed = 60;
 
 const faqs = [
+  {
+    question: "How long do your fresh juices stay fresh?",
+    answer:
+      "Our cold-pressed juices stay fresh for 3-5 days when refrigerated at 35-40°F. We use HPP (High Pressure Processing) to maintain freshness without preservatives.",
+  },
+  {
+    question: "Are your juices 100% organic?",
+    answer:
+      "Yes! We source 100% USDA certified organic fruits and vegetables from local farms. We never use pesticides, GMOs, or artificial additives.",
+  },
+  {
+    question: "Do you offer bulk or wholesale pricing?",
+    answer:
+      "Absolutely! We offer special bulk pricing for orders of 20+ bottles and wholesale partnerships for cafes, gyms, and retailers.",
+  },
+  {
+    question: "What's the difference between juice and smoothie?",
+    answer:
+      "Our juices are cold-pressed, extracting pure liquid from fruits/vegetables. Smoothies blend whole ingredients, retaining all fiber.",
+  },
+  {
+    question: "Can I customize my juice cleanse program?",
+    answer:
+      "Yes! We offer 1, 3, 5, and 7-day cleanse programs. You can customize based on your goals and dietary preferences.",
+  },
   { question: "How long do your fresh juices stay fresh?", answer: "Our cold-pressed juices stay fresh for 3-5 days when refrigerated at 35-40°F." },
   { question: "Are your juices 100% organic?", answer: "Yes! We source 100% USDA certified organic fruits and vegetables from local farms." },
   { question: "Do you offer bulk or wholesale pricing?", answer: "Absolutely! We offer special bulk pricing for orders of 20+ bottles and wholesale partnerships for cafes, gyms, and retailers." },
@@ -147,7 +277,7 @@ const tiktokLinks = [
   { image: tiktok1, url: "https://www.tiktok.com/@duksjuice" },
   { image: tiktok2, url: "https://www.tiktok.com/@duksjuice" },
   { image: tiktok3, url: "https://www.tiktok.com/@duksjuice" },
-  { image: tiktok4, url: "https://www.tiktok.com/@duksjuice" }
+  { image: tiktok4, url: "https://www.tiktok.com/@duksjuice" },
 ];
 
 const containerVariants = {
