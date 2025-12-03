@@ -117,7 +117,7 @@ export const ProductCard = ({
           {name}
         </h3>
 
-        <p className="font-heading font-semibold text-sm text-foreground mt-1">
+        <p className="font-heading font-semibold text-sm text-foreground">
           ₵{Number(selectedPrice).toFixed(2)}
         </p>
 
