@@ -106,7 +106,7 @@ export const ProductCard = ({
         )}
       </div>
 
-      <div className="p-4 flex flex-col gap-4 flex-grow text-center">
+      <div className="p-4 flex flex-col gap-2 flex-grow text-center">
         {category && (
           <Badge variant="outline" className="mb-0.5 mx-auto text-xs">
             {category}
@@ -117,7 +117,7 @@ export const ProductCard = ({
           {name}
         </h3>
 
-        <p className="font-heading font-semibold text-sm text-foreground mt-2">
+        <p className="font-heading font-semibold text-sm text-foreground mt-1">
           ₵{Number(selectedPrice).toFixed(2)}
         </p>
 
