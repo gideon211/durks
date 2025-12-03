@@ -68,7 +68,7 @@ const productCategories = [
     id: "bundles",
     name: "BUNDLES",
     slug: "bundles",
-    images: [bundle1, bundle2, bundle3, bundle4],
+    images: [ bundle3],
     fruits: "Mixed Fruit Packs, Mixed Juice Combos, Cleanse Packs, Family Fruit Bowls",
   },
 
@@ -384,25 +384,25 @@ export default function Home() {
             className="lg:hidden py-6 mt-2 flex flex-col items-center text-center space-y-4"
             style={{ fontFamily: 'Raleway, sans-serif' }}
           >
-<h1
-  className="text-5xl sm:text-4xl font-bold text-neutral-800 leading-none tracking-tight"
-  style={{
-    fontFamily: "'Poppins', sans-serif",
-   
-  }}
->
-  Fall into<br />
-  <span
-    className="text-green-400"
-    style={{
-      fontFamily: "'Poppins', serif",
-      fontWeight: 600,
-      fontStyle: "italic",
-    }}
-  >
-    Wellness
-  </span>
-</h1>
+            <h1
+            className="text-5xl sm:text-4xl font-bold text-neutral-800 leading-none tracking-tight"
+            style={{
+                fontFamily: "'Poppins', sans-serif",
+            
+            }}
+            >
+            Fall into<br />
+            <span
+                className="text-green-400"
+                style={{
+                fontFamily: "'Poppins', serif",
+                fontWeight: 600,
+                fontStyle: "italic",
+                }}
+            >
+                Wellness
+            </span>
+            </h1>
 
             <p className="text-lg sm:text-xl text-neutral-900 max-w-md px-4">
               Cold-pressed perfection. Zero additives. Maximum flavor.
@@ -480,7 +480,7 @@ export default function Home() {
 
           {/* 👉 MULTIPLE IMAGES (GRID OF 4) */}
           {category.images ? (
-            <div className="grid grid-cols-2 gap-[1px] w-full h-full">
+            <div className=" w-full h-full">
               {category.images.map((img, index) => (
                 <img
                   key={index}
