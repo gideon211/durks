@@ -43,7 +43,7 @@ export function Calendar24({
         </Label>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" id="date-picker" className="w-32 justify-between font-normal">
+            <Button variant="outline" id="date-picker" className="w-32 justify-between font-normal p-4">
               {date ? date.toLocaleDateString() : "Select date"}
               <ChevronDownIcon />
             </Button>

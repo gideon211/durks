@@ -194,7 +194,7 @@ export default function Orders() {
                     </p>
                   )}
 
-                  <p className="text-xs mt-1">
+                  <p className="text-md mt-1 font-medium">
                     {order.items.length} item{order.items.length !== 1 ? "s" : ""}
                   </p>
                 </div>
