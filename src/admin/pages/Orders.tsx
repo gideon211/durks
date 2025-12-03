@@ -311,9 +311,7 @@ export default function OrdersAdminPage() {
             >
               <X className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/orders/${rowId}`)} title="Open order page">
-              <span className="text-xs">Open</span>
-            </Button>
+
           </div>
         );
       },
@@ -444,15 +442,20 @@ export default function OrdersAdminPage() {
             </div>
 
             <div>
-              <h3 className="text-sm font-medium">Items</h3>
+              <h3 className="text-sm font-bold">ITEMS</h3>
               {selectedOrder?.items?.length ? (
-                <ul className="list-disc pl-5 text-sm max-h-40 overflow-auto">
-                  {selectedOrder.items.map((it: any, idx: number) => (
-                    <li key={idx}>
-                      {it.quantity} × {it.name} {it.pack ? `(${it.pack})` : ""} — GH₵ {Number(it.price || 0).toFixed(2)}
-                    </li>
-                  ))}
-                </ul>
+<ul className="list-disc text-sm max-h-40 overflow-auto space-y-2">
+  {selectedOrder.items.map((it: any, idx: number) => (
+    <li key={idx} className="flex flex-col gap-1 border-2 border-gray-400 p-2">
+      <span><strong>Quantity:</strong> {it.quantity}</span>
+      <span><strong>Name:</strong> {it.name}</span>
+      {it.pack && <span><strong>Pack:</strong> {it.pack}</span>}
+      <span><strong>Price:</strong> GH₵ {Number(it.price || 0).toFixed(2)}</span>
+    </li>
+  ))}
+</ul>
+
+
               ) : (
                 <p className="text-sm">—</p>
               )}

@@ -192,10 +192,6 @@ export default function Checkout(): JSX.Element {
       const authoritativeItemsTotal = authoritativeItems.reduce((s, it) => s + Number(it.total || 0), 0);
       const authoritativeFinalTotal = authoritativeItemsTotal + (shippingFee || 0);
 
-      console.info("Checkout - authoritativeItems:", authoritativeItems);
-      console.info("Checkout - authoritativeItemsTotal:", authoritativeItemsTotal);
-      console.info("Checkout - authoritativeFinalTotal:", authoritativeFinalTotal);
-
       const orderId = generateOrderId();
 
       if (formData.paymentMethod === "delivery") {
@@ -215,11 +211,13 @@ export default function Checkout(): JSX.Element {
             drinkId: it.drinkId,
             name: it.name,
             pack: it.pack,
-            packPrice: it.packPrice,
+            price: it.packPrice,
             quantity: it.quantity,
             total: it.total,
             image: it.image,
           })),
+          deliveryDate: formData.deliveryDate ? formData.deliveryDate.toISOString() : null,
+          deliveryTime: formData.deliveryTime || null,
         });
 
         setShowConfirmation(true);
@@ -242,32 +240,43 @@ export default function Checkout(): JSX.Element {
         drinkId: it.drinkId,
         name: it.name,
         pack: it.pack,
-        packPrice: it.packPrice,
+        price: it.packPrice,
         quantity: it.quantity,
         total: it.total,
         image: it.image,
       }));
 
-      const payload: any = {
-        email: formData.email || (user as any)?.email,
+      const customerObj = {
         fullName: formData.fullName,
+        email: formData.email || (user as any)?.email,
         phone: formData.phone,
         address: formData.address,
+        city: formData.city,
+        country: formData.country,
+      };
+
+      const payload: any = {
+        email: customerObj.email,
+        fullName: customerObj.fullName,
+        phone: customerObj.phone,
+        address: customerObj.address,
         amount: Math.round(authoritativeFinalTotal * 100),
         provider: "Paystack",
         metadata: {
           userId,
-          email: formData.email || (user as any)?.email,
-          fullName: formData.fullName,
-          phone: formData.phone,
-          address: formData.address,
-          provider: "Paystack",
+          customer: customerObj,
           items: metadataItems,
           itemsTotal: authoritativeItemsTotal,
           shippingFee,
           finalTotal: authoritativeFinalTotal,
           deliveryDate: formData.deliveryDate ? formData.deliveryDate.toISOString() : null,
           deliveryTime: formData.deliveryTime || null,
+          fullName: customerObj.fullName,
+          email: customerObj.email,
+          phone: customerObj.phone,
+          address: customerObj.address,
+          city: customerObj.city,
+          provider: "Paystack",
         },
       };
 
