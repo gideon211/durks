@@ -20,7 +20,6 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { motion, Variants, easeOut, useAnimationFrame } from "framer-motion";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Link } from "react-router-dom";
 import { Star, Leaf, Heart, Sparkles, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
@@ -85,7 +84,6 @@ const productCategories = [
     fruits: "Oranges, Apples, Watermelon, Pineapple, Grapes",
     benefit: "High in Vitamin C & Natural Energy",
     bgColor: "bg-[#007a56]",
-    fruits: "Oranges, Apples, Watermelon, Pineapple, Grapes",
   },
 
   // 4. Cleanse juices
@@ -99,7 +97,6 @@ const productCategories = [
     fruits: "Kale, Spinach, Cucumber, Celery, Lemon, Ginger, Green Apple",
     benefit: "Natural Detox & Metabolism Boost",
     bgColor: "bg-[#eb2e4f]",
-    fruits: "Kale, Spinach, Cucumber, Celery, Lemon, Ginger, Green Apple",
   },
 
   // 5. Wellness shots
@@ -116,14 +113,12 @@ const productCategories = [
     id: "smoothies",
     name: "SMOOTHIES",
     slug: "smoothies",
-    image: smoothiesImage,
     description:
       "Creamy, dreamy, and packed with nutrition! Our smoothies blend premium fruits with Greek yogurt, oats, and superfoods like chia seeds. Perfect for breakfast or post-workout fuel.",
-    fruits: "Bananas, Berries, Mangos, Avocado, Dates, Coconut",
+    fruits: "Bananas, Strawberries, Blueberries, Mangos, Avocado, Dates, Coconut",
     benefit: "Protein-Rich & Sustained Energy",
     bgColor: "bg-[#ff7017]",
     images: [smoothie1, smoothie2, smoothie3, smoothie4],
-    fruits: "Bananas, Strawberries, Blueberries, Mangos, Avocado, Dates, Coconut",
   },
 
   // 7. Flavors → 4 images
@@ -140,14 +135,12 @@ const productCategories = [
     id: "cut-fruits",
     name: "CUT FRUITS",
     slug: "cut-fruits",
-    image: cutFruitsImage,
     description:
       "Fresh, hand-cut fruits ready to enjoy! Our fruit cups feature a colorful medley of seasonal fruits, perfectly portioned for snacking. Washed, cut, and packed fresh daily.",
     fruits: "Pineapple, Watermelon, Cantaloupe, Berries, Grapes, Kiwi",
     benefit: "Convenient & Vitamin-Packed Snacking",
     bgColor: "bg-[#054525]",
     images: [cutFruit1, cutFruit2, cutFruit3, cutFruit4],
-    fruits: "Pineapple, Watermelon, Cantaloupe, Berries, Grapes, Kiwi",
   },
 
   // 9. Gift packs → 4 images
@@ -155,14 +148,12 @@ const productCategories = [
     id: "gift-packs",
     name: "GIFT PACKS",
     slug: "gift-packs",
-    image: giftPacksImage,
     description:
       "Share the gift of health with our beautifully curated gift packs. Each collection features an assortment of our bestselling juices, smoothies, and wellness shots, elegantly packaged.",
-    fruits: "Assorted Premium Selection",
+    fruits: "Premium Assorted Selection: Berries, Pineapple, Grapes, Citrus Mix, Exotic Fruits",
     benefit: "Thoughtful Wellness Gifting",
     bgColor: "bg-[#007a56]",
     images: [gift1, gift2, gift3, gift4],
-    fruits: "Premium Assorted Selection: Berries, Pineapple, Grapes, Citrus Mix, Exotic Fruits",
   },
 
   // 10. Events
@@ -178,9 +169,9 @@ const productCategories = [
     bgColor: "bg-[#eb2e4f]",
   },
   {
-    id: "shots",
+    id: "shots-workout",
     name: "WORKOUT SHOTS",
-    slug: "shots",
+    slug: "workout-shots",
     image: pureJuiceImage,
     description:
       "Power-packed 2oz wellness shots designed for peak performance. Concentrated blends deliver instant energy, reduce inflammation, and accelerate recovery. Perfect pre or post-workout fuel.",
@@ -226,10 +217,7 @@ const testimonials = [
     text: "We hired Duk's for our corporate wellness event and they were phenomenal! The juice bar was a huge hit with our employees!",
     location: "New York, NY",
   },
-    fruits: "Custom Event-Based Selection (Bulk Packs, Party Trays, Juice Stations)",
-  },
 ];
-
 
 const messages = [
   "Packed with vitamins and natural energy",
@@ -266,11 +254,6 @@ const faqs = [
     answer:
       "Yes! We offer 1, 3, 5, and 7-day cleanse programs. You can customize based on your goals and dietary preferences.",
   },
-  { question: "How long do your fresh juices stay fresh?", answer: "Our cold-pressed juices stay fresh for 3-5 days when refrigerated at 35-40°F." },
-  { question: "Are your juices 100% organic?", answer: "Yes! We source 100% USDA certified organic fruits and vegetables from local farms." },
-  { question: "Do you offer bulk or wholesale pricing?", answer: "Absolutely! We offer special bulk pricing for orders of 20+ bottles and wholesale partnerships for cafes, gyms, and retailers." },
-  { question: "What's the difference between juice and smoothie?", answer: "Our juices are cold-pressed, extracting pure liquid from fruits/vegetables. Smoothies blend whole ingredients, retaining all fiber." },
-  { question: "Can I customize my juice cleanse program?", answer: "Yes! We offer 1, 3, 5, and 7-day cleanse programs. You can customize based on your goals and dietary preferences." }
 ];
 
 const tiktokLinks = [

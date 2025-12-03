@@ -15,6 +15,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  loading: boolean;
   login: (user: User) => void;
   logout: () => void;
   tryRefreshToken: () => Promise<User | null>;
@@ -38,11 +39,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   });
 
+  const [loading, setLoading] = useState(true);
+
   const login = async (userData: User) => {
     try {
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
-
       await mergeGuestIntoUser(userData.id);
       await loadCartForUser(userData.id);
     } catch {
@@ -57,7 +59,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
-
     try {
       switchToGuestCart();
     } catch {
@@ -65,7 +66,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         useCartStore.getState().clearCart();
       } catch {}
     }
-
     navigate("/");
   };
 
@@ -94,7 +94,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     let activeUser = currentUser;
-
     if (!activeUser) {
       const refreshed = await tryRefreshToken();
       if (!refreshed) {
@@ -129,12 +128,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await loadCartForUser(user.id);
         await processPendingAdd(user);
       }
+      setLoading(false);
     })();
   }, []);
 
   useEffect(() => {
     if (!user) return;
-
     (async () => {
       try {
         await mergeGuestIntoUser(user.id);
@@ -145,7 +144,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, tryRefreshToken }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, tryRefreshToken }}>
       {children}
     </AuthContext.Provider>
   );

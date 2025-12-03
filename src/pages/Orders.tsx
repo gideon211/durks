@@ -1,4 +1,3 @@
-// src/pages/Orders.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -32,7 +31,7 @@ interface Order {
 
 export default function Orders() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,6 +39,7 @@ export default function Orders() {
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user?.token) return;
 
     const fetchOrders = async () => {
@@ -67,11 +67,12 @@ export default function Orders() {
           deliveryTime: o.deliveryTime ?? null,
         }));
 
-        setOrders(parsed.sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        ));
+        setOrders(
+          parsed.sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
+        );
       } catch (err: any) {
-        console.error("Failed to fetch orders:", err?.response ?? err);
         if (err?.response?.status === 401) {
           toast.error("You are not authorized. Please sign in again.");
           navigate("/auth");
@@ -84,7 +85,7 @@ export default function Orders() {
     };
 
     fetchOrders();
-  }, [user?.token, navigate]);
+  }, [authLoading, user?.token, navigate]);
 
   const statusClass = (status: string) => {
     switch (status) {
@@ -100,7 +101,7 @@ export default function Orders() {
   };
 
   const toggleExpand = (id: string) => {
-    setExpanded(prev => (prev === id ? null : id));
+    setExpanded((prev) => (prev === id ? null : id));
   };
 
   const handleCancelOrder = async (orderId: string) => {
@@ -109,30 +110,27 @@ export default function Orders() {
     try {
       setCancellingOrderId(orderId);
       await axiosInstance.put(`/orders/${orderId}/cancel`);
-
-      setOrders(prev =>
-        prev.map(o =>
+      setOrders((prev) =>
+        prev.map((o) =>
           o.id === orderId
             ? { ...o, orderStatus: "cancelled", paymentStatus: "refunded" }
             : o
         )
       );
-
       toast.success("Order cancelled");
-    } catch (err) {
-      console.error("Cancel error:", err);
+    } catch {
       toast.error("Failed to cancel order");
     } finally {
       setCancellingOrderId(null);
     }
   };
 
-  if (!user) {
+  if (!user || authLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1 flex items-center justify-center">
-          <Button onClick={() => navigate("/auth")}>Sign In</Button>
+          <Loader2 className="animate-spin h-12 w-12 text-accent" />
         </main>
       </div>
     );
@@ -173,7 +171,7 @@ export default function Orders() {
         <h1 className="font-heading text-center text-md font-semibold mb-6">MY ORDERS</h1>
 
         <div className="space-y-4">
-          {orders.map(order => (
+          {orders.map((order) => (
             <motion.div
               key={order.id}
               initial={{ opacity: 0, y: 40 }}
@@ -248,20 +246,20 @@ export default function Orders() {
                 </div>
 
                 {order.orderStatus !== "completed" &&
-                 order.orderStatus !== "cancelled" && (
-                  <Button
-                    variant="destructive"
-                    className="mt-4 w-full"
-                    onClick={() => handleCancelOrder(order.id)}
-                    disabled={cancellingOrderId === order.id}
-                  >
-                    {cancellingOrderId === order.id ? (
-                      <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                    ) : (
-                      "Cancel Order"
-                    )}
-                  </Button>
-                )}
+                  order.orderStatus !== "cancelled" && (
+                    <Button
+                      variant="destructive"
+                      className="mt-4 w-full"
+                      onClick={() => handleCancelOrder(order.id)}
+                      disabled={cancellingOrderId === order.id}
+                    >
+                      {cancellingOrderId === order.id ? (
+                        <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                      ) : (
+                        "Cancel Order"
+                      )}
+                    </Button>
+                  )}
               </div>
             </motion.div>
           ))}

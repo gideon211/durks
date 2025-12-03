@@ -87,7 +87,6 @@ export default function Checkout(): JSX.Element {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // store hooks
   const cart = useCartStore((s) => s.cart) as CartItem[];
   const clearCart = useCartStore((s) => s.clearCart) as () => void;
   const fetchCart = useCartStore((s) => s.fetchCart) as () => Promise<void>;
@@ -116,7 +115,7 @@ export default function Checkout(): JSX.Element {
   }, [cart, navigate]);
 
   useEffect(() => {
-    const zone = zones.find((z) => z.name.toLowerCase() === formData.city.toLowerCase());
+    const zone = zones.find((z) => z.name.toLowerCase() === (formData.city || "").toLowerCase());
     setShippingFee(zone ? zone.fee : 0);
   }, [formData.city]);
 
@@ -127,10 +126,6 @@ export default function Checkout(): JSX.Element {
 
   const generateOrderId = () => "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase();
 
-  // Use local cart for UI summary (keeps responsiveness)
-  // But critical: when the user hits submit we re-fetch server cart to be authoritative.
-
-  // Build normalized items from store cart for display / basic summary
   const validCartItems = useMemo(() => {
     return cart.map((item) => {
       const price = Number(item.price ?? 0);
@@ -153,7 +148,6 @@ export default function Checkout(): JSX.Element {
 
   const finalTotal = itemsTotal + (shippingFee || 0);
 
-  // Debug logs for dev
   useEffect(() => {
     console.debug("Checkout - UI cart:", cart);
     console.debug("Checkout - UI validCartItems:", validCartItems);
@@ -171,11 +165,8 @@ export default function Checkout(): JSX.Element {
     try {
       setIsProcessing(true);
 
-      // === CRITICAL: reconcile with server BEFORE computing final amount ===
-      // This ensures any optimistic/local state is reconciled and we use authoritative pack/price.
       await fetchCart();
 
-      // Read latest authoritative cart out of the store
       const latestCart = useCartStore.getState().cart as CartItem[];
 
       if (!latestCart || latestCart.length === 0) {
@@ -184,35 +175,29 @@ export default function Checkout(): JSX.Element {
         return;
       }
 
-      // Compute per-item packPrice (if packs[] available match pack -> price),
-      // otherwise fall back to item.price
-        const authoritativeItems = latestCart.map((item) => {
+      const authoritativeItems = latestCart.map((item) => {
         const quantity = Number(item.qty ?? 1);
-        const packPrice = Number(item.price ?? 0); // always use the price stored in cart
-
+        const packPrice = Number(item.price ?? 0);
         return {
-            drinkId: item.drinkId || item.id,
-            name: item.name ?? "Item",
-            pack: item.pack ?? null,
-            packPrice,
-            quantity,
-            image: item.image ?? "",
-            total: packPrice * quantity,
+          drinkId: item.drinkId || item.id,
+          name: item.name ?? "Item",
+          pack: item.pack ?? null,
+          packPrice,
+          quantity,
+          image: item.image ?? "",
+          total: packPrice * quantity,
         };
-        });
-
+      });
 
       const authoritativeItemsTotal = authoritativeItems.reduce((s, it) => s + Number(it.total || 0), 0);
       const authoritativeFinalTotal = authoritativeItemsTotal + (shippingFee || 0);
 
-      // Debug: show what we'll send to payments endpoint
       console.info("Checkout - authoritativeItems:", authoritativeItems);
       console.info("Checkout - authoritativeItemsTotal:", authoritativeItemsTotal);
       console.info("Checkout - authoritativeFinalTotal:", authoritativeFinalTotal);
 
       const orderId = generateOrderId();
 
-      // PAY ON DELIVERY
       if (formData.paymentMethod === "delivery") {
         await axiosInstance.post("/orders", {
           totalAmount: authoritativeFinalTotal,
@@ -243,7 +228,6 @@ export default function Checkout(): JSX.Element {
         return;
       }
 
-      // CARD PAYMENT (Paystack)
       if (!user || !(user as any).token) {
         toast.error("You must be logged in to pay with card");
         setIsProcessing(false);
@@ -254,7 +238,6 @@ export default function Checkout(): JSX.Element {
 
       const userId = (user as any)?._id ?? (user as any)?.id ?? null;
 
-      // Build metadata/items using authoritative values (packPrice included)
       const metadataItems = authoritativeItems.map((it) => ({
         drinkId: it.drinkId,
         name: it.name,
@@ -270,7 +253,7 @@ export default function Checkout(): JSX.Element {
         fullName: formData.fullName,
         phone: formData.phone,
         address: formData.address,
-        amount: Math.round(authoritativeFinalTotal * 100), // Paystack expects smallest currency unit
+        amount: Math.round(authoritativeFinalTotal * 100),
         provider: "Paystack",
         metadata: {
           userId,
@@ -288,7 +271,6 @@ export default function Checkout(): JSX.Element {
         },
       };
 
-      // Debug: what we send to the server to initialize payment
       console.info("Checkout - initializing payment payload:", payload);
 
       const { data } = await axiosInstance.post("/payments/initialize", payload);
@@ -297,63 +279,6 @@ export default function Checkout(): JSX.Element {
       setIsProcessing(false);
 
       if (data?.authorization_url) {
-
-        // NOTE (Tell your backend dev):
-
-        // I checked everything on your frontend and it's working exactly as it should.
-        // The payload being sent to the backend is correct, and the `amount` value here
-        // is already converted into the proper Paystack kobo amount (e.g., 272500).
-        // Nothing is wrong on your side — the issue is not coming from the frontend.
-
-        // Here's the exact payload the frontend is sending:
-        // {
-        //   email: "archergorden@gmail.com",
-        //   fullName: "Gorden Panyin Archer",
-        //   phone: "0546214293",
-        //   address: "Takoradi",
-        //   amount: 272500,      // <-- Correct Paystack kobo amount, kudos for converting that, you're very good
-        //   metadata: {
-        //     userId: "692f34be53e94f4cc02980e9",
-        //     email: "archergorden@gmail.com",
-        //     fullName: "Gorden Panyin Archer",
-        //     address: "Takoradi",
-        //     deliveryDate: null,
-        //     deliveryTime: null,
-        //     itemsTotal: 2700,
-        //     finalTotal: 2725,
-        //     shippingFee: 25,
-        //     provider: "Paystack",
-        //     items: [
-        //       {
-        //         drinkId: "690f7e605336f76ed11e4d0f",
-        //         name: "Watermelon Juice",
-        //         pack: 24,
-        //         packPrice: 900,
-        //         quantity: 3,
-        //         total: 2700,
-        //         image: "https://res.cloudinary.com/...jpg"
-        //       }
-        //     ]
-        //   }
-        // }
-
-        // The frontend is already generating and sending the correct final amount.
-        // The backend is the service that actually initializes the Paystack payment,
-        // so it must take this exact `amount` from the payload and forward it directly
-        // to Paystack when creating the transaction.
-
-        // Right now the backend appears to be sending the wrong amount or a static one,
-        // which is why Paystack is receiving an incorrect figure.
-
-        // Summary: Frontend = correct and perfect. Backend dev needs to use the `amount` sent in this payload
-        // {
-        //   ...
-        //   amount: 272500 or any amount depending on the value or items purchased,   
-        //   ...
-        // }
-        // when initializing the Paystack transaction.
-
-
         window.location.href = data.authorization_url;
       } else {
         console.error("Missing authorization_url:", data);
@@ -420,21 +345,15 @@ export default function Checkout(): JSX.Element {
               </div>
               <div>
                 <Label>City / Zone</Label>
-                <select
+                <Input
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
+                  placeholder="Enter your city or zone"
                   className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                   disabled={isProcessing}
-                >
-                  <option value="">Select your area</option>
-                  {zones.map((z) => (
-                    <option key={z.name} value={z.name}>
-                      {z.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
             </div>
 
