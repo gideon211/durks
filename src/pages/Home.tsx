@@ -369,7 +369,7 @@ export default function Home() {
                     <Link
                     to="/products/bundle"
                     state={{ activeTab: "bundle" }}
-                    className="inline-block bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm"
+                    className="inline-block bg-white text-green-700 text-base font-semibold py-2 px-4 rounded-full"
                     >
                     Shop Now
                     <ArrowRight className="w-5 h-5 ml-2 inline-block" />
