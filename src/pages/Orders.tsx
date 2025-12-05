@@ -24,6 +24,8 @@ interface Order {
   totalAmount: number;
   orderStatus: string;
   paymentStatus: string;
+  address:string;
+  city:string;
   createdAt: string;
   deliveryDate?: string | null;
   deliveryTime?: string | null;
@@ -64,6 +66,8 @@ export default function Orders() {
           createdAt: o.createdAt ?? new Date().toISOString(),
           deliveryDate: o.deliveryDate ?? null,
           deliveryTime: o.deliveryTime ?? null,
+          address: o.customer?.address ?? "No address provided",
+          city: o.customer?.city ?? "No city provided",
         }));
 
         setOrders(
@@ -193,7 +197,9 @@ export default function Orders() {
                       <p className="text-xs text-muted-foreground mt-1">Delivery: {new Date(order.deliveryDate).toLocaleDateString()}</p>
                     )}
 
-                    <p className="text-md mt-1 font-medium">{order.items.length} item{order.items.length !== 1 ? "s" : ""}</p>
+                    <p className="text-xs mt-1 font-medium">{order.items.length} item{order.items.length !== 1 ? "s" : ""}</p>
+                    <p className="text-xs"> Drop location: {order.address} - {order.city}</p>
+                    
                   </div>
 
                   <div className="text-right">
