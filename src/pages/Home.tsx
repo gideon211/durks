@@ -267,15 +267,16 @@ export default function Home() {
           viewport={{ once: true }}
           transition={{ duration: 1.5 }}
         >
-          <div className="h-[500px] md:h-[600px] lg:h-[700px] w-full overflow-hidden">
+          <div className="h-[500px] md:h-[600px] lg:h-screen w-full overflow-hidden">
             <motion.img
-              src={deskheroImage}
-              alt="Fresh Organic Cold-Pressed Juice"
-              initial={{ opacity: 0, y: -80 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 2.5, ease: "easeOut" }}
-              className="hidden lg:block w-full h-full object-cover"
+            src={deskheroImage}
+            alt="Fresh Organic Cold-Pressed Juice"
+            initial={{ opacity: 0, y: -80 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 2.5, ease: "easeOut" }}
+            className="hidden lg:block w-full lg:h-screen object-cover"
             />
+
 
             <motion.img
               src={heroImage}
@@ -355,10 +356,10 @@ export default function Home() {
 
 
 
-            <div className="w-full sm:py-8 md:py-8 lg:mt-16 ">
+            <div className="w-full sm:py-8 md:py-8 lg:mt-16 lg:px-12">
                 <div className="mb-6 w-full text-center">
-                    <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-center leading-relaxed">CHRISTMAS SPECIALS</h1>
-                    <p className="text-center text-sm text-gray-600 sm:px-2 md:px2 lg:px-8">
+                    <h1 className="text-2xl md:text-4xl lg:text-4xl font-bold text-center leading-relaxed">CHRISTMAS SPECIALS</h1>
+                    <p className="text-center text-sm text-gray-600 sm:px-2 md:px2 lg:px-8 lg:py-2">
                     Celebrate the Season with Our Exclusive Christmas Offers! Hurry, it’s only valid until December 20th. Call us today to place your special order and make this holiday truly unforgettable!
                     </p>
                 </div>
