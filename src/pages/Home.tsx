@@ -355,7 +355,7 @@ export default function Home() {
 
 
 
-            <div className="w-full py-8">
+            <div className="w-full py-8 ">
                 <div className="mb-6 w-full text-center">
                     <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-center leading-relaxed">CHRISTMAS SPECIALS</h1>
                     <p className="text-center text-sm text-gray-600 px-2">
