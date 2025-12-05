@@ -96,6 +96,7 @@ export default function OrdersAdminPage() {
           o.customer?.fullName?.trim() && o.customer?.fullName !== "null null"
             ? o.customer.fullName
             : o.customer?.email || "Unknown";
+            const customerCity = o.customer?.city || "—";
 
         const itemsArr = o.items || [];
 
@@ -125,6 +126,7 @@ export default function OrdersAdminPage() {
         return {
           id,
           customer,
+          customerCity,
           items: itemsSummary,
           qty,
           total: `GH₵ ${Number(totalAmount || 0).toFixed(2)}`,
@@ -466,6 +468,7 @@ export default function OrdersAdminPage() {
               <p className="text-sm">Total: GH₵ {Number(selectedOrder?.totalAmount || 0).toFixed(2)}</p>
               <p className="text-sm">Payment status: {selectedOrder?.paymentStatus || "—"}</p>
               <p className="text-sm">Order status: {selectedOrder?.orderStatus || "—"}</p>
+
             </div>
           </div>
         </Modal>

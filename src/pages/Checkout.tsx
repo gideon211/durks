@@ -11,7 +11,6 @@ import { useCartStore, CartItem } from "@/store/cartStore";
 import { CheckCircle, Loader2, ChevronDownIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { zones } from "@/data/zones";
 import { useAuth } from "@/context/Authcontext";
 import { Modal } from "@/components/Modal";
 
@@ -38,9 +37,7 @@ export function Calendar24({
   return (
     <div className="flex gap-4 mt-4">
       <div className="flex flex-col gap-3">
-        <Label htmlFor="date-picker" className="px-1">
-          Date
-        </Label>
+        <Label htmlFor="date-picker" className="px-1">Date</Label>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" id="date-picker" className="w-32 justify-between font-normal p-4">
@@ -64,9 +61,7 @@ export function Calendar24({
       </div>
 
       <div className="flex flex-col gap-3">
-        <Label htmlFor="time-picker" className="px-1">
-          Time
-        </Label>
+        <Label htmlFor="time-picker" className="px-1">Time</Label>
         <Input
           type="time"
           id="time-picker"
@@ -107,20 +102,15 @@ export default function Checkout(): JSX.Element {
     deliveryDate: undefined as Date | undefined,
     deliveryTime: "",
   });
-  const [shippingFee, setShippingFee] = useState(0);
 
   useEffect(() => {
     if (cart.length === 0) navigate("/cart");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [cart, navigate]);
 
-  useEffect(() => {
-    const zone = zones.find((z) => z.name.toLowerCase() === (formData.city || "").toLowerCase());
-    setShippingFee(zone ? zone.fee : 0);
-  }, [formData.city]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    if (!name) return;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -146,27 +136,36 @@ export default function Checkout(): JSX.Element {
     return validCartItems.reduce((s, it) => s + (Number(it.total) || 0), 0);
   }, [validCartItems]);
 
-  const finalTotal = itemsTotal + (shippingFee || 0);
-
-  useEffect(() => {
-    console.debug("Checkout - UI cart:", cart);
-    console.debug("Checkout - UI validCartItems:", validCartItems);
-    console.debug("Checkout - UI itemsTotal:", itemsTotal, "shippingFee:", shippingFee, "finalTotal:", finalTotal);
-  }, [cart, validCartItems, itemsTotal, shippingFee, finalTotal]);
+  const finalTotal = itemsTotal;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!formData.fullName || !formData.email || !formData.address || !formData.city) {
+    const trimmedCity = String(formData.city || "").trim();
+    const trimmedName = String(formData.fullName || "").trim();
+    const trimmedEmail = String(formData.email || "").trim();
+    const trimmedAddress = String(formData.address || "").trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedAddress || !trimmedCity) {
       toast.error("Please fill all required fields");
       return;
+    }
+
+    if (formData.orderType === "delivery") {
+      if (!formData.deliveryDate) {
+        toast.error("Please select a delivery date");
+        return;
+      }
+      if (!formData.deliveryTime) {
+        toast.error("Please select a delivery time");
+        return;
+      }
     }
 
     try {
       setIsProcessing(true);
 
       await fetchCart();
-
       const latestCart = useCartStore.getState().cart as CartItem[];
 
       if (!latestCart || latestCart.length === 0) {
@@ -190,7 +189,7 @@ export default function Checkout(): JSX.Element {
       });
 
       const authoritativeItemsTotal = authoritativeItems.reduce((s, it) => s + Number(it.total || 0), 0);
-      const authoritativeFinalTotal = authoritativeItemsTotal + (shippingFee || 0);
+      const authoritativeFinalTotal = authoritativeItemsTotal;
 
       const orderId = generateOrderId();
 
@@ -198,12 +197,12 @@ export default function Checkout(): JSX.Element {
         await axiosInstance.post("/orders", {
           totalAmount: authoritativeFinalTotal,
           customer: {
-            fullName: formData.fullName,
-            email: formData.email,
-            phone: formData.phone,
-            address: formData.address,
-            city: formData.city,
-            country: formData.country,
+            fullName: trimmedName,
+            email: trimmedEmail,
+            phone: String(formData.phone || ""),
+            address: trimmedAddress,
+            city: trimmedCity,
+            country: formData.country || "Ghana",
           },
           orderId,
           paymentMethod: "Pay on Delivery",
@@ -216,8 +215,8 @@ export default function Checkout(): JSX.Element {
             total: it.total,
             image: it.image,
           })),
-          deliveryDate: formData.deliveryDate ? formData.deliveryDate.toISOString() : null,
-          deliveryTime: formData.deliveryTime || null,
+          deliveryDate: formData.deliveryDate?.toISOString() || "",
+          deliveryTime: formData.deliveryTime || "",
         });
 
         setShowConfirmation(true);
@@ -235,7 +234,6 @@ export default function Checkout(): JSX.Element {
       setIsRedirectModalOpen(true);
 
       const userId = (user as any)?._id ?? (user as any)?.id ?? null;
-
       const metadataItems = authoritativeItems.map((it) => ({
         drinkId: it.drinkId,
         name: it.name,
@@ -247,12 +245,12 @@ export default function Checkout(): JSX.Element {
       }));
 
       const customerObj = {
-        fullName: formData.fullName,
-        email: formData.email || (user as any)?.email,
-        phone: formData.phone,
-        address: formData.address,
-        city: formData.city,
-        country: formData.country,
+        fullName: trimmedName,
+        email: trimmedEmail || (user as any)?.email,
+        phone: String(formData.phone || ""),
+        address: trimmedAddress,
+        city: trimmedCity,
+        country: formData.country || "Ghana",
       };
 
       const payload: any = {
@@ -267,20 +265,11 @@ export default function Checkout(): JSX.Element {
           customer: customerObj,
           items: metadataItems,
           itemsTotal: authoritativeItemsTotal,
-          shippingFee,
           finalTotal: authoritativeFinalTotal,
-          deliveryDate: formData.deliveryDate ? formData.deliveryDate.toISOString() : null,
-          deliveryTime: formData.deliveryTime || null,
-          fullName: customerObj.fullName,
-          email: customerObj.email,
-          phone: customerObj.phone,
-          address: customerObj.address,
-          city: customerObj.city,
-          provider: "Paystack",
+          deliveryDate: formData.deliveryDate?.toISOString() || "",
+          deliveryTime: formData.deliveryTime || "",
         },
       };
-
-      console.info("Checkout - initializing payment payload:", payload);
 
       const { data } = await axiosInstance.post("/payments/initialize", payload);
 
@@ -290,11 +279,9 @@ export default function Checkout(): JSX.Element {
       if (data?.authorization_url) {
         window.location.href = data.authorization_url;
       } else {
-        console.error("Missing authorization_url:", data);
         toast.error("Payment initialization failed");
       }
     } catch (err: any) {
-      console.error("Checkout error:", err?.response?.data ?? err);
       toast.error("Failed to process order");
       setIsRedirectModalOpen(false);
       setIsProcessing(false);
@@ -309,9 +296,7 @@ export default function Checkout(): JSX.Element {
         <p className="text-muted-foreground text-center max-w-md mb-6">
           Thank you for your purchase. We’re processing your order and will contact you soon.
         </p>
-        <Button size="lg" onClick={() => navigate("/products")}>
-          Continue Shopping
-        </Button>
+        <Button size="lg" onClick={() => navigate("/products")}>Continue Shopping</Button>
       </div>
     );
   }
@@ -329,32 +314,24 @@ export default function Checkout(): JSX.Element {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
                 <Label>Full Name</Label>
-                <Input
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  required
-                  disabled={isProcessing}
-                />
+                <Input name="fullName" value={formData.fullName} onChange={handleChange} required disabled={isProcessing} />
               </div>
+
               <div>
                 <Label>Email</Label>
-                <Input
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  disabled={isProcessing}
-                />
+                <Input name="email" type="email" value={formData.email} onChange={handleChange} required disabled={isProcessing} />
               </div>
+
               <div>
                 <Label>Phone</Label>
                 <Input name="phone" value={formData.phone} onChange={handleChange} required disabled={isProcessing} />
               </div>
+
               <div>
-                <Label>City / Town</Label>
+                <Label htmlFor="city">City / Town</Label>
                 <Input
+                  type="text"
+                  id="city"
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
@@ -368,14 +345,7 @@ export default function Checkout(): JSX.Element {
 
             <div className="mt-4">
               <Label>Address</Label>
-              <Input
-                name="address"
-                placeholder="your specific location"
-                value={formData.address}
-                onChange={handleChange}
-                required
-                disabled={isProcessing}
-              />
+              <Input name="address" placeholder="your specific location" value={formData.address} onChange={handleChange} required disabled={isProcessing} />
             </div>
 
             {formData.orderType === "delivery" && (

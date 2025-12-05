@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import Banner from "../components/CallToOrderBanner";
-
+import ProductCardSkeleton from "@/components/ProductCardSkeleton"
 type PackEntry = { pack: number; price: number };
 
 type Product = {
@@ -377,10 +377,14 @@ export default function Products(): JSX.Element {
 
         {/* Loading indicator */}
         {loadingProducts && (
-          <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground">Refreshing products…</p>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {Array.from({ length: 8 }).map((_, idx) => (
+            <ProductCardSkeleton key={idx} />
+            ))}
+        </div>
         )}
+
+
       </div>
 
       <div>

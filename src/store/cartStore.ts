@@ -40,6 +40,7 @@ interface CartState {
   setCart: (items: CartItem[]) => void;
   loadCartForUser: (userId: string) => Promise<void>;
   mergeGuestIntoUser: (userId: string) => Promise<void>;
+  distinctItems: () => number;
   switchToGuestCart: () => void;
 }
 
@@ -380,6 +381,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   totalQty: () => get().cart.reduce((sum, item) => sum + (item.qty || 0), 0),
+  distinctItems: () => get().cart.length,
 
   totalPrice: () => get().cart.reduce((sum, item) => sum + ((item.price ?? 0) * (item.qty ?? 0)), 0),
 

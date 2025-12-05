@@ -121,7 +121,7 @@ export const ProductCard = ({
           ₵{Number(selectedPrice).toFixed(2)}
         </p>
 
-        <div className="flex flex-col gap-2 mt-1.5">
+        <div className="flex flex-col gap-2 mt-1">
           <select
             value={String(selectedPack)}
             onChange={(e) => handlePackChange(Number(e.target.value))}
@@ -137,7 +137,7 @@ export const ProductCard = ({
           <Button
             size="sm"
             onClick={handleAddToCart}
-            className={`w-full flex justify-center items-center gap-2 font-bold transition-colors ${
+            className={`w-full flex justify-center items-center gap-1 font-bold transition-colors ${
               addedMessage ? "bg-green-500 hover:bg-green-600 text-white" : ""
             }`}
             disabled={isLoading}
