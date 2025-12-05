@@ -1,35 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- Homepage -->
+  <!-- Frontend Pages -->
   <url>
-    <loc>https://duksjuice.com</loc>
+    <loc>https://duksjuice.com/</loc>
     <priority>1.0</priority>
     <changefreq>weekly</changefreq>
   </url>
-
-  <!-- Products page -->
   <url>
     <loc>https://duksjuice.com/products</loc>
     <priority>0.9</priority>
     <changefreq>weekly</changefreq>
   </url>
 
-  <!-- About page -->
+  <!-- Product Categories -->
+  <url>
+    <loc>https://duksjuice.com/products/juice</loc>
+    <priority>0.9</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://duksjuice.com/products/smoothies</loc>
+    <priority>0.9</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://duksjuice.com/products/snacks</loc>
+    <priority>0.9</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <!-- Add more categories here -->
+
+  <!-- Other Pages -->
   <url>
     <loc>https://duksjuice.com/about</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
   </url>
-
-  <!-- Contact page -->
   <url>
     <loc>https://duksjuice.com/contact</loc>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
   </url>
+  <url>
+    <loc>https://duksjuice.com/csr</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://duksjuice.com/cart</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://duksjuice.com/checkout</loc>
+    <priority>0.9</priority>
+    <changefreq>weekly</changefreq>
+  </url>
 
-  <!-- Blog page (if any) -->
-
+  <!-- Admin Pages -->
+  <url>
+    <loc>https://duksjuice.com/admin/dashboard</loc>
+    <priority>0.5</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://duksjuice.com/admin/orders</loc>
+    <priority>0.5</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <!-- Add the rest of your admin pages as before -->
 
 </urlset>
