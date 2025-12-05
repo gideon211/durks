@@ -81,6 +81,8 @@ export function Calendar24({
 export default function Checkout(): JSX.Element {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const distinctItemsCount = useCartStore((s) => s.distinctItems());
+
 
   const cart = useCartStore((s) => s.cart) as CartItem[];
   const clearCart = useCartStore((s) => s.clearCart) as () => void;
@@ -375,7 +377,7 @@ export default function Checkout(): JSX.Element {
 
               <div className="flex justify-between text-sm mb-4">
                 <span className="font-medium">ITEMS SELECTED:</span>
-                <span className="font-semibold">{itemsCount}</span>
+                <span className="font-semibold">{distinctItemsCount}</span>
               </div>
 
               <div className="space-y-2 text-sm">
