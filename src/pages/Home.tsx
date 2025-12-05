@@ -1,24 +1,10 @@
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { motion, Variants, easeOut, useAnimationFrame } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Star, Leaf, Heart, Sparkles, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
@@ -49,7 +35,6 @@ import {
   flavor3,
   flavor4,
 } from "@/constants/imagePaths";
-
 import wellnessPacksImage from "@/assets/wellness-shot.jpg";
 import chooseImage from "@/assets/chooseImage.jpg";
 import eventsImage from "@/assets/events.jpeg";
@@ -58,9 +43,8 @@ import tiktok1 from "@/assets/tiktok-1.jpg";
 import tiktok2 from "@/assets/tiktok-2.jpg";
 import tiktok3 from "@/assets/tiktok-3.jpg";
 import tiktok4 from "@/assets/tiktok-4.jpg";
-import waveDivider from "../assets/wave-haikei.svg";
-import MarqueeBanner from "@/components/ui/MarqueeBanner";
 import { useRef, useState, useEffect } from "react";
+import Carousel from "@/components/Carousel";
 
 const productCategories = [
   // 1. Bundles → 4 images
@@ -68,7 +52,7 @@ const productCategories = [
     id: "bundles",
     name: "BUNDLES",
     slug: "bundles",
-    images: [ bundle3],
+    images: [ bundle4],
     fruits: "Mixed Fruit Packs, Mixed Juice Combos, Cleanse Packs, Family Fruit Bowls",
   },
 
@@ -181,43 +165,6 @@ const productCategories = [
   },
 ];
 
-const testimonials = [
-  {
-    name: "Sarah Martinez",
-    category: "Pure Juices",
-    rating: 5,
-    text: "The pure orange juice from Duk's is incredible! You can taste the freshness in every sip. My kids actually prefer this over sugary drinks now.",
-    location: "Los Angeles, CA",
-  },
-  {
-    name: "James Chen",
-    category: "Cleanse Juices",
-    rating: 5,
-    text: "I completed their 3-day cleanse program and felt absolutely amazing. My energy levels skyrocketed and I lost 5 pounds!",
-    location: "San Francisco, CA",
-  },
-  {
-    name: "Emily Johnson",
-    category: "Smoothies",
-    rating: 5,
-    text: "These smoothies are a lifesaver! The berry blast smoothie is my post-workout ritual. Creamy, delicious, and keeps me full for hours.",
-    location: "Austin, TX",
-  },
-  {
-    name: "Michael Roberts",
-    category: "Workout Shots",
-    rating: 5,
-    text: "These wellness shots are game-changers! The turmeric ginger shot gives me such a boost. Less joint pain and faster recovery times.",
-    location: "Miami, FL",
-  },
-  {
-    name: "Priya Patel",
-    category: "Events",
-    rating: 5,
-    text: "We hired Duk's for our corporate wellness event and they were phenomenal! The juice bar was a huge hit with our employees!",
-    location: "New York, NY",
-  },
-];
 
 const messages = [
   "Packed with vitamins and natural energy",
@@ -416,6 +363,19 @@ export default function Home() {
           </motion.div>
         </motion.section>
 
+
+
+        <div className="w-full py-8">
+            <div className="mb-6 w-full text center">
+                <h1 className=" text-xl font-bold text-center leading-relaxed">CHRISTMAS SPECIALS</h1>
+                <p className="text-center text-sm text-gray-600 px-2">Celebrate the Season with Our Exclusive Christmas Offers! Hurry, it’s only valid until December 20th. Call us today to place your special order and make this holiday truly unforgettable!</p>
+
+            </div>
+            
+
+            <Carousel />
+        </div>
+
         {/* Products Carousel with left/right arrows */}
         <motion.section
           className="py-[5rem] md:py-20 bg-muted/30 relative"
@@ -458,85 +418,87 @@ export default function Home() {
               </button>
 
               {/* Carousel */}
-<motion.div
-  ref={carouselRef}
-  className="w-full flex gap-4 overflow-x-auto pb-6 no-scrollbar smooth-scroll scroll-pl-4"
-  initial="hidden"
-  whileInView="visible"
-  viewport={{ once: true, amount: 0.3 }}
-  variants={containerVariants}
-  style={{ scrollBehavior: "smooth" }}
->
-  {productCategories.map((category) => (
-    <motion.div
-      key={category.id}
-      className="w-[300px] flex-shrink-0"
-      variants={cardVariants}
-    >
-      <div className="relative rounded-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
+                <motion.div
+                ref={carouselRef}
+                className="w-full flex gap-4 overflow-x-auto pb-6 no-scrollbar smooth-scroll scroll-pl-4"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                variants={containerVariants}
+                style={{ scrollBehavior: "smooth" }}
+                >
+                {productCategories.map((category) => (
+                    <motion.div
+                    key={category.id}
+                    className="w-[300px] flex-shrink-0"
+                    variants={cardVariants}
+                    >
+                    <div className="relative rounded-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
 
-        {/* TOP SECTION: IMAGE OR GRID */}
-        <div className="relative h-[32rem] md:h-[34rem] lg:h-[36rem] overflow-hidden">
+                        {/* TOP SECTION: IMAGE OR GRID */}
+                        <div className="relative h-[32rem] md:h-[34rem] lg:h-[36rem] overflow-hidden">
 
-          {/* 👉 MULTIPLE IMAGES (GRID OF 4) */}
-          {category.images ? (
-            <div className=" w-full h-full">
-              {category.images.map((img, index) => (
-                <img
-                  key={index}
-                  src={img}
-                  alt={`${category.name} ${index + 1}`}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-              ))}
-            </div>
-          ) : (
-            /* 👉 SINGLE IMAGE */
-            <img
-              src={category.image}
-              alt={category.name}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-          )}
+                        {/* 👉 MULTIPLE IMAGES (GRID OF 4) */}
+                        {category.images ? (
+                            <div className=" w-full h-full">
+                            {category.images.map((img, index) => (
+                                <img
+                                key={index}
+                                src={img}
+                                alt={`${category.name} ${index + 1}`}
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                />
+                            ))}
+                            </div>
+                        ) : (
+                            /* 👉 SINGLE IMAGE */
+                            <img
+                            src={category.image}
+                            alt={category.name}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            />
+                        )}
 
-          {/* Overlay Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-        </div>
+                        {/* Overlay Gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                        </div>
 
-        {/* BOTTOM CONTENT */}
-        <div className="absolute inset-x-0 bottom-0 p-4 backdrop-blur-md rounded-t-2xl transition-all duration-700 bg-black/30 md:group-hover:bg-black/60">
-          <div className="flex items-center justify-between">
-            <h2 className="text-white text-lg md:text-xl font-bold">
-              {category.name}
-            </h2>
-            <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">
-              +
-            </button>
-          </div>
+                        {/* BOTTOM CONTENT */}
+                        <div className="absolute inset-x-0 bottom-0 p-4 backdrop-blur-md rounded-t-2xl transition-all duration-700 bg-black/30 md:group-hover:bg-black/60">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-white text-lg md:text-xl font-bold">
+                            {category.name}
+                            </h2>
+                            <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">
+                            +
+                            </button>
+                        </div>
 
-          <div className="mt-2 text-white text-sm leading-relaxed opacity-100 translate-y-0 md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-700">
-            <p className="text-xs mt-1 opacity-80">Key Ingredients:</p>
-            <p className="text-xs font-medium mb-3">{category.fruits}</p>
+                        <div className="mt-2 text-white text-sm leading-relaxed opacity-100 translate-y-0 md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-700">
+                            <p className="text-xs mt-1 opacity-80">Key Ingredients:</p>
+                            <p className="text-xs font-medium mb-3">{category.fruits}</p>
 
-            <Link
-              to={`/products/${category.slug}`}
-              className="flex mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm"
-            >
-              Shop Now
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
-          </div>
-        </div>
+                            <Link
+                            to={`/products/${category.slug}`}
+                            className="flex mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm"
+                            >
+                            Shop Now
+                            <ArrowRight className="w-5 h-5 ml-2" />
+                            </Link>
+                        </div>
+                        </div>
 
-      </div>
-    </motion.div>
-  ))}
-</motion.div>
+                    </div>
+                    </motion.div>
+                ))}
+                </motion.div>
 
             </div>
 
           </div>
         </motion.section>
+
+
 
       <div className="bg-green-600 text-white py-2 overflow-hidden font-lexend border-2 border-t-red-400">
         <motion.div

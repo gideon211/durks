@@ -35,7 +35,6 @@ export default function Orders() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
-  const [expanded, setExpanded] = useState<string | null>(null);
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -100,10 +99,6 @@ export default function Orders() {
     }
   };
 
-  const toggleExpand = (id: string) => {
-    setExpanded((prev) => (prev === id ? null : id));
-  };
-
   const handleCancelOrder = async (orderId: string) => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
 
@@ -112,9 +107,7 @@ export default function Orders() {
       await axiosInstance.put(`/orders/${orderId}/cancel`);
       setOrders((prev) =>
         prev.map((o) =>
-          o.id === orderId
-            ? { ...o, orderStatus: "cancelled", paymentStatus: "refunded" }
-            : o
+          o.id === orderId ? { ...o, orderStatus: "cancelled", paymentStatus: "refunded" } : o
         )
       );
       toast.success("Order cancelled");
@@ -125,145 +118,130 @@ export default function Orders() {
     }
   };
 
-  if (!user || authLoading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="animate-spin h-12 w-12 text-accent" />
-        </main>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="animate-spin h-12 w-12 text-accent" />
-        </main>
-      </div>
-    );
-  }
-
-  if (orders.length === 0) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <Package className="mx-auto h-14 w-14 text-muted-foreground" />
-            <h1 className="text-2xl font-bold mt-4">No orders yet</h1>
-            <Button className="mt-4" onClick={() => navigate("/products")}>
-              Browse Drinks
-            </Button>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  const isBusy = authLoading || loading;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="container mx-auto px-4 py-6 mt-14">
-        <h1 className="font-heading text-center text-md font-semibold mb-6">MY ORDERS</h1>
+        <h1 className="font-heading text-center text-xl font-semibold mb-6">MY ORDERS</h1>
 
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <motion.div
-              key={order.id}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-card border border-border rounded-xl p-4"
-            >
-              <p className="text-[10px] text-muted-foreground mb-1">
-                Order ID: {order.id}
-              </p>
-
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-md text-muted-foreground">
-                    {new Date(order.createdAt).toLocaleString()}
-                  </p>
-
-                  {order.deliveryDate && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Delivery: {new Date(order.deliveryDate).toLocaleDateString()}
-                    </p>
-                  )}
-
-                  <p className="text-md mt-1 font-medium">
-                    {order.items.length} item{order.items.length !== 1 ? "s" : ""}
-                  </p>
-                </div>
-
-                <div className="text-right">
-                  <p className={statusClass(order.orderStatus)}>
-                    {order.orderStatus.toUpperCase()}
-                  </p>
-                  <p className="font-medium text-sm mt-2">
-                    ₵{Number(order.totalAmount ?? 0).toFixed(2)}
-                  </p>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() => toggleExpand(order.id)}
-                  >
-                    {expanded === order.id ? "Hide Items" : "View More"}
-                  </Button>
-                </div>
-              </div>
-
-              <div
-                className={cn(
-                  "transition-all overflow-hidden mt-4",
-                  expanded === order.id ? "max-h-[600px]" : "max-h-0"
-                )}
+        {isBusy ? (
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+                className="bg-card border border-border rounded-xl p-4"
               >
-                <div className="space-y-3">
-                  {order.items.map((item, index) => (
-                    <div
-                      key={item.drinkId ?? `${order.id}-item-${index}`}
-                      className="bg-gray-100 p-3 rounded-lg flex items-center gap-3"
-                    >
-                      <img
-                        src={item.image ?? "/placeholder.png"}
-                        alt={item.name}
-                        className="w-14 h-14 rounded object-cover"
-                      />
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-gray-600">
-                          {item.quantity} × ₵{Number(item.price ?? 0).toFixed(2)}
-                        </p>
-                      </div>
+                <div className="animate-pulse">
+                  <div className="h-3 bg-slate-200 rounded w-1/3 mb-3" />
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2 w-2/3">
+                      <div className="h-4 bg-slate-200 rounded w-3/4" />
+                      <div className="h-3 bg-slate-200 rounded w-1/2" />
+                      <div className="h-3 bg-slate-200 rounded w-1/4" />
                     </div>
-                  ))}
+                    <div className="w-1/3 text-right">
+                      <div className="h-6 bg-slate-200 rounded inline-block ml-auto w-20" />
+                      <div className="h-8 bg-slate-200 rounded mt-3 w-full" />
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {Array.from({ length: 2 }).map((_, j) => (
+                      <div key={j} className="flex items-center gap-3">
+                        <div className="w-14 h-14 bg-slate-200 rounded" />
+                        <div className="flex-1">
+                          <div className="h-3 bg-slate-200 rounded w-1/3 mb-2" />
+                          <div className="h-3 bg-slate-200 rounded w-1/4" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="min-h-[50vh] flex items-center justify-center">
+            <div className="text-center">
+              <Package className="mx-auto h-14 w-14 text-muted-foreground" />
+              <h1 className="text-2xl font-bold mt-4">No orders yet</h1>
+              <Button className="mt-4" onClick={() => navigate("/products")}>
+                Browse Drinks
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {orders.map((order) => (
+              <motion.div
+                key={order.id}
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card border border-border rounded-xl p-4"
+              >
+                <p className="text-[10px] text-muted-foreground mb-1">Order ID: {order.id}</p>
+
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-md text-muted-foreground">{new Date(order.createdAt).toLocaleString()}</p>
+
+                    {order.deliveryDate && (
+                      <p className="text-xs text-muted-foreground mt-1">Delivery: {new Date(order.deliveryDate).toLocaleDateString()}</p>
+                    )}
+
+                    <p className="text-md mt-1 font-medium">{order.items.length} item{order.items.length !== 1 ? "s" : ""}</p>
+                  </div>
+
+                  <div className="text-right">
+                    <p className={statusClass(order.orderStatus)}>{order.orderStatus.toUpperCase()}</p>
+                    <p className="font-medium text-sm mt-2">₵{Number(order.totalAmount ?? 0).toFixed(2)}</p>
+                  </div>
                 </div>
 
-                {order.orderStatus !== "completed" &&
-                  order.orderStatus !== "cancelled" && (
-                    <Button
-                      variant="destructive"
-                      className="mt-4 w-full"
-                      onClick={() => handleCancelOrder(order.id)}
-                      disabled={cancellingOrderId === order.id}
-                    >
-                      {cancellingOrderId === order.id ? (
-                        <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                      ) : (
-                        "Cancel Order"
-                      )}
+                <div className={cn("mt-4")}> 
+                  <div className="space-y-3">
+                    {order.items.map((item, index) => (
+                        <div
+                        key={item.drinkId ?? `${order.id}-item-${index}`}
+                        className="bg-gray-100 p-3 rounded-lg flex items-start gap-3"
+                        >
+                        <img
+                            src={item.image ?? "/placeholder.png"}
+                            alt={item.name}
+                            className="w-14 h-14 rounded object-cover"
+                        />
+
+                        <div className="flex-1 flex flex-col">
+                            <p className="font-medium text-sm leading-tight">{item.name}</p>
+
+                            <ul className="text-xs text-gray-700 space-y-1 mt-1">
+                            {item.pack && <li>Pack: {item.pack}</li>}
+                            <li>Quantity: {item.quantity}</li>
+                            <li>Price: ₵{Number(item.price ?? 0).toFixed(2)}</li>
+                            </ul>
+                        </div>
+                        </div>
+
+
+
+
+                    ))}
+                  </div>
+
+                  {order.orderStatus !== "completed" && order.orderStatus !== "cancelled" && (
+                    <Button variant="destructive" className="mt-4 w-full" onClick={() => handleCancelOrder(order.id)} disabled={cancellingOrderId === order.id}>
+                      {cancellingOrderId === order.id ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : "Cancel Order"}
                     </Button>
                   )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

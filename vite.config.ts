@@ -8,12 +8,11 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     proxy: {
-      // 👇 All API requests starting with /api will be forwarded to your backend
       "/api": {
-        target: "https://updated-duks-backend-1-0.onrender.com", // ← change this to your backend base URL
-        changeOrigin: true,              // required for virtual hosted sites
-        secure: false,                   // allow self-signed certificates (https)
-        rewrite: (path) => path.replace(/^\/api/, ""), // remove /api prefix when forwarding
+        target: "https://updated-duks-backend-1-0.onrender.com", 
+        changeOrigin: true,              
+        secure: false,                  
+        rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
   },
