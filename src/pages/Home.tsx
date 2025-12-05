@@ -355,16 +355,27 @@ export default function Home() {
 
 
 
-        <div className="w-full py-8">
-            <div className="mb-6 w-full text center">
-                <h1 className=" text-xl font-bold text-center leading-relaxed">CHRISTMAS SPECIALS</h1>
-                <p className="text-center text-sm text-gray-600 px-2">Celebrate the Season with Our Exclusive Christmas Offers! Hurry, it’s only valid until December 20th. Call us today to place your special order and make this holiday truly unforgettable!</p>
+            <div className="w-full py-8">
+                <div className="mb-6 w-full text-center">
+                    <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-center leading-relaxed">CHRISTMAS SPECIALS</h1>
+                    <p className="text-center text-sm text-gray-600 px-2">
+                    Celebrate the Season with Our Exclusive Christmas Offers! Hurry, it’s only valid until December 20th. Call us today to place your special order and make this holiday truly unforgettable!
+                    </p>
+                </div>
 
+                <Carousel />
+
+                <div className="text-center mt-4">
+                    <Link
+                    to="/products/bundle"
+                    state={{ activeTab: "bundle" }}
+                    className="inline-block bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm"
+                    >
+                    Shop Now
+                    <ArrowRight className="w-5 h-5 ml-2 inline-block" />
+                    </Link>
+                </div>
             </div>
-            
-
-            <Carousel />
-        </div>
 
         {/* Products Carousel with left/right arrows */}
         <motion.section
