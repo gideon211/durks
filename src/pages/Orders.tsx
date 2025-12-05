@@ -191,7 +191,7 @@ export default function Orders() {
 
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-md text-muted-foreground">{new Date(order.createdAt).toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">{new Date(order.createdAt).toLocaleString()}</p>
 
                     {order.deliveryDate && (
                       <p className="text-xs text-muted-foreground mt-1">Delivery: {new Date(order.deliveryDate).toLocaleDateString()}</p>
