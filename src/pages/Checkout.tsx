@@ -198,14 +198,17 @@ export default function Checkout(): JSX.Element {
       if (formData.paymentMethod === "delivery") {
         await axiosInstance.post("/orders", {
           totalAmount: authoritativeFinalTotal,
-          customer: {
+            customer: {
             fullName: trimmedName,
             email: trimmedEmail,
             phone: String(formData.phone || ""),
             address: trimmedAddress,
             city: trimmedCity,
             country: formData.country || "Ghana",
-          },
+            deliveryDate: formData.deliveryDate || null,
+            deliveryTime: formData.deliveryTime || null,
+            },
+
           orderId,
           paymentMethod: "Pay on Delivery",
           items: authoritativeItems.map((it) => ({
@@ -253,13 +256,18 @@ export default function Checkout(): JSX.Element {
         address: trimmedAddress,
         city: trimmedCity,
         country: formData.country || "Ghana",
+        deliveryDate: formData.deliveryDate || null,
+        deliveryTime: formData.deliveryTime || null,
       };
 
       const payload: any = {
         email: customerObj.email,
         fullName: customerObj.fullName,
         phone: customerObj.phone,
+        city: customerObj.city,
         address: customerObj.address,
+        deliveryDate: customerObj.deliveryDate,
+        deliveryTime: customerObj.deliveryTime,
         amount: Math.round(authoritativeFinalTotal * 100),
         provider: "Paystack",
         metadata: {
