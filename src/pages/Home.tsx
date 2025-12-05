@@ -51,8 +51,8 @@ const productCategories = [
   {
     id: "bundles",
     name: "BUNDLES",
-    slug: "bundles",
-    images: [ bundle4],
+    slug: "bundle",
+    images: [ bundle3],
     fruits: "Mixed Fruit Packs, Mixed Juice Combos, Cleanse Packs, Family Fruit Bowls",
   },
 
@@ -152,17 +152,7 @@ const productCategories = [
     benefit: "Professional Catering & Bulk Orders",
     bgColor: "bg-[#eb2e4f]",
   },
-  {
-    id: "shots-workout",
-    name: "WORKOUT SHOTS",
-    slug: "workout-shots",
-    image: pureJuiceImage,
-    description:
-      "Power-packed 2oz wellness shots designed for peak performance. Concentrated blends deliver instant energy, reduce inflammation, and accelerate recovery. Perfect pre or post-workout fuel.",
-    fruits: "Turmeric, Ginger, Beetroot, Wheatgrass, Cayenne",
-    benefit: "Performance & Quick Recovery",
-    bgColor: "bg-[#ff7017]",
-  },
+
 ];
 
 
