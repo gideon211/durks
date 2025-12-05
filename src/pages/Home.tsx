@@ -355,10 +355,10 @@ export default function Home() {
 
 
 
-            <div className="w-full py-8 ">
+            <div className="w-full sm:py-8 md:py-8 lg:mt-16 ">
                 <div className="mb-6 w-full text-center">
                     <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-center leading-relaxed">CHRISTMAS SPECIALS</h1>
-                    <p className="text-center text-sm text-gray-600 px-2">
+                    <p className="text-center text-sm text-gray-600 sm:px-2 md:px2 lg:px-8">
                     Celebrate the Season with Our Exclusive Christmas Offers! Hurry, it’s only valid until December 20th. Call us today to place your special order and make this holiday truly unforgettable!
                     </p>
                 </div>
