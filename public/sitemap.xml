@@ -3,7 +3,7 @@
 
   <!-- Homepage -->
   <url>
-    <loc>https://duksjuice.com/</loc>
+    <loc>https://duksjuice.com</loc>
     <priority>1.0</priority>
     <changefreq>weekly</changefreq>
   </url>
@@ -30,10 +30,6 @@
   </url>
 
   <!-- Blog page (if any) -->
-  <url>
-    <loc>https://duksjuice.com/blog</loc>
-    <priority>0.7</priority>
-    <changefreq>weekly</changefreq>
-  </url>
+
 
 </urlset>
