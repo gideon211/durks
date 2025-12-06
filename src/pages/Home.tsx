@@ -299,7 +299,7 @@ export default function Home() {
 
 
                             <p className="text-xl lg:text-xl text-white/90 max-w-2xl">
-                               Health is my complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
+                               Health isn't complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
                             </p>
                             <div className="flex gap-4 pt-4">
                                 <Button asChild size="md" variant="hero">
@@ -343,7 +343,7 @@ export default function Home() {
                     </h1>
 
                     <p className="text-lg sm:text-xl text-neutral-900 max-w-md px-4">
-                    Health is my complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
+                    Health isn't complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
                     </p>
                     <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2 font-semibold">
                     <Link to="/products">
