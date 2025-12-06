@@ -31,6 +31,7 @@ import Analytics from "./admin/pages/Analytics";
 import Users from "./admin/pages/Users";
 import Settings from "./admin/pages/Settings";
 
+
 const queryClient = new QueryClient();
 
 function AnimatedRoutes() {

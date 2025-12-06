@@ -1,7 +1,7 @@
 // src/admin/pages/Orders.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import AdminLayout from "@/admin/components/AdminLayout";
 import DataTable from "@/admin/components/DataTable";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, Eye, Package, X, Loader2 as LoaderIcon } from "lucide-react";
+import { Search, Filter, Eye, Package, X, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "@/api/axios"; // make sure your axios instance includes auth token
+import axiosInstance from "@/api/axios";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { Modal } from "@/components/Modal";
 
 type RawOrder = any;
@@ -33,6 +32,7 @@ interface TableRow {
   fulfillment: string;
   date: string;
   _raw?: RawOrder;
+  customerCity?: string;
 }
 
 export default function OrdersAdminPage() {
@@ -44,62 +44,49 @@ export default function OrdersAdminPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | string>("all");
   const [paymentFilter, setPaymentFilter] = useState<"all" | string>("all");
-  const [dateRange, setDateRange] = useState<"recent" | "month" | "quarter">(
-    "recent"
-  );
+  const [dateRange, setDateRange] = useState<"recent" | "month" | "quarter">("recent");
 
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
-  // Modal state
   const [selectedOrder, setSelectedOrder] = useState<RawOrder | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    fetchAllOrders();
-  }, []);
-
-  async function fetchAllOrders() {
+  const fetchAllOrders = useCallback(async () => {
     try {
       setLoading(true);
       setFetchError(null);
-
-      const { data } = await axiosInstance.get("/orders");
+      const { data } = await axiosInstance.get("/orders/admin/all");
       const backendOrders = data.orders ?? data;
-
-      // ⭐ SORT LATEST FIRST (DESCENDING)
       const sorted = Array.isArray(backendOrders)
-        ? backendOrders.sort((a, b) => {
-            const dateA = new Date(a.createdAt).getTime();
-            const dateB = new Date(b.createdAt).getTime();
-            return dateB - dateA; // latest on top
-          })
+        ? backendOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         : [];
-
       setOrders(sorted);
     } catch (err: any) {
       console.error("Failed to fetch orders:", err);
-      const msg =
-        err?.response?.data?.message || err.message || "Failed to load orders";
+      const msg = err?.response?.data?.message || err.message || "Failed to load orders";
       setFetchError(msg);
       toast.error(msg);
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchAllOrders();
+    const id = setInterval(fetchAllOrders, 15000);
+    return () => clearInterval(id);
+  }, [fetchAllOrders]);
 
   const rows: TableRow[] = useMemo(
     () =>
       orders.map((o: any) => {
         const id = o._id;
-
         const customer =
           o.customer?.fullName?.trim() && o.customer?.fullName !== "null null"
             ? o.customer.fullName
             : o.customer?.email || "Unknown";
-            const customerCity = o.customer?.city || "—";
-
+        const customerCity = o.customer?.city || "—";
         const itemsArr = o.items || [];
-
         const itemsSummary =
           itemsArr.length > 0
             ? itemsArr
@@ -108,21 +95,11 @@ export default function OrdersAdminPage() {
                 .join(", ") +
               (itemsArr.length > 3 ? ` +${itemsArr.length - 3} more` : "")
             : "—";
-
-        const qty = itemsArr.reduce(
-          (s: number, it: any) => s + (it.quantity || 0),
-          0
-        );
-
+        const qty = itemsArr.reduce((s: number, it: any) => s + (it.quantity || 0), 0);
         const totalAmount = o.totalAmount || 0;
-
         const payment = (o.paymentStatus || "pending").toLowerCase();
         const fulfillment = (o.orderStatus || "pending").toLowerCase();
-
-        const date = o.createdAt
-          ? new Date(o.createdAt).toLocaleDateString()
-          : "—";
-
+        const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "—";
         return {
           id,
           customer,
@@ -143,35 +120,19 @@ export default function OrdersAdminPage() {
     return rows.filter((r) => {
       if (search) {
         const q = search.toLowerCase();
-        if (
-          !(
-            r.id.toLowerCase().includes(q) ||
-            r.customer.toLowerCase().includes(q) ||
-            r.items.toLowerCase().includes(q)
-          )
-        )
+        if (!(r.id.toLowerCase().includes(q) || r.customer.toLowerCase().includes(q) || r.items.toLowerCase().includes(q)))
           return false;
       }
-      if (statusFilter !== "all" && r.fulfillment !== statusFilter.toLowerCase())
-        return false;
+      if (statusFilter !== "all" && r.fulfillment !== statusFilter.toLowerCase()) return false;
       if (paymentFilter !== "all" && r.payment !== paymentFilter.toLowerCase()) return false;
-
       if (dateRange) {
-        const days =
-          dateRange === "recent"
-            ? 7
-            : dateRange === "month"
-            ? 30
-            : dateRange === "quarter"
-            ? 90
-            : 0;
+        const days = dateRange === "recent" ? 7 : dateRange === "month" ? 30 : dateRange === "quarter" ? 90 : 0;
         if (days > 0) {
           const created = new Date(r._raw?.createdAt || r.date).getTime();
           const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
           if (isNaN(created) || created < cutoff) return false;
         }
       }
-
       return true;
     });
   }, [rows, search, statusFilter, paymentFilter, dateRange]);
@@ -187,11 +148,10 @@ export default function OrdersAdminPage() {
     setIsModalOpen(false);
   }
 
-  // Helper to format delivery date/time safely
   function formatDeliveryDate(dateStr?: string | null) {
     if (!dateStr) return "—";
     const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr; // fallback if not ISO
+    if (isNaN(d.getTime())) return dateStr;
     return d.toLocaleDateString();
   }
 
@@ -199,11 +159,9 @@ export default function OrdersAdminPage() {
     if (!orderId) return;
     const ok = window.confirm("Mark this order as completed/delivered?");
     if (!ok) return;
-
     try {
       setUpdatingOrderId(orderId);
-      // NOTE: backend expects PUT /orders/:id/status with { orderStatus }
-      const res = await axiosInstance.put(`/orders/${orderId}/status`, { orderStatus: "completed" });
+      const res = await axiosInstance.patch(`/orders/admin/${orderId}/status`, { orderStatus: "completed" });
       const updatedOrder = res.data.order ?? res.data;
       setOrders((prev) =>
         prev.map((o) =>
@@ -225,11 +183,9 @@ export default function OrdersAdminPage() {
     if (!orderId) return;
     const ok = window.confirm("Cancel this order? Payment may be refunded.");
     if (!ok) return;
-
     try {
       setUpdatingOrderId(orderId);
-      // NOTE: backend expects PUT /orders/:id/cancel
-      const res = await axiosInstance.put(`/orders/${orderId}/cancel`);
+      const res = await axiosInstance.patch(`/orders/${orderId}/cancel`);
       const updatedOrder = res.data.order ?? res.data;
       setOrders((prev) =>
         prev.map((o) =>
@@ -257,10 +213,7 @@ export default function OrdersAdminPage() {
       key: "payment",
       label: "Payment",
       render: (value: string) => (
-        <Badge
-          variant={value === "paid" ? "default" : "destructive"}
-          className="whitespace-nowrap"
-        >
+        <Badge variant={value === "paid" ? "default" : "destructive"} className="whitespace-nowrap">
           {value}
         </Badge>
       ),
@@ -269,14 +222,7 @@ export default function OrdersAdminPage() {
       key: "fulfillment",
       label: "Fulfillment",
       render: (value: string) => {
-        const variant =
-          value === "completed"
-            ? "default"
-            : value === "shipped"
-            ? "secondary"
-            : value === "processing"
-            ? "outline"
-            : "destructive";
+        const variant = value === "completed" ? "default" : value === "shipped" ? "secondary" : value === "processing" ? "outline" : "destructive";
         return (
           <Badge variant={variant} className="whitespace-nowrap">
             {value}
@@ -295,25 +241,12 @@ export default function OrdersAdminPage() {
             <Button variant="ghost" size="sm" onClick={() => openOrderModal(row?._raw)}>
               <Eye className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleMarkCompleted(rowId)}
-              disabled={updatingOrderId === rowId || !row}
-              title="Mark Completed"
-            >
-              {updatingOrderId === rowId ? <LoaderIcon className="h-4 w-4 animate-spin" /> : <Package className="h-4 w-4" />}
+            <Button variant="ghost" size="sm" onClick={() => handleMarkCompleted(rowId)} disabled={updatingOrderId === rowId || !row} title="Mark Completed">
+              {updatingOrderId === rowId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Package className="h-4 w-4" />}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleCancelOrder(rowId)}
-              disabled={updatingOrderId === rowId || !row}
-              title="Cancel Order"
-            >
+            <Button variant="ghost" size="sm" onClick={() => handleCancelOrder(rowId)} disabled={updatingOrderId === rowId || !row} title="Cancel Order">
               <X className="h-4 w-4" />
             </Button>
-
           </div>
         );
       },
@@ -333,12 +266,7 @@ export default function OrdersAdminPage() {
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 px-8">
           <div className="relative flex-1 min-w-[220px] sm:min-w-[250px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by order ID or customer..."
-              className="pl-10 w-full"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+            <Input placeholder="Search by order ID or customer..." className="pl-10 w-full" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
 
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
@@ -392,24 +320,20 @@ export default function OrdersAdminPage() {
                 <Button onClick={fetchAllOrders}>Retry</Button>
               </div>
             ) : (
-              <DataTable
-                columns={columns}
-                data={filteredRows}
-                emptyMessage="No orders match your filters — try clearing filters."
-              />
+              <DataTable columns={columns} data={filteredRows} emptyMessage="No orders match your filters — try clearing filters." />
             )}
           </div>
         </div>
 
-        {/* Order Details Modal */}
         <Modal
           isOpen={isModalOpen}
           title={`Order ${selectedOrder?.orderNumber || selectedOrder?._id || ""}`}
           onClose={closeOrderModal}
           footer={
             <div className="flex gap-2 w-full">
-              <Button variant="ghost" onClick={closeOrderModal} className="flex-1">Close</Button>
-
+              <Button variant="ghost" onClick={closeOrderModal} className="flex-1">
+                Close
+              </Button>
             </div>
           }
         >
@@ -429,9 +353,7 @@ export default function OrdersAdminPage() {
             <div>
               <h3 className="text-sm font-medium">Address</h3>
               <p className="text-sm">
-                {selectedOrder?.customer?.address && selectedOrder?.customer?.address !== "Not provided"
-                  ? selectedOrder.customer.address
-                  : "—"}
+                {selectedOrder?.customer?.address && selectedOrder?.customer?.address !== "Not provided" ? selectedOrder.customer.address : "—"}
                 {selectedOrder?.customer?.city ? `, ${selectedOrder.customer.city}` : ""}
                 {selectedOrder?.customer?.country ? `, ${selectedOrder.customer.country}` : ""}
               </p>
@@ -445,22 +367,30 @@ export default function OrdersAdminPage() {
 
             <div>
               <h3 className="text-sm font-bold">ITEMS</h3>
-            {selectedOrder?.items?.length ? (
-            <ul className="list-disc text-sm max-h-40 overflow-auto space-y-2">
-            {selectedOrder.items.map((it: any, idx: number) => (
-                <li key={idx} className="flex flex-col gap-1 border-2 border-gray-400 p-2">
-                <span><strong>Quantity:</strong> {it.quantity}</span>
-                <span><strong>Name:</strong> {it.name}</span>
-                {it.pack && <span><strong>Pack:</strong> {it.pack}</span>}
-                <span><strong>Price:</strong> GH₵ {Number(it.price || 0).toFixed(2)}</span>
-                </li>
-            ))}
-            </ul>
-
-
-            ) : (
-            <p className="text-sm">—</p>
-            )}
+              {selectedOrder?.items?.length ? (
+                <ul className="list-disc text-sm max-h-40 overflow-auto space-y-2">
+                  {selectedOrder.items.map((it: any, idx: number) => (
+                    <li key={idx} className="flex flex-col gap-1 border-2 border-gray-400 p-2">
+                      <span>
+                        <strong>Quantity:</strong> {it.quantity}
+                      </span>
+                      <span>
+                        <strong>Name:</strong> {it.name}
+                      </span>
+                      {it.pack && (
+                        <span>
+                          <strong>Pack:</strong> {it.pack}
+                        </span>
+                      )}
+                      <span>
+                        <strong>Price:</strong> GH₵ {Number(it.price || 0).toFixed(2)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm">—</p>
+              )}
             </div>
 
             <div>
@@ -468,7 +398,6 @@ export default function OrdersAdminPage() {
               <p className="text-sm">Total: GH₵ {Number(selectedOrder?.totalAmount || 0).toFixed(2)}</p>
               <p className="text-sm">Payment status: {selectedOrder?.paymentStatus || "—"}</p>
               <p className="text-sm">Order status: {selectedOrder?.orderStatus || "—"}</p>
-
             </div>
           </div>
         </Modal>
