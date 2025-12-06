@@ -372,15 +372,15 @@ export default function Home() {
   variants={containerVariants}
 >
   <motion.div
-    className="mb-6 w-full text-center mt-16"
+    className="mb-6 w-full text-center mt-16 px-4 sm:px-6 md:px-8 lg:px-12"
     initial={{ opacity: 0, y: 50 }}
     whileInView={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.8 }}
   >
-    <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-center mb-4">
+    <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-center mb-4 ">
       CHRISTMAS SPECIALS
     </h1>
-    <p className="text-center text-sm text-gray-600 sm:px-4 md:px-4 lg:px-8 lg:py-2 leading-relaxed">
+    <p className="text-center text-sm text-gray-600 lg:py-2 leading-relaxed">
     Celebrate the Season with Our Exclusive Christmas Offers! Hurry, it’s only
     valid until December 20th. Order through the website to enjoy these benefits!
     </p>
