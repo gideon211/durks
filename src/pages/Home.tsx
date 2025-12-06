@@ -347,7 +347,7 @@ export default function Home() {
                     </span>
                     </h1>
 
-                    <p className="text-base sm:text-xl text-gray-800 max-w-md px-1">
+                    <p className="text-base sm:text-xl text-gray-800 max-w-md px-2">
                     Health isn't complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
                     </p>
                     <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2 font-semibold">
@@ -372,7 +372,7 @@ export default function Home() {
   variants={containerVariants}
 >
   <motion.div
-    className="mb-6 w-full text-center mt-12"
+    className="mb-6 w-full text-center mt-16"
     initial={{ opacity: 0, y: 50 }}
     whileInView={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.8 }}
