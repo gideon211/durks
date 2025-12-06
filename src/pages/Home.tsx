@@ -337,7 +337,7 @@ export default function Home() {
                         fontStyle: "italic",
                         }}
                     >
-                        Wellness
+                    Wellness
                     </span>
                     </h1>
 
