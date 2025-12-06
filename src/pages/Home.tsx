@@ -35,6 +35,11 @@ import {
   flavor3,
   flavor4,
 } from "@/constants/imagePaths";
+
+import Instagram from "@/assets/instagram.svg"
+import Tiktok from "@/assets/tiktok.svg"
+import  Facebook from "@/assets/facebook.svg"
+import Twitter from "@/assets/twitter.svg"
 import wellnessPacksImage from "@/assets/wellness-shot.jpg";
 import chooseImage from "@/assets/chooseImage.jpg";
 import eventsImage from "@/assets/events.jpeg";
@@ -580,7 +585,7 @@ export default function Home() {
                         </motion.div>
 
                         <motion.div className="grid md:grid-cols-3 gap-6 md:gap-8 " variants={containerVariants}>
-                            {[{ icon: Leaf, title: "Credibility", text: "juices are all pure with no added sugar, preservatives and artificial colors. Juices are bottled as juiced." },
+                            {[{ icon: Leaf, title: "Credibility", text: "Juices are all pure with no added sugar, preservatives and artificial colors. Juices are bottled as juiced." },
                                 { icon: Sparkles, title: "Bursting with Benefits", text: "Cold-press technology preserves maximum vitamins, minerals, and enzymes." },
                                 { icon: Heart, title: "Deliciously Elevated", text: "Our master blenders create flavor combinations that excite your taste buds while nourishing your body." }
                             ].map((item, index) => (
@@ -610,8 +615,20 @@ export default function Home() {
                 >
                     <div className="container mx-auto px-4">
                         <motion.div className="text-center mb-12 md:mb-16" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-                            <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Join Us On TikTok</h2>
+                            <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Join us on our socials</h2>
                             <p className="text-md md:text-xl font-body text-white/80">Follow @duks_juice for daily juice inspo, recipes, and wellness tips</p>
+                            <div className="flex gap-6 mx-auto justify-center mt-4">
+                            <a href="https://www.tiktok.com/@duks_juice" target="_blank" rel="noopener noreferrer">
+                                <img src={Tiktok} alt="tiktok" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover" />
+                            </a>
+                            <a href="https://www.instagram.com/duks_juice" target="_blank" rel="noopener noreferrer">
+                                <img src={Instagram} alt="instagram" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover" />
+                            </a>
+                            <a href="https://facebook.com/duks_juice" target="_blank" rel="noopener noreferrer">
+                                <img src={Facebook} alt="facebook" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover" />
+                            </a>
+                            </div>
+
                         </motion.div>
 
                         <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
