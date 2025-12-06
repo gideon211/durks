@@ -45,6 +45,7 @@ import tiktok3 from "@/assets/tiktok-3.jpg";
 import tiktok4 from "@/assets/tiktok-4.jpg";
 import { useRef, useState, useEffect } from "react";
 import Carousel from "@/components/Carousel";
+import { Description } from "@radix-ui/react-toast";
 
 const productCategories = [
   // 1. Bundles → 4 images
@@ -53,7 +54,7 @@ const productCategories = [
     name: "BUNDLES",
     slug: "bundle",
     images: [ bundle3],
-    fruits: "Mixed Fruit Packs, Mixed Juice Combos, Cleanse Packs, Family Fruit Bowls",
+    fruits: "Mixed Fruit Packs, Mixed Juice Combos, Cleanse Packs, Family Fruit BowlsJuice packs to serve your unique quantity and dietary needs.",
   },
 
 
@@ -64,7 +65,7 @@ const productCategories = [
     slug: "pure-juice",
     image: pureJuiceImage,
     description:
-      "Experience nature's finest with our cold-pressed pure juices. Made from 100% fresh fruits with zero additives, each bottle captures the vibrant flavors of oranges, apples, watermelons, and pineapples.",
+      "Juices made from single strength juices and delicious juice blend combinations.",
     fruits: "Oranges, Apples, Watermelon, Pineapple, Grapes",
     benefit: "High in Vitamin C & Natural Energy",
     bgColor: "bg-[#007a56]",
@@ -77,7 +78,7 @@ const productCategories = [
     slug: "cleanse",
     image: cleanseJuiceImage,
     description:
-      "Detoxify and rejuvenate your body with our specially crafted cleanse juices. Expertly blended combinations of leafy greens, cucumber, celery, lemon, and ginger work together to flush toxins and boost metabolism.",
+      "The body is designed to heal itself, but sometimes it needs help. Flush out your digestive system with these carefully curated powerful ingredients to help cleanse regularly",
     fruits: "Kale, Spinach, Cucumber, Celery, Lemon, Ginger, Green Apple",
     benefit: "Natural Detox & Metabolism Boost",
     bgColor: "bg-[#eb2e4f]",
@@ -87,6 +88,7 @@ const productCategories = [
   {
     id: "shots",
     name: "WELLNESS SHOTS",
+    description: "Small but mighty little potions of health. Let your shots do the waking up!",
     slug: "shots",
     image: wellnessPacksImage,
     fruits: "Ginger, Turmeric, Beetroot, Wheatgrass, Cayenne, Lemon",
@@ -98,7 +100,7 @@ const productCategories = [
     name: "SMOOTHIES",
     slug: "smoothies",
     description:
-      "Creamy, dreamy, and packed with nutrition! Our smoothies blend premium fruits with Greek yogurt, oats, and superfoods like chia seeds. Perfect for breakfast or post-workout fuel.",
+      "Team thick, Rich blends of powerful detoxing ingredients. ",
     fruits: "Bananas, Strawberries, Blueberries, Mangos, Avocado, Dates, Coconut",
     benefit: "Protein-Rich & Sustained Energy",
     bgColor: "bg-[#ff7017]",
@@ -110,6 +112,7 @@ const productCategories = [
     id: "flavors",
     name: "FLAVORS",
     slug: "flavors",
+    description: "A wide range of delicious juice blends to meet your specific health needs and event goals.",
     images: [flavor1, flavor2, flavor3, flavor4],
     fruits: "Strawberry, Mango, Coconut, Berry Fusion (Flavor-Based Assortment)",
   },
@@ -120,7 +123,7 @@ const productCategories = [
     name: "CUT FRUITS",
     slug: "cut-fruits",
     description:
-      "Fresh, hand-cut fruits ready to enjoy! Our fruit cups feature a colorful medley of seasonal fruits, perfectly portioned for snacking. Washed, cut, and packed fresh daily.",
+      "Sometimes you want the fruits serve in snacks and desserts. Grab your fruit packs",
     fruits: "Pineapple, Watermelon, Cantaloupe, Berries, Grapes, Kiwi",
     benefit: "Convenient & Vitamin-Packed Snacking",
     bgColor: "bg-[#054525]",
@@ -169,7 +172,7 @@ const faqs = [
   {
     question: "Can I get juices now or I always have to preorder.",
     answer:
-      "⁠we juice everyday fresh and we always have juice. We understand people have perculiar need for juices. To better serve you, preordering helps so you get your most preferred juice flavors, quantities and at your preferred time. ",
+      "⁠We juice everyday fresh and we always have juice. We understand people have perculiar need for juices. To better serve you, preordering helps so you get your most preferred juice flavors, quantities and at your preferred time. ",
   },
   {
     question: "How long can juices stay preserves.",
@@ -179,7 +182,7 @@ const faqs = [
   {
     question: "How many flavors do you have?",
     answer:
-      "we have a wide range of flavors between pure juices, cleanse juices, nutty juices and smoothies to handle different dietary and health needs. Don’t see your flavor online, simply connect to design your custom flavor.",
+      "We have a wide range of flavors between pure juices, cleanse juices, nutty juices and smoothies to handle different dietary and health needs. Don’t see your flavor online, simply connect to design your custom flavor.",
   },
   {
     question: "⁠Do you offer bulk juice? ",
@@ -295,7 +298,7 @@ export default function Home() {
 
 
                             <p className="text-xl lg:text-xl text-white/90 max-w-2xl">
-                                Cold-pressed perfection. Zero additives. Maximum flavor. Health isn’t complicated… ⁠being intentional with your every sip
+                               Health is my complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
                             </p>
                             <div className="flex gap-4 pt-4">
                                 <Button asChild size="md" variant="hero">
@@ -339,7 +342,7 @@ export default function Home() {
                     </h1>
 
                     <p className="text-lg sm:text-xl text-neutral-900 max-w-md px-4">
-                    Cold-pressed perfection. Zero additives. Maximum flavor. Health isn’t complicated… ⁠being intentional with your every sip
+                    Health is my complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
                     </p>
                     <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2 font-semibold">
                     <Link to="/products">
@@ -373,8 +376,7 @@ export default function Home() {
     </h1>
     <p className="text-center text-sm text-gray-600 sm:px-4 md:px-4 lg:px-8 lg:py-2 leading-relaxed">
     Celebrate the Season with Our Exclusive Christmas Offers! Hurry, it’s only
-    valid until December 20th. Call us today to place your special order and
-    make this holiday truly unforgettable!
+    valid until December 20th. Order through the website to enjoy these benefits!
     </p>
 
   </motion.div>
@@ -575,7 +577,7 @@ export default function Home() {
                         </motion.div>
 
                         <motion.div className="grid md:grid-cols-3 gap-6 md:gap-8 " variants={containerVariants}>
-                            {[{ icon: Leaf, title: "Totally Organic", text: "USDA certified organic fruits and vegetables from sustainable farms. No pesticides, no GMOs, no compromises." },
+                            {[{ icon: Leaf, title: "Credibility", text: "juices are all pure with no added sugar, preservatives and artificial colors. Juices are bottled as juiced." },
                                 { icon: Sparkles, title: "Bursting with Benefits", text: "Cold-press technology preserves maximum vitamins, minerals, and enzymes." },
                                 { icon: Heart, title: "Deliciously Elevated", text: "Our master blenders create flavor combinations that excite your taste buds while nourishing your body." }
                             ].map((item, index) => (
