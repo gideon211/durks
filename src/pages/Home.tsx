@@ -619,13 +619,13 @@ export default function Home() {
                             <p className="text-md md:text-xl font-body text-white/80">Follow @duks_juice for daily juice inspo, recipes, and wellness tips</p>
                             <div className="flex gap-6 mx-auto justify-center mt-4">
                             <a href="https://www.tiktok.com/@duks_juice" target="_blank" rel="noopener noreferrer">
-                                <img src={Tiktok} alt="tiktok" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover" />
+                                <img src={Tiktok} alt="tiktok" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover cursor-pointer " />
                             </a>
                             <a href="https://www.instagram.com/duks_juice" target="_blank" rel="noopener noreferrer">
-                                <img src={Instagram} alt="instagram" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover" />
+                                <img src={Instagram} alt="instagram" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover cursor-pointer " />
                             </a>
                             <a href="https://facebook.com/duks_juice" target="_blank" rel="noopener noreferrer">
-                                <img src={Facebook} alt="facebook" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover" />
+                                <img src={Facebook} alt="facebook" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 cursor-pointer object-cover" />
                             </a>
                             </div>
 
