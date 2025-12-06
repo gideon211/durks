@@ -12,7 +12,7 @@ import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import heroImage from "@/assets/hero-juice.png";
 import pureJuiceImage from "@/assets/pure-juice.jpg";
-import cleanseJuiceImage from "@/assets/cleanse-juice.jpg";
+import cleanseJuiceImage from "@/assets/cleanse-juice.jpeg";
 import {
   smoothie1,
   smoothie2,
@@ -167,30 +167,26 @@ const baseSpeed = 60;
 
 const faqs = [
   {
-    question: "How long do your fresh juices stay fresh?",
+    question: "Can I get juices now or I always have to preorder.",
     answer:
-      "Our cold-pressed juices stay fresh for 3-5 days when refrigerated at 35-40°F. We use HPP (High Pressure Processing) to maintain freshness without preservatives.",
+      "⁠we juice everyday fresh and we always have juice. We understand people have perculiar need for juices. To better serve you, preordering helps so you get your most preferred juice flavors, quantities and at your preferred time. ",
   },
   {
-    question: "Are your juices 100% organic?",
+    question: "How long can juices stay preserves.",
     answer:
-      "Yes! We source 100% USDA certified organic fruits and vegetables from local farms. We never use pesticides, GMOs, or artificial additives.",
+      "Fresh natural juices can do well only 3 days in the refrigerator. Fresh natural juices without preservatives are best keep frozen and can do up to 3 months frozen.",
   },
   {
-    question: "Do you offer bulk or wholesale pricing?",
+    question: "How many flavors do you have?",
     answer:
-      "Absolutely! We offer special bulk pricing for orders of 20+ bottles and wholesale partnerships for cafes, gyms, and retailers.",
+      "we have a wide range of flavors between pure juices, cleanse juices, nutty juices and smoothies to handle different dietary and health needs. Don’t see your flavor online, simply connect to design your custom flavor.",
   },
   {
-    question: "What's the difference between juice and smoothie?",
+    question: "⁠Do you offer bulk juice? ",
     answer:
-      "Our juices are cold-pressed, extracting pure liquid from fruits/vegetables. Smoothies blend whole ingredients, retaining all fiber.",
+      "Yes we do bulk and white labeling starting from 300 bottles and above. Connect for more details.",
   },
-  {
-    question: "Can I customize my juice cleanse program?",
-    answer:
-      "Yes! We offer 1, 3, 5, and 7-day cleanse programs. You can customize based on your goals and dietary preferences.",
-  },
+
 ];
 
 const tiktokLinks = [
@@ -287,7 +283,7 @@ export default function Home() {
                         className="block lg:hidden w-full h-full object-cover rounded-b-md"
                         />
 
-                        <div className="hidden lg:flex absolute inset-0 bg-gradient-to-t from-neutral-charcoal/80 via-neutral-charcoal/40 to-transparent items-center justify-center">
+                        <div className="hidden lg:flex absolute inset-0 bg-gradient-to-t from-neutral-charcoal/95 via-neutral-charcoal/50 to-transparent items-center justify-center">
                         <div className="container mx-auto px-4 text-left">
                             <motion.div
                             className="max-w-3xl space-y-4 animate-fade-in"
@@ -298,8 +294,8 @@ export default function Home() {
                             <h1 className="text-8xl lg:text-7xl font-heading font-bold text-white leading-wide tracking-wide"> Fall Into <br /> <span className="text-green-400">Wellness</span> </h1>
 
 
-                            <p className="text-xl lg:text-2xl text-white/90 max-w-2xl">
-                                Cold-pressed perfection. Zero additives. Maximum flavor.
+                            <p className="text-xl lg:text-xl text-white/90 max-w-2xl">
+                                Cold-pressed perfection. Zero additives. Maximum flavor. Health isn’t complicated… ⁠being intentional with your every sip
                             </p>
                             <div className="flex gap-4 pt-4">
                                 <Button asChild size="md" variant="hero">
@@ -343,7 +339,7 @@ export default function Home() {
                     </h1>
 
                     <p className="text-lg sm:text-xl text-neutral-900 max-w-md px-4">
-                    Cold-pressed perfection. Zero additives. Maximum flavor.
+                    Cold-pressed perfection. Zero additives. Maximum flavor. Health isn’t complicated… ⁠being intentional with your every sip
                     </p>
                     <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2 font-semibold">
                     <Link to="/products">
@@ -474,7 +470,7 @@ export default function Home() {
                                     {/* TOP SECTION: IMAGE OR GRID */}
                                     <div className="relative h-[32rem] md:h-[34rem] lg:h-[36rem] overflow-hidden">
 
-                                    {/* 👉 MULTIPLE IMAGES (GRID OF 4) */}
+                                    {/*  MULTIPLE IMAGES (GRID OF 4) */}
                                     {category.images ? (
                                         <div className=" w-full h-full">
                                         {category.images.map((img, index) => (
@@ -487,7 +483,7 @@ export default function Home() {
                                         ))}
                                         </div>
                                     ) : (
-                                        /* 👉 SINGLE IMAGE */
+                                        /*  SINGLE IMAGE */
                                         <img
                                         src={category.image}
                                         alt={category.name}
