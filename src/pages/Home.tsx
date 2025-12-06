@@ -54,7 +54,8 @@ const productCategories = [
     name: "BUNDLES",
     slug: "bundle",
     images: [ bundle3],
-    fruits: "Mixed Fruit Packs, Mixed Juice Combos, Cleanse Packs, Family Fruit BowlsJuice packs to serve your unique quantity and dietary needs.",
+    fruits: "",
+    description: "Mixed Fruit Packs, Mixed Juice Combos, Cleanse Packs, Family Fruit BowlsJuice packs to serve your unique quantity and dietary needs."
   },
 
 
@@ -78,7 +79,7 @@ const productCategories = [
     slug: "cleanse",
     image: cleanseJuiceImage,
     description:
-      "The body is designed to heal itself, but sometimes it needs help. Flush out your digestive system with these carefully curated powerful ingredients to help cleanse regularly",
+      "The body heals itself, but sometimes it needs support. Cleanse your system regularly with these powerful, carefully selected ingredients.",
     fruits: "Kale, Spinach, Cucumber, Celery, Lemon, Ginger, Green Apple",
     benefit: "Natural Detox & Metabolism Boost",
     bgColor: "bg-[#eb2e4f]",
@@ -461,70 +462,72 @@ export default function Home() {
                             variants={containerVariants}
                             style={{ scrollBehavior: "smooth" }}
                             >
-                            {productCategories.map((category) => (
-                                <motion.div
-                                key={category.id}
-                                className="w-[300px] flex-shrink-0"
-                                variants={cardVariants}
-                                >
-                                <div className="relative rounded-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
+{productCategories.map(category => (
+  <motion.div
+    key={category.id}
+    className="w-[300px] flex-shrink-0"
+    variants={cardVariants}
+  >
+    <div className="relative rounded-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
 
-                                    {/* TOP SECTION: IMAGE OR GRID */}
-                                    <div className="relative h-[32rem] md:h-[34rem] lg:h-[36rem] overflow-hidden">
+      {/* FIXED HEIGHT IMAGE WRAPPER */}
+      <div className="relative h-[36rem] overflow-hidden">
 
-                                    {/*  MULTIPLE IMAGES (GRID OF 4) */}
-                                    {category.images ? (
-                                        <div className=" w-full h-full">
-                                        {category.images.map((img, index) => (
-                                            <img
-                                            key={index}
-                                            src={img}
-                                            alt={`${category.name} ${index + 1}`}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                            />
-                                        ))}
-                                        </div>
-                                    ) : (
-                                        /*  SINGLE IMAGE */
-                                        <img
-                                        src={category.image}
-                                        alt={category.name}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                        />
-                                    )}
+        {/* IMAGES */}
+        {category.images ? (
+          <div className="w-full h-full">
+            {category.images.slice(0, 4).map((img, index) => (
+              <img
+                key={index}
+                src={img}
+                alt={`${category.name} ${index + 1}`}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+            ))}
+          </div>
+        ) : (
+          <img
+            src={category.image}
+            alt={category.name}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+        )}
 
-                                    {/* Overlay Gradient */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                                    </div>
+        {/* STRONGER BLACK OVERLAY — FIXED HEIGHT */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent pointer-events-none" />
+      </div>
 
-                                    {/* BOTTOM CONTENT */}
-                                    <div className="absolute inset-x-0 bottom-0 p-4 backdrop-blur-md rounded-t-2xl transition-all duration-700 bg-black/30 md:group-hover:bg-black/60">
-                                    <div className="flex items-center justify-between">
-                                        <h2 className="text-white text-lg md:text-xl font-bold">
-                                        {category.name}
-                                        </h2>
-                                        <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">
-                                        +
-                                        </button>
-                                    </div>
+      {/* CONTENT OVERLAY — FIXED HEIGHT & NOT PUSHING IMAGE */}
+      <div className="absolute bottom-0 inset-x-0 p-4 backdrop-blur-md bg-black/40 rounded-t-2xl transition-all duration-700 md:group-hover:bg-black/60">
 
-                                    <div className="mt-2 text-white text-sm leading-relaxed opacity-100 translate-y-0 md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-700">
-                                        <p className="text-xs mt-1 opacity-80">Key Ingredients:</p>
-                                        <p className="text-xs font-medium mb-3">{category.fruits}</p>
+        <div className="flex items-center justify-between">
+          <h2 className="text-white text-lg md:text-xl font-bold">
+            {category.name}
+          </h2>
+          <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">
+            +
+          </button>
+        </div>
 
-                                        <Link
-                                        to={`/products/${category.slug}`}
-                                        className="flex mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm"
-                                        >
-                                        Shop Now
-                                        <ArrowRight className="w-5 h-5 ml-2" />
-                                        </Link>
-                                    </div>
-                                    </div>
+        {/* FIXED HEIGHT TEXT WRAPPER SO DESCRIPTION NEVER PUSHES CARD */}
+        <div className="mt-2 text-white text-sm leading-relaxed opacity-100 md:opacity-90 md:group-hover:opacity-100 h-[70px] overflow-hidden">
+          <p className="text-xs opacity-95">
+            {category.description}
+          </p>
+        </div>
 
-                                </div>
-                                </motion.div>
-                            ))}
+        <Link
+          to={`/products/${category.slug}`}
+          className="inline-flex items-center mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm"
+        >
+          Shop Now
+          <ArrowRight className="w-5 h-5 ml-2" />
+        </Link>
+      </div>
+    </div>
+  </motion.div>
+))}
+
                             </motion.div>
 
                         </div>
