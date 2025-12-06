@@ -60,7 +60,7 @@ const productCategories = [
     slug: "bundle",
     images: [ bundle3],
     fruits: "",
-    description: "Mixed Fruit Packs, Mixed Juice Combos, Cleanse Packs, Family Fruit BowlsJuice packs to serve your unique quantity and dietary needs."
+    description: "Perfectly curated juice packs to serve your unique quantity and dietary needs."
   },
 
 
@@ -347,7 +347,7 @@ export default function Home() {
                     </span>
                     </h1>
 
-                    <p className="text-lg sm:text-xl text-neutral-900 max-w-md px-4">
+                    <p className="text-base sm:text-xl text-gray-800 max-w-md px-1">
                     Health isn't complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
                     </p>
                     <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2 font-semibold">

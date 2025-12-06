@@ -237,12 +237,6 @@ export default function Orders() {
 
                     ))}
                   </div>
-
-                  {order.orderStatus !== "completed" && order.orderStatus !== "cancelled" && (
-                    <Button variant="destructive" className="mt-4 w-full" onClick={() => handleCancelOrder(order.id)} disabled={cancellingOrderId === order.id}>
-                      {cancellingOrderId === order.id ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : "Cancel Order"}
-                    </Button>
-                  )}
                 </div>
               </motion.div>
             ))}
