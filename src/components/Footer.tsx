@@ -23,7 +23,7 @@ export const Footer = () => {
                 className="w-14 h-14 md:w-16 md:h-16 object-contain"
             />
             <h2 className="text-white font-bold text-2xl md:text-3xl ">
-                DUK'S JUICE
+                DUKS JUICE
             </h2>
             </div>
 

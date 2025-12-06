@@ -567,7 +567,7 @@ export default function Home() {
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8 }}
                         >
-                            <h2 className="text-xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Why Choose Duk's?</h2>
+                            <h2 className="text-xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Why Choose Duks?</h2>
                             <div>
                                 <motion.img src={chooseImage} alt="why choose us Image" className="w-full object-cover h-[14rem] rounded-md lg:h-[30rem] lg:rounded-md py-4" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 1 }} />
                             </div>
@@ -641,7 +641,7 @@ export default function Home() {
                     <div className="container mx-auto px-4 max-w-4xl">
                         <motion.div className="text-center mb-12 md:mb-16" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                             <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">FAQS</h2>
-                            <p className="text-md md:text-xl font-body text-muted-foreground">Everything you need to know about Duk's juices</p>
+                            <p className="text-md md:text-xl font-body text-muted-foreground">Everything you need to know about Duks juices</p>
                         </motion.div>
 
                         <Accordion type="single" collapsible className="space-y-2">
