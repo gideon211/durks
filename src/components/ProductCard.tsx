@@ -1,10 +1,14 @@
-// src/components/ProductCard.tsx
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { ShoppingCart, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { useCartStore } from "@/store/cartStore";
 import { toast } from "sonner";
+
+interface PackEntry {
+  pack: number;
+  price: number;
+}
 
 interface ProductCardProps {
   id: string | number;
@@ -14,7 +18,7 @@ interface ProductCardProps {
   price?: number;
   category?: string;
   size?: string;
-  packs?: { pack: number; price: number }[];
+  packs?: PackEntry[];
 }
 
 interface CartProduct {
@@ -25,11 +29,16 @@ interface CartProduct {
   category?: string;
   size?: string;
   pack?: number | string;
-  packs?: { pack: number; price: number }[];
+  packs?: PackEntry[];
   qty?: number;
 }
 
-export const ProductCard = ({
+function formatPrice(p: number | undefined) {
+  const n = typeof p === "number" ? p : 0;
+  return `₵${n.toFixed(2)}`;
+}
+
+function ProductCardInner({
   id,
   name,
   description,
@@ -38,25 +47,50 @@ export const ProductCard = ({
   category,
   size,
   packs = [{ pack: 12, price }],
-}: ProductCardProps) => {
-  const addToCart = useCartStore((state) => state.addToCart);
+}: ProductCardProps) {
+  const addToCart = useCartStore((s) => s.addToCart);
 
-  const initialPack = packs.length ? packs[0].pack : 1;
-  const initialPrice = packs.length ? packs[0].price : price;
+  // memoize derived pack list and initial values
+  const stablePacks = useMemo(() => {
+    // defensive copy and normalize
+    return Array.isArray(packs) && packs.length > 0
+      ? packs.map((p) => ({ pack: Number(p.pack) || 1, price: Number(p.price) || 0 }))
+      : [{ pack: 1, price: price || 0 }];
+  }, [packs, price]);
+
+  const initialPack = stablePacks[0].pack;
+  const initialPrice = stablePacks[0].price;
 
   const [selectedPack, setSelectedPack] = useState<number>(initialPack);
   const [selectedPrice, setSelectedPrice] = useState<number>(initialPrice);
   const [isLoading, setIsLoading] = useState(false);
   const [addedMessage, setAddedMessage] = useState(false);
 
-  const handlePackChange = (pack: number) => {
-    setSelectedPack(pack);
-    const packObj = packs.find((p) => p.pack === pack);
-    if (packObj) setSelectedPrice(packObj.price);
-  };
+  // keep timer ref to clear on unmount and avoid leaks
+  const addedTimerRef = useRef<number | null>(null);
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
+  useEffect(() => {
+    // if packs prop changes, sync state with the new initial values
+    setSelectedPack(initialPack);
+    setSelectedPrice(initialPrice);
+  }, [initialPack, initialPrice]);
+
+  useEffect(() => {
+    return () => {
+      if (addedTimerRef.current) window.clearTimeout(addedTimerRef.current);
+    };
+  }, []);
+
+  const handlePackChange = useCallback((pack: number) => {
+    setSelectedPack(pack);
+    const found = stablePacks.find((p) => p.pack === pack);
+    setSelectedPrice(found ? found.price : stablePacks[0].price);
+  }, [stablePacks]);
+
+  const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
+    if (isLoading) return;
+
     setIsLoading(true);
 
     const productToAdd: CartProduct = {
@@ -66,23 +100,25 @@ export const ProductCard = ({
       category,
       size,
       pack: selectedPack,
-      packs,
+      packs: stablePacks,
       qty: 1,
     };
 
     try {
-      // Works for both guest + logged-in users
       await addToCart(productToAdd, selectedPack, 1);
 
       setAddedMessage(true);
-      setTimeout(() => setAddedMessage(false), 3000);
+      if (addedTimerRef.current) window.clearTimeout(addedTimerRef.current);
+      addedTimerRef.current = window.setTimeout(() => setAddedMessage(false), 2500);
     } catch (err) {
       console.error("Add to cart error:", err);
-      toast.error("Could not add to cart");
+      try {
+        toast.error("Could not add item to cart");
+      } catch {}
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [addToCart, id, image, name, category, size, selectedPack, stablePacks, isLoading]);
 
   const sizeLabel = size ?? "";
 
@@ -90,7 +126,21 @@ export const ProductCard = ({
     <div className="bg-card rounded-xl border-2 border-green-200 overflow-hidden hover:border-green-300 hover:shadow-xl transition-all duration-150 flex flex-col h-full">
       <div className="relative aspect-square overflow-hidden bg-muted block">
         {image ? (
-          <img src={image} alt={name} className="w-full h-full object-cover" />
+          <img
+            src={image}
+            alt={name}
+            loading="lazy"
+            decoding="async"
+            fetchPriority={"low" as any}
+            className="w-full h-full object-cover"
+            // keep layout stable
+            width={600}
+            height={600}
+            onError={(e) => {
+              const t = e.currentTarget as HTMLImageElement;
+              t.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2373747a' font-size='20'>Image not available</text></svg>";
+            }}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             No Image
@@ -113,12 +163,12 @@ export const ProductCard = ({
           </Badge>
         )}
 
-        <h3 className="font-heading font-semibold text-sm text-foreground">
+        <h3 className="font-heading font-semibold text-sm text-foreground truncate">
           {name}
         </h3>
 
         <p className="font-heading font-semibold text-sm text-foreground">
-          ₵{Number(selectedPrice).toFixed(2)}
+          {formatPrice(selectedPrice)}
         </p>
 
         <div className="flex flex-col gap-2 mt-1">
@@ -126,8 +176,9 @@ export const ProductCard = ({
             value={String(selectedPack)}
             onChange={(e) => handlePackChange(Number(e.target.value))}
             className="w-full border rounded px-2 py-1 text-center focus:outline-none focus:ring-1 focus:ring-primary font-bold"
+            aria-label={`Select pack for ${name}`}
           >
-            {packs.map((p) => (
+            {stablePacks.map((p) => (
               <option key={p.pack} value={p.pack}>
                 {p.pack}
               </option>
@@ -135,12 +186,13 @@ export const ProductCard = ({
           </select>
 
           <Button
+            type="button"
             size="sm"
             onClick={handleAddToCart}
-            className={`w-full flex justify-center items-center gap-1 font-bold transition-colors ${
-              addedMessage ? "bg-green-500 hover:bg-green-600 text-white" : ""
-            }`}
+            className={`w-full flex justify-center items-center gap-1 font-bold transition-colors ${addedMessage ? "bg-green-500 hover:bg-green-600 text-white" : ""}`}
             disabled={isLoading}
+            aria-live="polite"
+            aria-pressed={addedMessage}
           >
             {isLoading ? (
               <Loader2 className="animate-spin h-4 w-4" />
@@ -158,6 +210,7 @@ export const ProductCard = ({
       </div>
     </div>
   );
-};
+}
 
+export const ProductCard = React.memo(ProductCardInner);
 export default ProductCard;
