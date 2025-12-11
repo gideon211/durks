@@ -122,6 +122,50 @@ function ProductCardInner({
 
   const sizeLabel = size ?? "";
 
+  // view-more logic for name (two-line clamp + expand)
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [showToggle, setShowToggle] = useState(false);
+
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!el) return;
+
+    const checkOverflow = () => {
+      // when not expanded we apply line-clamp via class, and then check overflow
+      const isOverflowing = el.scrollHeight > el.clientHeight + 1;
+      setShowToggle(isOverflowing);
+    };
+
+    // run after paint
+    requestAnimationFrame(() => {
+      checkOverflow();
+    });
+
+    // observe size changes to re-check if text wraps differently
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => {
+        checkOverflow();
+      });
+      ro.observe(el);
+    }
+
+    return () => {
+      if (ro) ro.disconnect();
+    };
+  }, [name]);
+
+  const toggleExpanded = useCallback(() => {
+    setExpanded((v) => !v);
+    // after expanding or collapsing, re-check overflow on next frame
+    requestAnimationFrame(() => {
+      const el = titleRef.current;
+      if (!el) return;
+      setShowToggle(el.scrollHeight > el.clientHeight + 1);
+    });
+  }, []);
+
   return (
     <div className="bg-card rounded-xl border-2 border-green-200 overflow-hidden hover:border-green-300 hover:shadow-xl transition-all duration-150 flex flex-col h-full">
       <div className="relative aspect-square overflow-hidden bg-muted block">
@@ -133,12 +177,12 @@ function ProductCardInner({
             decoding="async"
             fetchPriority={"low" as any}
             className="w-full h-full object-cover"
-            // keep layout stable
             width={600}
             height={600}
             onError={(e) => {
               const t = e.currentTarget as HTMLImageElement;
-              t.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2373747a' font-size='20'>Image not available</text></svg>";
+              t.src =
+                "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2373747a' font-size='20'>Image not available</text></svg>";
             }}
           />
         ) : (
@@ -163,9 +207,29 @@ function ProductCardInner({
           </Badge>
         )}
 
-        <h3 className="font-heading font-semibold text-sm text-foreground truncate">
+        <h3
+          ref={titleRef}
+          className={
+            "font-heading font-semibold text-sm text-foreground " +
+            (expanded ? "text-left" : "line-clamp-2 text-left")
+          }
+          aria-expanded={expanded}
+          title={expanded ? undefined : name}
+        >
           {name}
         </h3>
+
+        {/* toggle button only when text actually exceeds two lines */}
+        {showToggle && (
+          <button
+            type="button"
+            onClick={toggleExpanded}
+            className="text-xs mt-0.5 underline underline-offset-2 text-primary mx-auto"
+            aria-label={expanded ? "View less" : "View more"}
+          >
+            {expanded ? "View less" : "View more"}
+          </button>
+        )}
 
         <p className="font-heading font-semibold text-sm text-foreground">
           {formatPrice(selectedPrice)}
@@ -189,7 +253,9 @@ function ProductCardInner({
             type="button"
             size="sm"
             onClick={handleAddToCart}
-            className={`w-full flex justify-center items-center gap-1 font-bold transition-colors ${addedMessage ? "bg-green-500 hover:bg-green-600 text-white" : ""}`}
+            className={`w-full flex justify-center items-center gap-1 font-bold transition-colors ${
+              addedMessage ? "bg-green-500 hover:bg-green-600 text-white" : ""
+            }`}
             disabled={isLoading}
             aria-live="polite"
             aria-pressed={addedMessage}
