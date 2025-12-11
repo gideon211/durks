@@ -50,9 +50,7 @@ function ProductCardInner({
 }: ProductCardProps) {
   const addToCart = useCartStore((s) => s.addToCart);
 
-  // memoize derived pack list and initial values
   const stablePacks = useMemo(() => {
-    // defensive copy and normalize
     return Array.isArray(packs) && packs.length > 0
       ? packs.map((p) => ({ pack: Number(p.pack) || 1, price: Number(p.price) || 0 }))
       : [{ pack: 1, price: price || 0 }];
@@ -66,11 +64,9 @@ function ProductCardInner({
   const [isLoading, setIsLoading] = useState(false);
   const [addedMessage, setAddedMessage] = useState(false);
 
-  // keep timer ref to clear on unmount and avoid leaks
   const addedTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // if packs prop changes, sync state with the new initial values
     setSelectedPack(initialPack);
     setSelectedPrice(initialPrice);
   }, [initialPack, initialPrice]);
@@ -87,42 +83,44 @@ function ProductCardInner({
     setSelectedPrice(found ? found.price : stablePacks[0].price);
   }, [stablePacks]);
 
-  const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (isLoading) return;
+  const handleAddToCart = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      if (isLoading) return;
 
-    setIsLoading(true);
+      setIsLoading(true);
 
-    const productToAdd: CartProduct = {
-      id,
-      name,
-      image,
-      category,
-      size,
-      pack: selectedPack,
-      packs: stablePacks,
-      qty: 1,
-    };
+      const productToAdd: CartProduct = {
+        id,
+        name,
+        image,
+        category,
+        size,
+        pack: selectedPack,
+        packs: stablePacks,
+        qty: 1,
+      };
 
-    try {
-      await addToCart(productToAdd, selectedPack, 1);
-
-      setAddedMessage(true);
-      if (addedTimerRef.current) window.clearTimeout(addedTimerRef.current);
-      addedTimerRef.current = window.setTimeout(() => setAddedMessage(false), 2500);
-    } catch (err) {
-      console.error("Add to cart error:", err);
       try {
-        toast.error("Could not add item to cart");
-      } catch {}
-    } finally {
-      setIsLoading(false);
-    }
-  }, [addToCart, id, image, name, category, size, selectedPack, stablePacks, isLoading]);
+        await addToCart(productToAdd, selectedPack, 1);
+
+        setAddedMessage(true);
+        if (addedTimerRef.current) window.clearTimeout(addedTimerRef.current);
+        addedTimerRef.current = window.setTimeout(() => setAddedMessage(false), 2500);
+      } catch (err) {
+        console.error("Add to cart error:", err);
+        try {
+          toast.error("Could not add item to cart");
+        } catch {}
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [addToCart, id, image, name, category, size, selectedPack, stablePacks, isLoading]
+  );
 
   const sizeLabel = size ?? "";
 
-  // view-more logic for name (two-line clamp + expand)
   const titleRef = useRef<HTMLHeadingElement | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [showToggle, setShowToggle] = useState(false);
@@ -132,17 +130,15 @@ function ProductCardInner({
     if (!el) return;
 
     const checkOverflow = () => {
-      // when not expanded we apply line-clamp via class, and then check overflow
+      // compare scrollHeight and clientHeight after clamp applied
       const isOverflowing = el.scrollHeight > el.clientHeight + 1;
       setShowToggle(isOverflowing);
     };
 
-    // run after paint
     requestAnimationFrame(() => {
       checkOverflow();
     });
 
-    // observe size changes to re-check if text wraps differently
     let ro: ResizeObserver | null = null;
     if (typeof ResizeObserver !== "undefined") {
       ro = new ResizeObserver(() => {
@@ -158,7 +154,6 @@ function ProductCardInner({
 
   const toggleExpanded = useCallback(() => {
     setExpanded((v) => !v);
-    // after expanding or collapsing, re-check overflow on next frame
     requestAnimationFrame(() => {
       const el = titleRef.current;
       if (!el) return;
@@ -200,42 +195,43 @@ function ProductCardInner({
         )}
       </div>
 
-      <div className="p-4 flex flex-col gap-2 flex-grow text-center">
+      <div className="p-4 flex flex-col gap-2 flex-grow items-center text-center">
         {category && (
           <Badge variant="outline" className="mb-0.5 mx-auto text-xs">
             {category}
           </Badge>
         )}
 
-        <h3
-          ref={titleRef}
-          className={
-            "font-heading font-semibold text-sm text-foreground " +
-            (expanded ? "text-left" : "line-clamp-2 text-left")
-          }
-          aria-expanded={expanded}
-          title={expanded ? undefined : name}
-        >
-          {name}
-        </h3>
-
-        {/* toggle button only when text actually exceeds two lines */}
-        {showToggle && (
-          <button
-            type="button"
-            onClick={toggleExpanded}
-            className="text-xs mt-0.5 underline underline-offset-2 text-primary mx-auto"
-            aria-label={expanded ? "View less" : "View more"}
+        <div className="w-full flex flex-col items-center text-center">
+          <h3
+            ref={titleRef}
+            className={
+              "font-heading font-semibold text-sm text-foreground " +
+              (expanded ? "" : "line-clamp-2")
+            }
+            aria-expanded={expanded}
+            title={expanded ? undefined : name}
           >
-            {expanded ? "View less" : "View more"}
-          </button>
-        )}
+            {name}
+          </h3>
+
+          {showToggle && (
+            <button
+              type="button"
+              onClick={toggleExpanded}
+              className="text-xs mt-0.5 underline underline-offset-2 text-primary"
+              aria-label={expanded ? "View less" : "View more"}
+            >
+              {expanded ? "View less" : "View more"}
+            </button>
+          )}
+        </div>
 
         <p className="font-heading font-semibold text-sm text-foreground">
           {formatPrice(selectedPrice)}
         </p>
 
-        <div className="flex flex-col gap-2 mt-1">
+        <div className="flex flex-col gap-2 mt-1 w-full">
           <select
             value={String(selectedPack)}
             onChange={(e) => handlePackChange(Number(e.target.value))}
