@@ -156,6 +156,7 @@ export default function Cart() {
                     >
                       <div className="w-24 flex-shrink-0">
                         <img
+                          loading="lazy"
                           src={item.image || ""}
                           alt={item.name}
                           className="w-full h-24 object-cover rounded border"
