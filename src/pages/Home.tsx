@@ -275,6 +275,7 @@ export default function Home() {
                 <div className="h-[500px] md:h-[600px] lg:h-screen w-full overflow-hidden">
                         <motion.img
                         src={deskheroImage}
+                        loading="lazy"
                         alt="Fresh Organic Cold-Pressed Juice"
                         initial={{ opacity: 0, y: -80 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -285,6 +286,7 @@ export default function Home() {
 
                         <motion.img
                         src={heroImage}
+                        loading="lazy"
                         alt="Fresh Organic Cold-Pressed Juice"
                         initial={{ opacity: 0, y: -80 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -364,53 +366,53 @@ export default function Home() {
 
 
 
-<motion.section
-  className="w-full sm:py-8 md:pt-8 md:pb-8 lg:pt-16 lg:px-12 border-t border-transparent"
-  initial="hidden"
-  whileInView="visible"
-  viewport={{ once: true, amount: 0.3 }}
-  variants={containerVariants}
->
-  <motion.div
-    className="mb-6 w-full text-center mt-16 px-4 sm:px-6 md:px-8 lg:px-12"
-    initial={{ opacity: 0, y: 50 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.8 }}
-  >
-    <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-center mb-4 ">
-      CHRISTMAS SPECIALS
-    </h1>
-    <p className="text-center text-sm text-gray-600 lg:py-2 leading-relaxed">
-    Celebrate the Season with Our Exclusive Christmas Offers! Hurry, it’s only
-    valid until December 20th. Order through the website to enjoy these benefits!
-    </p>
+                <motion.section
+                className="w-full sm:py-8 md:pt-8 md:pb-8 lg:pt-16 lg:px-12 border-t border-transparent"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                variants={containerVariants}
+                >
+                <motion.div
+                    className="mb-6 w-full text-center mt-16 px-4 sm:px-6 md:px-8 lg:px-12"
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                >
+                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-center mb-4 ">
+                CHRISTMAS SPECIALS
+                </h1>
+                <p className="text-center text-sm text-gray-600 lg:py-2 leading-relaxed">
+                Celebrate the Season with Our Exclusive Christmas Offers! Hurry, it’s only
+                valid until December 20th. Order through the website to enjoy these benefits!
+                </p>
 
-  </motion.div>
+                </motion.div>
 
-  <motion.div
-    initial={{ opacity: 0, y: 50 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.8, delay: 0.2 }}
-  >
-    <Carousel />
-  </motion.div>
+                <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                >
+                    <Carousel />
+                </motion.div>
 
-  <motion.div
-    className="text-center mt-4"
-    initial={{ opacity: 0, y: 50 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.8, delay: 0.4 }}
-  >
-    <Link
-      to="/products/bundle"
-      state={{ activeTab: "bundle" }}
-      className="inline-block bg-white text-green-700 text-base font-semibold py-2 px-4 rounded-full"
-    >
-      Shop Now
-      <ArrowRight className="w-5 h-5 ml-2 inline-block" />
-    </Link>
-  </motion.div>
-</motion.section>
+                <motion.div
+                    className="text-center mt-4"
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                >
+                    <Link
+                    to="/products/bundle"
+                    state={{ activeTab: "bundle" }}
+                    className="inline-block bg-white text-green-700 text-base font-semibold py-2 px-4 rounded-full"
+                    >
+                    Shop Now
+                    <ArrowRight className="w-5 h-5 ml-2 inline-block" />
+                    </Link>
+                </motion.div>
+                </motion.section>
 
 
             
@@ -485,6 +487,7 @@ export default function Home() {
               <img
                 key={index}
                 src={img}
+                loading="lazy"
                 alt={`${category.name} ${index + 1}`}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
@@ -493,6 +496,7 @@ export default function Home() {
         ) : (
           <img
             src={category.image}
+            loading="lazy"
             alt={category.name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
@@ -577,7 +581,7 @@ export default function Home() {
                         >
                             <h2 className="text-xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Why Choose Duks?</h2>
                             <div>
-                                <motion.img src={chooseImage} alt="why choose us Image" className="w-full object-cover h-[14rem] rounded-md lg:h-[30rem] lg:rounded-md py-4" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 1 }} />
+                                <motion.img src={chooseImage} loading="lazy" alt="why choose us Image" className="w-full object-cover h-[14rem] rounded-md lg:h-[30rem] lg:rounded-md py-4" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 1 }} />
                             </div>
                             <p className="text-md md:text-xl font-semibold text-muted-foreground max-w-2xl mx-auto">
                                 Every bottle is a commitment to your health and our planet
@@ -619,13 +623,13 @@ export default function Home() {
                             <p className="text-md md:text-xl font-body text-white/80">Follow @duks_juice for daily juice inspo, recipes, and wellness tips</p>
                             <div className="flex gap-6 mx-auto justify-center mt-4">
                             <a href="https://www.tiktok.com/@duks_juice" target="_blank" rel="noopener noreferrer">
-                                <img src={Tiktok} alt="tiktok" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover cursor-pointer " />
+                                <img src={Tiktok} loading="lazy" alt="tiktok" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover cursor-pointer " />
                             </a>
                             <a href="https://www.instagram.com/duks_juice" target="_blank" rel="noopener noreferrer">
-                                <img src={Instagram} alt="instagram" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover cursor-pointer " />
+                                <img src={Instagram} loading="lazy" alt="instagram" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover cursor-pointer " />
                             </a>
                             <a href="https://facebook.com/duks_juice" target="_blank" rel="noopener noreferrer">
-                                <img src={Facebook} alt="facebook" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 cursor-pointer object-cover" />
+                                <img src={Facebook} loading="lazy" alt="facebook" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 cursor-pointer object-cover" />
                             </a>
                             </div>
 
@@ -634,7 +638,7 @@ export default function Home() {
                         <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
                             {tiktokLinks.map((item, index) => (
                                 <motion.a key={index} href={item.url} target="_blank" rel="noopener noreferrer" className="group relative aspect-square overflow-hidden rounded-sm" variants={cardVariants}>
-                                    <img src={item.image} alt={`TikTok post ${index + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                                    <img src={item.image} loading="lazy" alt={`TikTok post ${index + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                                         <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/80 transition-all duration-300 flex items-center justify-center">
                                             <span className="text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-heading">View on TikTok</span>
                                         </div>
