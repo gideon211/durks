@@ -252,12 +252,12 @@ export default function Home() {
   }, []);
 
   const scrollCarousel = (dir: "left" | "right") => {
-    const el = carouselRef.current;
-    if (!el) return;
-    // scroll by ~80% of viewport width of the carousel
-    const amount = Math.floor(el.clientWidth * 0.8);
-    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
-  };
+        const el = carouselRef.current;
+        if (!el) return;
+        // scroll by ~80% of viewport width of the carousel
+        const amount = Math.floor(el.clientWidth * 0.8);
+        el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+    };
 
   return (
     <div>
@@ -318,7 +318,7 @@ export default function Home() {
                             </div>
                             </motion.div>
                         </div>
-                        </div>
+                    </div>
                 </div>
 
                 <motion.div
@@ -469,73 +469,73 @@ export default function Home() {
                             variants={containerVariants}
                             style={{ scrollBehavior: "smooth" }}
                             >
-{productCategories.map(category => (
-  <motion.div
-    key={category.id}
-    className="w-[300px] flex-shrink-0"
-    variants={cardVariants}
-  >
-    <div className="relative rounded-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
+                                {productCategories.map(category => (
+                                <motion.div
+                                    key={category.id}
+                                    className="w-[300px] flex-shrink-0"
+                                    variants={cardVariants}
+                                >
+                                    <div className="relative rounded-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
 
-      {/* FIXED HEIGHT IMAGE WRAPPER */}
-      <div className="relative h-[36rem] overflow-hidden">
+                                    {/* FIXED HEIGHT IMAGE WRAPPER */}
+                                    <div className="relative h-[36rem] overflow-hidden">
 
-        {/* IMAGES */}
-        {category.images ? (
-          <div className="w-full h-full">
-            {category.images.slice(0, 4).map((img, index) => (
-              <img
-                key={index}
-                src={img}
-                loading="lazy"
-                alt={`${category.name} ${index + 1}`}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-            ))}
-          </div>
-        ) : (
-          <img
-            src={category.image}
-            loading="lazy"
-            alt={category.name}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          />
-        )}
+                                        {/* IMAGES */}
+                                        {category.images ? (
+                                        <div className="w-full h-full">
+                                            {category.images.slice(0, 4).map((img, index) => (
+                                            <img
+                                                key={index}
+                                                src={img}
+                                                loading="lazy"
+                                                alt={`${category.name} ${index + 1}`}
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                            />
+                                            ))}
+                                        </div>
+                                        ) : (
+                                        <img
+                                            src={category.image}
+                                            loading="lazy"
+                                            alt={category.name}
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        />
+                                        )}
 
-        {/* STRONGER BLACK OVERLAY — FIXED HEIGHT */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent pointer-events-none" />
-      </div>
+                                        {/* STRONGER BLACK OVERLAY — FIXED HEIGHT */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent pointer-events-none" />
+                                    </div>
 
-      {/* CONTENT OVERLAY — FIXED HEIGHT & NOT PUSHING IMAGE */}
-      <div className="absolute bottom-0 inset-x-0 p-4 backdrop-blur-md bg-black/40 rounded-t-2xl transition-all duration-700 md:group-hover:bg-black/60">
+                                    {/* CONTENT OVERLAY — FIXED HEIGHT & NOT PUSHING IMAGE */}
+                                    <div className="absolute bottom-0 inset-x-0 p-4 backdrop-blur-md bg-black/40 rounded-t-2xl transition-all duration-700 md:group-hover:bg-black/60">
 
-        <div className="flex items-center justify-between">
-          <h2 className="text-white text-lg md:text-xl font-bold">
-            {category.name}
-          </h2>
-          <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">
-            +
-          </button>
-        </div>
+                                        <div className="flex items-center justify-between">
+                                        <h2 className="text-white text-lg md:text-xl font-bold">
+                                            {category.name}
+                                        </h2>
+                                        <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">
+                                            +
+                                        </button>
+                                        </div>
 
-        {/* FIXED HEIGHT TEXT WRAPPER SO DESCRIPTION NEVER PUSHES CARD */}
-        <div className="mt-2 text-white text-sm leading-relaxed opacity-100 md:opacity-90 md:group-hover:opacity-100 h-[70px] overflow-hidden">
-          <p className="text-xs opacity-95">
-            {category.description}
-          </p>
-        </div>
+                                        {/* FIXED HEIGHT TEXT WRAPPER SO DESCRIPTION NEVER PUSHES CARD */}
+                                        <div className="mt-2 text-white text-sm leading-relaxed opacity-100 md:opacity-90 md:group-hover:opacity-100 h-[70px] overflow-hidden">
+                                        <p className="text-xs opacity-95">
+                                            {category.description}
+                                        </p>
+                                        </div>
 
-        <Link
-          to={`/products/${category.slug}`}
-          className="inline-flex items-center mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm"
-        >
-          Shop Now
-          <ArrowRight className="w-5 h-5 ml-2" />
-        </Link>
-      </div>
-    </div>
-  </motion.div>
-))}
+                                        <Link
+                                        to={`/products/${category.slug}`}
+                                        className="inline-flex items-center mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm"
+                                        >
+                                        Shop Now
+                                        <ArrowRight className="w-5 h-5 ml-2" />
+                                        </Link>
+                                    </div>
+                                    </div>
+                                </motion.div>
+                                ))}
 
                             </motion.div>
 
@@ -673,7 +673,7 @@ export default function Home() {
                                 <motion.div key={index} variants={cardVariants}>
                                     <AccordionItem value={`item-${index}`} className="border rounded-sm px-6 bg-card">
                                         <AccordionTrigger className="text-md font-semibold font-heading hover:text-secondary hover:no-underline">{faq.question}</AccordionTrigger>
-                                        <AccordionContent className="text-sm  leading-relaxed pt-2">{faq.answer}</AccordionContent>
+                                        <AccordionContent className="text-sm leading-relaxed pt-2">{faq.answer}</AccordionContent>
                                     </AccordionItem>
                                 </motion.div>
                             ))}
@@ -682,7 +682,9 @@ export default function Home() {
                 </motion.section>
 
                 <Footer />
+
             </div>
+
         </div>
     );
 }
