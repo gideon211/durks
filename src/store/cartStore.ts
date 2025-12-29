@@ -89,6 +89,7 @@ function readPendingCart(): any[] {
   }
 }
 
+
 function writePendingCart(list: any[]) {
   try {
     if (typeof window === "undefined") return;
@@ -102,6 +103,7 @@ function addOrMergePendingItem(item: any) {
   try {
     const existing = readPendingCart();
     let updated = false;
+    
     const out = (existing || []).map((pi) => {
       // merge by drinkId + pack
       if (String(pi.drinkId ?? pi.id) === String(item.drinkId ?? item.id) && String(pi.pack) === String(item.pack)) {
