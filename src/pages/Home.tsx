@@ -49,7 +49,7 @@ import tiktok2 from "@/assets/tiktok-2.jpg";
 import tiktok3 from "@/assets/tiktok-3.jpg";
 import tiktok4 from "@/assets/tiktok-4.jpg";
 import { useRef, useState, useEffect } from "react";
-import Carousel from "@/components/Carousel";
+// import Carousel from "@/components/Carousel";
 import { Description } from "@radix-ui/react-toast";
 
 const productCategories = [
@@ -366,7 +366,7 @@ export default function Home() {
 
 
 
-                <motion.section
+                {/* <motion.section
                 className="w-full sm:py-8 md:pt-8 md:pb-8 lg:pt-16 lg:px-12 border-t border-transparent"
                 initial="hidden"
                 whileInView="visible"
@@ -412,7 +412,7 @@ export default function Home() {
                     <ArrowRight className="w-5 h-5 ml-2 inline-block" />
                     </Link>
                 </motion.div>
-                </motion.section>
+                </motion.section> */}
 
 
             
