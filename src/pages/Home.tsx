@@ -375,11 +375,12 @@ export default function Home() {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
                 >
-                <h1 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-4 ">
-                IT'S HABIT THAT YIELD RESULTS
+                <h1 className="font-heading font-bold text-center mb-2 leading-tight text-[clamp(1.25rem,3.5vw,2.5rem)]">
+                A HABIT THAT YIELD RESULTS
                 </h1>
-                <p className="text-center text-sm text-gray-600 lg:py-2 leading-relaxed font-body">
-                    
+
+                <p className="text-center text-md text-gray-600 lg:py-2 leading-tight font-body">
+                   A gentle palate reset designed to elevate your cravings toward better nutrition.
                 </p>
 
                 </motion.div>
