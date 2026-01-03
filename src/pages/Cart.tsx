@@ -43,6 +43,7 @@ export default function Cart() {
   const [isLoading, setIsLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState<"checkout" | "bulk" | null>(null);
   const [loadingCart, setLoadingCart] = useState<boolean>(true);
+  const [checkingOut, setCheckingOut] = useState(false);
 
   // NEW: track quantity inputs for all items
   const [qtyInputs, setQtyInputs] = useState<Record<string, string>>({});
@@ -87,8 +88,17 @@ export default function Cart() {
       openAuthModal("checkout");
       return;
     }
-    toast.success("Proceeding to checkout...");
-    navigate("/checkout");
+    // toast.success("Proceeding to checkout...");
+    setCheckingOut(true);
+   
+
+    setTimeout(()=>{
+        setCheckingOut(false);
+        navigate("/checkout");
+    }, 3000)
+    
+
+    
   };
 
   const handleSignInFromModal = () => {
@@ -254,9 +264,21 @@ export default function Cart() {
                   <span className="font-heading font-bold text-md">₵{totalPrice().toFixed(2)}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button size="md" onClick={handleCheckout} className="w-full sm:w-auto">
-                    Proceed to Checkout
-                  </Button>
+                    <Button
+                    size="md"
+                    onClick={handleCheckout}
+                    disabled={checkingOut}
+                    className="w-full sm:w-auto"
+                    >
+                    {checkingOut ? (
+                    <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Proceeding to checkout..
+                    </span>
+                    ) : (
+                    "Proceed to Checkout"
+                    )}
+                    </Button>
                 </div>
               </>
             )}
