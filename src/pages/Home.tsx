@@ -351,7 +351,7 @@ export default function Home() {
               </span>
             </h1>
 
-            <p className="text-base sm:text-xl text-gray-800 max-w-md px-2">
+            <p className="text-base sm:text-xl text-gray-800 max-w-md px-2 font-body">
               Health isn't complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
             </p>
             <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2 font-semibold">
