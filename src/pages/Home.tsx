@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { Star, Leaf, Heart, Sparkles, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
-// import Carousel from "@/components/Carousel";
+import Carousel from "@/components/Carousel";
 // Local assets in src/assets
 import heroImage from "@/assets/hero-juice.webp";
 import pureJuiceImage from "@/assets/pure-juice.webp";
@@ -362,7 +362,7 @@ export default function Home() {
         </motion.section>
 
 
-             {/* <motion.section
+             <motion.section
                 className="w-full sm:py-8 md:pt-8 md:pb-8 lg:pt-16 lg:px-12 border-t border-transparent"
                 initial="hidden"
                 whileInView="visible"
@@ -375,12 +375,11 @@ export default function Home() {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
                 >
-                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-center mb-4 ">
-                CHRISTMAS SPECIALS
+                <h1 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-4 ">
+                IT'S HABIT THAT YIELD RESULTS
                 </h1>
-                <p className="text-center text-sm text-gray-600 lg:py-2 leading-relaxed">
-                Celebrate the Season with Our Exclusive Christmas Offers! Hurry, it’s only
-                valid until December 20th. Order through the website to enjoy these benefits!
+                <p className="text-center text-sm text-gray-600 lg:py-2 leading-relaxed font-body">
+                    
                 </p>
 
                 </motion.div>
@@ -400,15 +399,15 @@ export default function Home() {
                     transition={{ duration: 0.8, delay: 0.4 }}
                 >
                     <Link
-                    to="/products/bundle"
-                    state={{ activeTab: "bundle" }}
+                    to="/products/cleanse"
+                    state={{ activeTab: "cleanse" }}
                     className="inline-block bg-white text-green-700 text-base font-semibold py-2 px-4 rounded-full"
                     >
                     Shop Now
                     <ArrowRight className="w-5 h-5 ml-2 inline-block" />
                     </Link>
                 </motion.div>
-                </motion.section> */}
+                </motion.section>
 
         {/* Products Carousel with left/right arrows */}
         <motion.section
