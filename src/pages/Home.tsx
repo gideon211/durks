@@ -331,29 +331,27 @@ export default function Home() {
             className="lg:hidden py-6 mt-2 flex flex-col items-center text-center space-y-4"
             style={{ fontFamily: "Raleway, sans-serif" }}
           >
-            <h1
-              className="text-5xl sm:text-4xl font-bold text-neutral-800 leading-none tracking-tight"
-              style={{
-                fontFamily: "'Poppins', sans-serif",
-              }}
-            >
-              Fall into
-              <br />
-              <span
-                className="text-green-400"
-                style={{
-                  fontFamily: "'Poppins', serif",
-                  fontWeight: 600,
-                  fontStyle: "italic",
-                }}
-              >
-                Wellness
-              </span>
-            </h1>
+<h1
+  className="text-5xl sm:text-4xl font-bold font-heading text-neutral-900  tracking-tight"
+>
+  Fall into
+  <br />
+  <span className="text-green-500 font-bold">
+    Wellness..
+  </span>
+</h1>
 
-            <p className="text-base sm:text-xl text-gray-800 max-w-md px-2 font-body">
-              Health isn't complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
-            </p>
+
+<motion.p
+  className="text-base sm:text-xl text-gray-800 max-w-md px-2 font-body"
+  initial={{ opacity: 0, y: 50 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  transition={{ duration: 2.0, ease: "easeOut", delay: 0.4 }} // <-- delay added
+  viewport={{ once: true }}
+>
+  Health isn't complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
+</motion.p>
+
             <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2 font-semibold">
               <Link to="/products">
                 Shop Now

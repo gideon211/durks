@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-         heading: ['Montserrat', 'sans'],
+         heading: ['Montserrat', 'sans', "Poppins", "Inter", "sans-serif"],
         body: ['Poppins', 'sans-serif'],
       },
       colors: {
