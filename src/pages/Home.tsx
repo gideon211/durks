@@ -376,7 +376,7 @@ export default function Home() {
                     transition={{ duration: 0.8 }}
                 >
                 <h1 className="font-heading font-bold text-center mb-2 leading-tight text-[clamp(1.25rem,3.5vw,2.5rem)]">
-                A HABIT THAT YIELD RESULTS
+                A HABIT THAT YIELDS RESULTS
                 </h1>
 
                 <p className="text-center text-md text-gray-600 lg:py-2 leading-tight font-body">
