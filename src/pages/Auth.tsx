@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAuth } from "@/context/Authcontext";
 import { signInUser, signUpUser } from "@/api/authApi";
-import { Eye, EyeOff } from "lucide-react";
+import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -23,12 +23,12 @@ export default function Auth() {
 
   // track active tab so we can animate titles/subtitles
   const [activeTab, setActiveTab] = useState<"signin" | "signup">(
-    (location.state as any)?.tab === "signup" ? "signup" : "signin"
+    (location.state as any)?.tab === "signup" ? "signup" : "signin",
   );
 
   // prefill email on the sign-in form after successful signup
   const [prefillEmail, setPrefillEmail] = useState<string>(
-    (location.state as any)?.prefillEmail || ""
+    (location.state as any)?.prefillEmail || "",
   );
 
   // If the route state requested a specific tab (navigated from elsewhere), honour it once.
@@ -43,8 +43,11 @@ export default function Auth() {
     e.preventDefault();
     setIsLoading(true);
     const form = e.currentTarget;
-    const email = (form.elements.namedItem("signin-email") as HTMLInputElement).value;
-    const password = (form.elements.namedItem("signin-password") as HTMLInputElement).value;
+    const email = (form.elements.namedItem("signin-email") as HTMLInputElement)
+      .value;
+    const password = (
+      form.elements.namedItem("signin-password") as HTMLInputElement
+    ).value;
 
     try {
       const data = await signInUser({ email, password });
@@ -71,13 +74,19 @@ export default function Auth() {
     e.preventDefault();
     setIsLoading(true);
     const form = e.currentTarget;
-    const fullName = (form.elements.namedItem("signup-name") as HTMLInputElement).value;
-    const email = (form.elements.namedItem("signup-email") as HTMLInputElement).value;
-    const password = (form.elements.namedItem("signup-password") as HTMLInputElement).value;
-    const company = (form.elements.namedItem("signup-company") as HTMLInputElement)?.value || "";
+    const fullName = (
+      form.elements.namedItem("signup-name") as HTMLInputElement
+    ).value;
+    const email = (form.elements.namedItem("signup-email") as HTMLInputElement)
+      .value;
+    const password = (
+      form.elements.namedItem("signup-password") as HTMLInputElement
+    ).value;
+    const company =
+      (form.elements.namedItem("signup-company") as HTMLInputElement)?.value ||
+      "";
 
     try {
-  
       const data = await signUpUser({ fullName, email, password, company });
 
       // DO NOT auto-login. Instead:
@@ -87,7 +96,6 @@ export default function Auth() {
       setPrefillEmail(email);
       setActiveTab("signin");
 
-
       form.reset();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to create account");
@@ -95,7 +103,6 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
-
 
   const containerVariants = {
     hidden: { opacity: 0, y: 18 },
@@ -114,7 +121,6 @@ export default function Auth() {
   };
 
   useEffect(() => {
-  
     window.scrollTo({ top: 0 });
   }, []);
 
@@ -124,7 +130,10 @@ export default function Auth() {
       {/* <Header /> */}
 
       {/* Decorative background shapes */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+      >
         <motion.div
           animate={{ rotate: [0, 6, -6, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
@@ -148,6 +157,22 @@ export default function Auth() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             {/* Left: animated heading + microcopy */}
             <div className="flex flex-col gap-2">
+              <motion.a
+                href="/"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-300 group mb-3"
+              >
+                <motion.div
+                  initial={{ x: 0 }}
+                  whileHover={{ x: -3 }}
+                  transition={{ type: "spring", stiffness: 400 }}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </motion.div>
+                <span className="font-medium">Back to home</span>
+              </motion.a>
               <AnimatePresence mode="wait">
                 {activeTab === "signin" ? (
                   <motion.div
@@ -173,8 +198,9 @@ export default function Auth() {
                       animate="show"
                       className="text-sm text-muted-foreground max-w-md"
                     >
-                      Sign in to resume where you left off — your cart, order history
-                      are waiting. Quick tip: Use the email you signed up with.
+                      Sign in to resume where you left off — your cart, order
+                      history are waiting. Quick tip: Use the email you signed
+                      up with.
                     </motion.p>
 
                     <motion.div
@@ -185,16 +211,47 @@ export default function Auth() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 2v6" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M8 10h8" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M6 14h12" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M9 18h6" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
+                            <path
+                              d="M12 2v6"
+                              stroke="#0f172a"
+                              strokeWidth="1.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M8 10h8"
+                              stroke="#0f172a"
+                              strokeWidth="1.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M6 14h12"
+                              stroke="#0f172a"
+                              strokeWidth="1.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M9 18h6"
+                              stroke="#0f172a"
+                              strokeWidth="1.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
                           </svg>
                         </div>
                         <div>
                           <div className="font-semibold">Signed-in perks</div>
-                          <div className="text-xs text-muted-foreground">Quick checkout • Order tracking • Saved carts</div>
+                          <div className="text-xs text-muted-foreground">
+                            Quick checkout • Order tracking • Saved carts
+                          </div>
                         </div>
                       </div>
                     </motion.div>
@@ -223,8 +280,9 @@ export default function Auth() {
                       animate="show"
                       className="text-sm text-muted-foreground max-w-md"
                     >
-                      Join us and enjoy personalised deals, order history, and easy bulk purchases.
-                      It only takes a minute — and you'll get special offers for first orders.
+                      Join us and enjoy personalised deals, order history, and
+                      easy bulk purchases. It only takes a minute — and you'll
+                      get special offers for first orders.
                     </motion.p>
                   </motion.div>
                 )}
@@ -248,49 +306,96 @@ export default function Auth() {
               transition={{ duration: 0.45 }}
               className="bg-card border-2 border-border rounded-2xl shadow-xl p-6"
             >
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "signin" | "signup")} className="w-full">
+              <Tabs
+                value={activeTab}
+                onValueChange={(v) => setActiveTab(v as "signin" | "signup")}
+                className="w-full"
+              >
                 <TabsList className="grid w-full grid-cols-2 mb-6 bg-transparent rounded-md p-1">
-                  <TabsTrigger value="signin" className={`font-semibold ${activeTab === "signin" ? "bg-primary rounded-md border" : ""}`}>LOG IN</TabsTrigger>
-                  <TabsTrigger value="signup" className={`font-semibold ${activeTab === "signup" ? "bg-primary/5 rounded-md border" : ""}`}>SIGN UP</TabsTrigger>
+                  <TabsTrigger
+                    value="signin"
+                    className={`font-semibold ${activeTab === "signin" ? "bg-primary rounded-md border" : ""}`}
+                  >
+                    LOG IN
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="signup"
+                    className={`font-semibold ${activeTab === "signup" ? "bg-primary/5 rounded-md border" : ""}`}
+                  >
+                    SIGN UP
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="signin">
                   {/* Show a small success hint if we've arrived here after signup */}
                   {prefillEmail && activeTab === "signin" && (
-                    <div className="mb-3 text-sm text-emerald-600">Account created — please sign in using the email below.</div>
+                    <div className="mb-3 text-sm text-emerald-600">
+                      Account created — please sign in using the email below.
+                    </div>
                   )}
 
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="signin-email">Email</Label>
-                      <Input id="signin-email" name="signin-email" type="email" required defaultValue={prefillEmail} />
+                      <Input
+                        id="signin-email"
+                        name="signin-email"
+                        type="email"
+                        required
+                        defaultValue={prefillEmail}
+                      />
                     </div>
 
                     <div className="space-y-2 relative">
                       <Label htmlFor="signin-password">Password</Label>
-                      <Input id="signin-password" name="signin-password" type={showSignInPassword ? "text" : "password"} required />
-                      <button type="button" onClick={() => setShowSignInPassword(!showSignInPassword)} className="absolute right-3 top-9 text-muted-foreground hover:text-foreground">
-                        {showSignInPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                      <Input
+                        id="signin-password"
+                        name="signin-password"
+                        type={showSignInPassword ? "text" : "password"}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowSignInPassword(!showSignInPassword)
+                        }
+                        className="absolute right-3 top-9 text-muted-foreground hover:text-foreground"
+                      >
+                        {showSignInPassword ? (
+                          <Eye size={18} />
+                        ) : (
+                          <EyeOff size={18} />
+                        )}
                       </button>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <Checkbox id="remember" />
-                        <label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">Remember me</label>
+                        <label
+                          htmlFor="remember"
+                          className="text-sm text-muted-foreground cursor-pointer"
+                        >
+                          Remember me
+                        </label>
                       </div>
 
-                      <a className="text-sm text-primary hover:underline" href="/forgot-password">Forgot?</a>
+                      {/*<a className="text-sm text-primary hover:underline" href="/forgot-password">Forgot?</a>*/}
                     </div>
 
                     <div className="space-y-3">
-                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button type="submit" className="w-full p-6" disabled={isLoading}>
+                      <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Button
+                          type="submit"
+                          className="w-full p-6"
+                          disabled={isLoading}
+                        >
                           {isLoading ? "Logging in..." : "Log In"}
                         </Button>
                       </motion.div>
-
-
                     </div>
                   </form>
                 </TabsContent>
@@ -299,40 +404,85 @@ export default function Auth() {
                   <form onSubmit={handleSignUp} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="signup-name">Full Name</Label>
-                      <Input id="signup-name" name="signup-name" type="text" required />
+                      <Input
+                        id="signup-name"
+                        name="signup-name"
+                        type="text"
+                        required
+                      />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="signup-email">Email</Label>
-                      <Input id="signup-email" name="signup-email" type="email" required />
+                      <Input
+                        id="signup-email"
+                        name="signup-email"
+                        type="email"
+                        required
+                      />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="signup-company">Company (Optional)</Label>
-                      <Input id="signup-company" name="signup-company" type="text" />
+                      <Input
+                        id="signup-company"
+                        name="signup-company"
+                        type="text"
+                      />
                     </div>
 
                     <div className="space-y-2 relative">
                       <Label htmlFor="signup-password">Password</Label>
-                      <Input id="signup-password" name="signup-password" type={showSignUpPassword ? "text" : "password"} required />
-                      <button type="button" onClick={() => setShowSignUpPassword(!showSignUpPassword)} className="absolute right-3 top-9 text-muted-foreground hover:text-foreground">
-                        {showSignUpPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                      <Input
+                        id="signup-password"
+                        name="signup-password"
+                        type={showSignUpPassword ? "text" : "password"}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowSignUpPassword(!showSignUpPassword)
+                        }
+                        className="absolute right-3 top-9 text-muted-foreground hover:text-foreground"
+                      >
+                        {showSignUpPassword ? (
+                          <Eye size={18} />
+                        ) : (
+                          <EyeOff size={18} />
+                        )}
                       </button>
                     </div>
 
                     <div className="space-y-3">
-                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button type="submit" className="w-full" disabled={isLoading}>
+                      <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          disabled={isLoading}
+                        >
                           {isLoading ? "Creating account..." : "Create Account"}
                         </Button>
                       </motion.div>
 
-                      <div className="text-center text-xs text-muted-foreground">
-                        By creating an account you agree to our <a className="text-primary underline" href="/terms">Terms</a>.
-                      </div>
+                      {/*<div className="text-center text-xs text-muted-foreground">
+                        By creating an account you agree to our{" "}
+                        <a className="text-primary underline" href="/terms">
+                          Terms
+                        </a>
+                        .
+                      </div>*/}
 
                       <div className="mt-1 text-center">
-                        <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="inline-block bg-emerald-50 px-3 py-1 rounded-full text-xs font-medium">
+                        <motion.span
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.15 }}
+                          className="inline-block bg-emerald-50 px-3 py-1 rounded-full text-xs font-medium"
+                        >
                           New users: Get 10% off your first order
                         </motion.span>
                       </div>
