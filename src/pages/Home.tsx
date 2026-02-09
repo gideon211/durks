@@ -7,10 +7,19 @@ import {
 } from "@/components/ui/accordion";
 import { motion, Variants, easeOut, useAnimationFrame } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Star, Leaf, Heart, Sparkles, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Star,
+  Leaf,
+  Heart,
+  Sparkles,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import Carousel from "@/components/Carousel";
+import Carousel from "@/components/carousel/Carousel";
+import HeroSection from "@/layout/HeroSection";
 // Local assets in src/assets
 import heroImage from "@/assets/hero-juice.webp";
 import pureJuiceImage from "@/assets/pure-juice.webp";
@@ -66,7 +75,8 @@ const productCategories = [
     slug: "bundle",
     images: [bundle3],
     fruits: "",
-    description: "Perfectly curated juice packs to serve your unique quantity and dietary needs.",
+    description:
+      "Perfectly curated juice packs to serve your unique quantity and dietary needs.",
   },
 
   // 3. Pure juices
@@ -99,7 +109,8 @@ const productCategories = [
   {
     id: "shots",
     name: "WELLNESS SHOTS",
-    description: "Small but mighty little potions of health. Let your shots do the waking up!",
+    description:
+      "Small but mighty little potions of health. Let your shots do the waking up!",
     slug: "shots",
     image: wellnessPacksImage,
     fruits: "Ginger, Turmeric, Beetroot, Wheatgrass, Cayenne, Lemon",
@@ -110,9 +121,9 @@ const productCategories = [
     id: "smoothies",
     name: "SMOOTHIES",
     slug: "smoothies",
-    description:
-      "Team thick, Rich blends of powerful detoxing ingredients. ",
-    fruits: "Bananas, Strawberries, Blueberries, Mangos, Avocado, Dates, Coconut",
+    description: "Team thick, Rich blends of powerful detoxing ingredients. ",
+    fruits:
+      "Bananas, Strawberries, Blueberries, Mangos, Avocado, Dates, Coconut",
     benefit: "Protein-Rich & Sustained Energy",
     bgColor: "bg-[#ff7017]",
     images: [smoothie1, smoothie2, smoothie3, smoothie4],
@@ -123,9 +134,11 @@ const productCategories = [
     id: "flavors",
     name: "FLAVORS",
     slug: "flavors",
-    description: "A wide range of delicious juice blends to meet your specific health needs and event goals.",
+    description:
+      "A wide range of delicious juice blends to meet your specific health needs and event goals.",
     images: [flavor1, flavor2, flavor3, flavor4],
-    fruits: "Strawberry, Mango, Coconut, Berry Fusion (Flavor-Based Assortment)",
+    fruits:
+      "Strawberry, Mango, Coconut, Berry Fusion (Flavor-Based Assortment)",
   },
 
   // 8. Cut Fruits → 4 images
@@ -148,7 +161,8 @@ const productCategories = [
     slug: "gift-packs",
     description:
       "Share the gift of health with our beautifully curated gift packs. Each collection features an assortment of our bestselling juices, smoothies, and wellness shots, elegantly packaged.",
-    fruits: "Premium Assorted Selection: Berries, Pineapple, Grapes, Citrus Mix, Exotic Fruits",
+    fruits:
+      "Premium Assorted Selection: Berries, Pineapple, Grapes, Citrus Mix, Exotic Fruits",
     benefit: "Thoughtful Wellness Gifting",
     bgColor: "bg-[#007a56]",
     images: [gift1, gift2, gift3, gift4],
@@ -258,7 +272,10 @@ export default function Home() {
     if (!el) return;
     // scroll by ~80% of viewport width of the carousel
     const amount = Math.floor(el.clientWidth * 0.8);
-    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+    el.scrollBy({
+      left: dir === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
   };
 
   return (
@@ -266,149 +283,55 @@ export default function Home() {
       <Header />
       <div className="min-h-screen bg-white">
         {/* Hero Section (unchanged) */}
+        <HeroSection />
+
         <motion.section
-          className="relative"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.5 }}
+          className="w-full sm:py-8 md:pt-8 md:pb-8 lg:pt-16 lg:px-12 border-t border-transparent"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={containerVariants}
         >
-          <div className="h-[500px] md:h-[600px] lg:h-screen w-full overflow-hidden">
-            <motion.img
-              src={deskheroImage}
-              loading="lazy"
-              alt="Fresh Organic Cold-Pressed Juice"
-              initial={{ opacity: 0, y: -80 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 2.5, ease: "easeOut" }}
-              className="hidden lg:block w-full lg:h-screen object-cover"
-            />
+          <motion.div
+            className="mb-6 w-full text-center mt-16 px-4 sm:px-6 md:px-8 lg:px-12"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="font-heading font-bold text-center mb-2 leading-tight text-[clamp(1.25rem,3.5vw,2.5rem)]">
+              A HABIT THAT YIELDS RESULTS
+            </h1>
 
-            <motion.img
-              src={heroImage}
-              loading="lazy"
-              alt="Fresh Organic Cold-Pressed Juice"
-              initial={{ opacity: 0, y: -80 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 2.5, ease: "easeOut" }}
-              className="block lg:hidden w-full h-full object-cover rounded-b-md"
-            />
-
-            <div className="hidden lg:flex absolute inset-0 bg-gradient-to-t from-neutral-charcoal/95 via-neutral-charcoal/50 to-transparent items-center justify-center">
-              <div className="container mx-auto px-4 text-left">
-                <motion.div
-                  className="max-w-3xl space-y-4 animate-fade-in"
-                  initial={{ opacity: 0, x: -50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 1 }}
-                >
-                  <h1 className="text-8xl lg:text-7xl font-heading font-bold text-white leading-wide tracking-wide">
-                    {" "}
-                    Fall Into <br /> <span className="text-green-400">Wellness</span>{" "}
-                  </h1>
-
-                  <p className="text-xl lg:text-xl text-white/90 max-w-2xl">
-                    Health isn't complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
-                  </p>
-                  <div className="flex gap-4 pt-4">
-                    <Button asChild size="md" variant="hero">
-                      <Link to="/products">Shop All Juices</Link>
-                    </Button>
-                    <Button asChild size="md" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-foreground">
-                      <Link to="/products/cleanse">Start Your Cleanse</Link>
-                    </Button>
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </div>
+            <p className="text-center text-md text-gray-600 lg:py-2 leading-tight font-body">
+              A gentle palate reset designed to elevate your cravings toward
+              better nutrition.
+            </p>
+          </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 80 }}
+            initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            viewport={{ once: true }}
-            className="lg:hidden py-6 mt-2 flex flex-col items-center text-center space-y-4"
-            style={{ fontFamily: "Raleway, sans-serif" }}
+            transition={{ duration: 0.8, delay: 0.2 }}
           >
-<h1
-  className="text-5xl sm:text-4xl font-bold font-heading text-neutral-900  tracking-tight"
->
-  Fall into
-  <br />
-  <span className="text-green-500 font-bold">
-    Wellness..
-  </span>
-</h1>
+            <Carousel />
+          </motion.div>
 
-
-<motion.p
-  className="text-base sm:text-xl text-gray-800 max-w-md px-2 font-body"
-  initial={{ opacity: 0, y: 50 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  transition={{ duration: 2.0, ease: "easeOut", delay: 0.4 }} // <-- delay added
-  viewport={{ once: true }}
->
-  Health isn't complicated. Committed to being intentional with every sip. Fresh Pure Natural Juices, zero additives, maximum flavor and function.
-</motion.p>
-
-            <Button asChild size="md" variant="hero" className="rounded-sm flex items-center gap-2 font-semibold">
-              <Link to="/products">
-                Shop Now
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </Button>
+          <motion.div
+            className="text-center mt-4"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            <Link
+              to="/products/cleanse"
+              state={{ activeTab: "cleanse" }}
+              className="inline-block bg-white text-green-700 text-base font-semibold py-2 px-4 rounded-full"
+            >
+              Shop Now
+              <ArrowRight className="w-5 h-5 ml-2 inline-block" />
+            </Link>
           </motion.div>
         </motion.section>
-
-
-             <motion.section
-                className="w-full sm:py-8 md:pt-8 md:pb-8 lg:pt-16 lg:px-12 border-t border-transparent"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.3 }}
-                variants={containerVariants}
-                >
-                <motion.div
-                    className="mb-6 w-full text-center mt-16 px-4 sm:px-6 md:px-8 lg:px-12"
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                >
-                <h1 className="font-heading font-bold text-center mb-2 leading-tight text-[clamp(1.25rem,3.5vw,2.5rem)]">
-                A HABIT THAT YIELDS RESULTS
-                </h1>
-
-                <p className="text-center text-md text-gray-600 lg:py-2 leading-tight font-body">
-                   A gentle palate reset designed to elevate your cravings toward better nutrition.
-                </p>
-
-                </motion.div>
-
-                <motion.div
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                >
-                    <Carousel />
-                </motion.div>
-
-                <motion.div
-                    className="text-center mt-4"
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
-                >
-                    <Link
-                    to="/products/cleanse"
-                    state={{ activeTab: "cleanse" }}
-                    className="inline-block bg-white text-green-700 text-base font-semibold py-2 px-4 rounded-full"
-                    >
-                    Shop Now
-                    <ArrowRight className="w-5 h-5 ml-2 inline-block" />
-                    </Link>
-                </motion.div>
-                </motion.section>
 
         {/* Products Carousel with left/right arrows */}
         <motion.section
@@ -425,8 +348,12 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-2">Explore Our Products</h2>
-              <p className="text-md md:text-xl font-body text-muted-foreground">Discover the perfect juice for your lifestyle</p>
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-2">
+                Explore Our Products
+              </h2>
+              <p className="text-md md:text-xl font-body text-muted-foreground">
+                Discover the perfect juice for your lifestyle
+              </p>
             </motion.div>
 
             {/* Wrapper for arrows + carousel */}
@@ -462,7 +389,11 @@ export default function Home() {
                 style={{ scrollBehavior: "smooth" }}
               >
                 {productCategories.map((category) => (
-                  <motion.div key={category.id} className="w-[300px] flex-shrink-0" variants={cardVariants}>
+                  <motion.div
+                    key={category.id}
+                    className="w-[300px] flex-shrink-0"
+                    variants={cardVariants}
+                  >
                     <div className="relative rounded-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
                       {/* FIXED HEIGHT IMAGE WRAPPER */}
                       <div className="relative h-[36rem] overflow-hidden">
@@ -495,16 +426,25 @@ export default function Home() {
                       {/* CONTENT OVERLAY — FIXED HEIGHT & NOT PUSHING IMAGE */}
                       <div className="absolute bottom-0 inset-x-0 p-4 backdrop-blur-md bg-black/40 rounded-t-2xl transition-all duration-700 md:group-hover:bg-black/60">
                         <div className="flex items-center justify-between">
-                          <h2 className="text-white text-lg md:text-xl font-bold">{category.name}</h2>
-                          <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">+</button>
+                          <h2 className="text-white text-lg md:text-xl font-bold">
+                            {category.name}
+                          </h2>
+                          <button className="w-8 h-8 bg-white text-green-700 rounded-full flex items-center justify-center text-2xl font-bold">
+                            +
+                          </button>
                         </div>
 
                         {/* FIXED HEIGHT TEXT WRAPPER SO DESCRIPTION NEVER PUSHES CARD */}
                         <div className="mt-2 text-white text-sm leading-relaxed opacity-100 md:opacity-90 md:group-hover:opacity-100 h-[70px] overflow-hidden">
-                          <p className="text-xs opacity-95">{category.description}</p>
+                          <p className="text-xs opacity-95">
+                            {category.description}
+                          </p>
                         </div>
 
-                        <Link to={`/products/${category.slug}`} className="inline-flex items-center mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm">
+                        <Link
+                          to={`/products/${category.slug}`}
+                          className="inline-flex items-center mt-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full text-sm"
+                        >
                           Shop Now
                           <ArrowRight className="w-5 h-5 ml-2" />
                         </Link>
@@ -518,7 +458,10 @@ export default function Home() {
         </motion.section>
 
         <div className="bg-green-600 text-white py-2 overflow-hidden font-lexend border-2 border-t-red-400">
-          <motion.div ref={containerRef} className="flex gap-12 whitespace-nowrap will-change-transform">
+          <motion.div
+            ref={containerRef}
+            className="flex gap-12 whitespace-nowrap will-change-transform"
+          >
             {[...Array(2)].map((_, i) => (
               <span key={i} className="flex gap-12 px-8">
                 {messages.map((msg, index) => (
@@ -530,22 +473,65 @@ export default function Home() {
         </div>
 
         {/* Health Benefits (unchanged) */}
-        <motion.section className="md:py-20 mt-10" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants}>
+        <motion.section
+          className="md:py-20 mt-10"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={containerVariants}
+        >
           <div className="container mx-auto px-4">
-            <motion.div className="text-center mb-12 md:mb-16" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <h2 className="text-xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Why Choose Duks?</h2>
+            <motion.div
+              className="text-center mb-12 md:mb-16"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <h2 className="text-xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">
+                Why Choose Duks?
+              </h2>
               <div>
-                <motion.img src={chooseImage} loading="lazy" alt="why choose us Image" className="w-full object-cover h-[14rem] rounded-md lg:h-[30rem] lg:rounded-md py-4" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 1 }} />
+                <motion.img
+                  src={chooseImage}
+                  loading="lazy"
+                  alt="why choose us Image"
+                  className="w-full object-cover h-[14rem] rounded-md lg:h-[30rem] lg:rounded-md py-4"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  transition={{ duration: 1 }}
+                />
               </div>
-              <p className="text-md md:text-xl font-semibold text-muted-foreground max-w-2xl mx-auto">Every bottle is a commitment to your health and our planet</p>
+              <p className="text-md md:text-xl font-semibold text-muted-foreground max-w-2xl mx-auto">
+                Every bottle is a commitment to your health and our planet
+              </p>
             </motion.div>
 
-            <motion.div className="grid md:grid-cols-3 gap-6 md:gap-8 " variants={containerVariants}>
-              {[{ icon: Leaf, title: "Credibility", text: "Juices are all pure with no added sugar, preservatives and artificial colors. Juices are bottled as juiced." },
-              { icon: Sparkles, title: "Bursting with Benefits", text: "Cold-press technology preserves maximum vitamins, minerals, and enzymes." },
-              { icon: Heart, title: "Deliciously Elevated", text: "Our master blenders create flavor combinations that excite your taste buds while nourishing your body." }
+            <motion.div
+              className="grid md:grid-cols-3 gap-6 md:gap-8 "
+              variants={containerVariants}
+            >
+              {[
+                {
+                  icon: Leaf,
+                  title: "Credibility",
+                  text: "Juices are all pure with no added sugar, preservatives and artificial colors. Juices are bottled as juiced.",
+                },
+                {
+                  icon: Sparkles,
+                  title: "Bursting with Benefits",
+                  text: "Cold-press technology preserves maximum vitamins, minerals, and enzymes.",
+                },
+                {
+                  icon: Heart,
+                  title: "Deliciously Elevated",
+                  text: "Our master blenders create flavor combinations that excite your taste buds while nourishing your body.",
+                },
               ].map((item, index) => (
-                <motion.div key={index} className="border border-green-400 rounded-md p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-2" variants={cardVariants}>
+                <motion.div
+                  key={index}
+                  className="border border-green-400 rounded-md p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+                  variants={cardVariants}
+                >
                   <div className="flex items-center gap-4 px-4 py-2">
                     <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
                       <item.icon className="w-8 h-8 text-accent" />
@@ -553,7 +539,9 @@ export default function Home() {
                     <div className="text-xl font-semibold">{item.title}</div>
                   </div>
                   <div>
-                    <div className="text-base font-body leading-relaxed px-4 text-center py-2">{item.text}</div>
+                    <div className="text-base font-body leading-relaxed px-4 text-center py-2">
+                      {item.text}
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -562,57 +550,151 @@ export default function Home() {
         </motion.section>
 
         {/* TikTok Section (unchanged) */}
-        <motion.section className="py-12  md:py-20 bg-neutral-charcoal text-white mt-24 rounded-b-lg" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants}>
+        <motion.section
+          className="py-12  md:py-20 bg-neutral-charcoal text-white mt-24 rounded-b-lg"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={containerVariants}
+        >
           <div className="container mx-auto px-4">
-            <motion.div className="text-center mb-12 md:mb-16" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">Join us on our socials</h2>
-              <p className="text-md md:text-xl font-body text-white/80">Follow @duks_juice for daily juice inspo, recipes, and wellness tips</p>
+            <motion.div
+              className="text-center mb-12 md:mb-16"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">
+                Join us on our socials
+              </h2>
+              <p className="text-md md:text-xl font-body text-white/80">
+                Follow @duks_juice for daily juice inspo, recipes, and wellness
+                tips
+              </p>
               <div className="flex gap-6 mx-auto justify-center mt-4">
-                <a href="https://www.tiktok.com/@duks_juice" target="_blank" rel="noopener noreferrer">
-                  <img src={Tiktok} loading="lazy" alt="tiktok" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover cursor-pointer " />
+                <a
+                  href="https://www.tiktok.com/@duks_juice"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src={Tiktok}
+                    loading="lazy"
+                    alt="tiktok"
+                    className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover cursor-pointer "
+                  />
                 </a>
-                <a href="https://www.instagram.com/duks_juice" target="_blank" rel="noopener noreferrer">
-                  <img src={Instagram} loading="lazy" alt="instagram" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover cursor-pointer " />
+                <a
+                  href="https://www.instagram.com/duks_juice"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src={Instagram}
+                    loading="lazy"
+                    alt="instagram"
+                    className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover cursor-pointer "
+                  />
                 </a>
-                <a href="https://facebook.com/duks_juice" target="_blank" rel="noopener noreferrer">
-                  <img src={Facebook} loading="lazy" alt="facebook" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 cursor-pointer object-cover" />
+                <a
+                  href="https://facebook.com/duks_juice"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src={Facebook}
+                    loading="lazy"
+                    alt="facebook"
+                    className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 cursor-pointer object-cover"
+                  />
                 </a>
               </div>
             </motion.div>
 
             <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
               {tiktokLinks.map((item, index) => (
-                <motion.a key={index} href={item.url} target="_blank" rel="noopener noreferrer" className="group relative aspect-square overflow-hidden rounded-sm" variants={cardVariants}>
-                  <img src={item.image} loading="lazy" alt={`TikTok post ${index + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                <motion.a
+                  key={index}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative aspect-square overflow-hidden rounded-sm"
+                  variants={cardVariants}
+                >
+                  <img
+                    src={item.image}
+                    loading="lazy"
+                    alt={`TikTok post ${index + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
                   <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/80 transition-all duration-300 flex items-center justify-center">
-                    <span className="text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-heading">View on TikTok</span>
+                    <span className="text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-heading">
+                      View on TikTok
+                    </span>
                   </div>
                 </motion.a>
               ))}
             </motion.div>
 
-            <motion.div className="text-center mt-12" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <Button asChild size="md" className="bg-primary hover:bg-primary/90 text-foreground font-bold">
-                <a href="https://www.tiktok.com/@duks_juice" target="_blank" rel="noopener noreferrer">Follow Duks</a>
+            <motion.div
+              className="text-center mt-12"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <Button
+                asChild
+                size="md"
+                className="bg-primary hover:bg-primary/90 text-foreground font-bold"
+              >
+                <a
+                  href="https://www.tiktok.com/@duks_juice"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Follow Duks
+                </a>
               </Button>
             </motion.div>
           </div>
         </motion.section>
 
         {/* FAQ Section (unchanged) */}
-        <motion.section className="py-12 md:py-20 mt-10" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants}>
+        <motion.section
+          className="py-12 md:py-20 mt-10"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={containerVariants}
+        >
           <div className="container mx-auto px-4 max-w-4xl">
-            <motion.div className="text-center mb-12 md:mb-16" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">FAQS</h2>
-              <p className="text-md md:text-xl font-body text-muted-foreground">Everything you need to know about Duks juices</p>
+            <motion.div
+              className="text-center mb-12 md:mb-16"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">
+                FAQS
+              </h2>
+              <p className="text-md md:text-xl font-body text-muted-foreground">
+                Everything you need to know about Duks juices
+              </p>
             </motion.div>
 
             <Accordion type="single" collapsible className="space-y-2">
               {faqs.map((faq, index) => (
                 <motion.div key={index} variants={cardVariants}>
-                  <AccordionItem value={`item-${index}`} className="border rounded-sm px-6 bg-card">
-                    <AccordionTrigger className="text-md font-semibold font-heading hover:text-secondary hover:no-underline">{faq.question}</AccordionTrigger>
-                    <AccordionContent className="text-sm leading-relaxed pt-2">{faq.answer}</AccordionContent>
+                  <AccordionItem
+                    value={`item-${index}`}
+                    className="border rounded-sm px-6 bg-card"
+                  >
+                    <AccordionTrigger className="text-md font-semibold font-heading hover:text-secondary hover:no-underline">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-sm leading-relaxed pt-2">
+                      {faq.answer}
+                    </AccordionContent>
                   </AccordionItem>
                 </motion.div>
               ))}
