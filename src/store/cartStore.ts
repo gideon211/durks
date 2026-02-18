@@ -255,11 +255,18 @@ export const useCartStore = create<CartState>((set, get) => ({
           packs: packsArray,
         });
       }
-    } catch (err) {
-      console.error("addToCart failed:", err);
-      try { await get().fetchCart(); } catch (_) {}
-      throw err;
-    }
+        } catch (err: unknown) {
+        console.error("addToCart failed:", err);
+
+        try {
+            await get().fetchCart();
+        } catch (fetchErr: unknown) {
+            console.warn("fetchCart after addToCart failed:", fetchErr);
+        }
+
+        throw err;
+        }
+
   },
 
   removeFromCart: async (cartItemId) => {

@@ -19,7 +19,7 @@ export default function Carousel() {
           modules={[EffectCoverflow, Autoplay]}
           effect="coverflow"
           loop
-          autoplay={{ delay: 3000, disableOnInteraction: false }}
+          autoplay={{ delay: 1000, disableOnInteraction: false }}
           centeredSlides
           slidesPerView="auto"
           coverflowEffect={{
