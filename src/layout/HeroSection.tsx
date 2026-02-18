@@ -31,7 +31,7 @@ function HeroSection() {
                 <span className="text-green-400">Wellness</span>
               </h1>
 
-              <p className="text-md md:text-xl text-white/90 max-w-2xl">
+              <p className="text-lg md:text-xl text-white/90 max-w-2xl">
                 Health isn't complicated. Committed to being intentional with
                 every sip. Fresh Pure Natural Juices, zero additives, maximum
                 flavor and function.
@@ -71,7 +71,7 @@ function HeroSection() {
             <span className="text-green-500 font-bold">Wellness..</span>
           </h1>
 
-          <p className="text-lg text-gray-800 max-w-md font-body leading-relaxed">
+          <p className="text-md text-gray-800 max-w-md font-body leading-tight">
             Health isn't complicated. Committed to being intentional with every
             sip. Fresh Pure Natural Juices, zero additives, maximum flavor and
             function.
