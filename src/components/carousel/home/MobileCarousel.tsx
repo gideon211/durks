@@ -15,11 +15,11 @@ const MobileCarousel = () => {
 
     mobileImage1,
     mobileImage3,
-    mobileImage1,
-    mobileImage4,
     mobileImage2,
-    mobileImage5,
+    mobileImage4,
     mobileImage1,
+    mobileImage5,
+    mobileImage2,
     mobileImage6,
   ], []);
 
