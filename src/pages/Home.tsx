@@ -285,7 +285,7 @@ export default function Home() {
         {/* Hero Section (unchanged) */}
         <HeroSection />
 
-        <motion.section
+        {/* <motion.section
           className="w-full sm:py-8 md:pt-8 md:pb-8 lg:pt-16 lg:px-12 border-t border-transparent"
           initial="hidden"
           whileInView="visible"
@@ -331,7 +331,7 @@ export default function Home() {
               <ArrowRight className="w-5 h-5 ml-2 inline-block" />
             </Link>
           </motion.div>
-        </motion.section>
+        </motion.section> */}
 
         {/* Products Carousel with left/right arrows */}
         <motion.section
