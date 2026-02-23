@@ -18,41 +18,59 @@ function HeroSection() {
       <div className="hidden lg:block relative">
         <DesktopCarousel />
 
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="container mx-auto px-4">
-            <motion.div
-              className="max-w-3xl space-y-6"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.5 }}
-            >
-              <h1 className="text-6xl md:text-7xl lg:text-8xl font-heading font-bold text-white leading-tight">
-                Fall Into <br />
-                <span className="text-green-400">Wellness</span>
-              </h1>
+<div className="absolute inset-0 flex items-center justify-center  bg-gradient-to-t from-black/70 via-black/40 to-black/70">
+  <div className="container mx-auto px-6">
+    <motion.div
+      className="max-w-3xl mx-auto text-center space-y-8"
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 1 }}
+    >
+      {/* Badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-medium">
+        🌿 100% Natural • No Additives
+      </div>
 
-              <p className="text-lg md:text-xl text-white/90 max-w-2xl">
-                Health isn't complicated. Committed to being intentional with
-                every sip. Fresh Pure Natural Juices, zero additives, maximum
-                flavor and function.
-              </p>
+      {/* Headline */}
+      <h1 className="text-5xl md:text-7xl lg:text-8xl font-heading font-extrabold leading-tight text-white drop-shadow-2xl">
+        Fall Into
+        <br />
+        <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-lime-300 bg-clip-text text-transparent">
+          Wellness
+        </span>
+      </h1>
 
-              <div className="flex flex-wrap gap-4 pt-4">
-                <Button asChild size="md" variant="hero">
-                  <Link to="/products">Shop All Juices</Link>
-                </Button>
-                <Button
-                  asChild
-                  size="md"
-                  variant="outline"
-                  className="border-2 border-white text-white hover:bg-white hover:text-foreground"
-                >
-                  <Link to="/products/cleanse">Start Your Cleanse</Link>
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        </div>
+      {/* Decorative line */}
+      <div className="mx-auto w-24 h-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full" />
+
+      {/* Description */}
+      <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto drop-shadow-md">
+        Pure fruit. Thoughtfully crafted.
+        No additives...  just bold flavor, clean nutrition, and refreshing wellness in every bottle.
+      </p>
+
+      {/* Buttons */}
+      <div className="flex flex-wrap justify-center gap-4 pt-4">
+        <Button
+          asChild
+          size="lg"
+          className="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-8 py-6 rounded-full shadow-xl hover:scale-105 transition-transform drop-shadow-md"
+        >
+          <Link to="/products">Shop All Juices</Link>
+        </Button>
+
+        <Button
+          asChild
+          size="lg"
+          variant="outline"
+          className="border-2 border-white text-white px-8 py-6 rounded-full hover:bg-white hover:text-black transition-all drop-shadow-md"
+        >
+          <Link to="/products/cleanse">Start Your Cleanse</Link>
+        </Button>
+      </div>
+    </motion.div>
+  </div>
+</div>
       </div>
 
       <div className="block lg:hidden">
