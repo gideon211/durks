@@ -534,7 +534,7 @@ export default function Home() {
                 >
                   <div className="flex items-center gap-4 px-4 py-2">
                     <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
-                      <item.icon className="w-8 h-8 text-accent" />
+                      <item.icon className="w-6 h-6 text-accent" />
                     </div>
                     <div className="text-xl font-semibold">{item.title}</div>
                   </div>

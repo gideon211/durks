@@ -76,37 +76,50 @@ function HeroSection() {
       <div className="block lg:hidden">
         <MobileCarousel />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-          className="py-8 px-4 flex flex-col items-center text-center space-y-5"
-          style={{ fontFamily: "Raleway, sans-serif" }}
-        >
-          <h1 className="text-4xl sm:text-5xl font-bold font-heading text-neutral-900 tracking-tight">
-            Fall into
-            <br />
-            <span className="text-green-500 font-bold">Wellness..</span>
-          </h1>
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.8, ease: "easeOut", delay: 0.25 }}
+  className="py-10 px-5 flex flex-col items-center text-center space-y-6"
+  // remove inline fontFamily and use your Tailwind font classes instead
+>
+  {/* Small premium badge */}
+  <div className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-4 py-1.5 text-xs font-semibold tracking-wide text-green-700">
+    🌿 100% Natural • Zero Additives
+  </div>
 
-          <p className="text-md text-gray-800 max-w-md font-body leading-tight">
-            Health isn't complicated. Committed to being intentional with every
-            sip. Fresh Pure Natural Juices, zero additives, maximum flavor and
-            function.
-          </p>
+  {/* Headline (better hierarchy + spacing) */}
+  <h1 className="text-4xl sm:text-5xl font-heading font-extrabold tracking-tight leading-[1.05] text-neutral-900">
+    Fall into
+    <br />
+    <span className="bg-gradient-to-r from-green-600 via-emerald-500 to-lime-500 bg-clip-text text-transparent">
+      Wellness
+    </span>
+  </h1>
 
-          <Button
-            asChild
-            size="lg"
-            variant="default"
-            className="bg-green-500 hover:bg-green-600 text-white rounded-full px-8 py-6 font-semibold"
-          >
-            <Link to="/products" className="flex items-center gap-2">
-              Shop Now
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </Button>
-        </motion.div>
+  {/* Copy (cleaner, easier to read) */}
+  <p className="text-[15px] sm:text-base font-body leading-relaxed text-neutral-700 max-w-sm">
+    Crafted from real fruits with pure intention. No additives.. only vibrant
+    flavor, clean nourishment, and wellness in every sip.
+  </p>
+
+  {/* CTA (more premium) */}
+  <Button
+    asChild
+    size="lg"
+    className="rounded-full px-10 py-6 font-semibold tracking-wide shadow-lg bg-gradient-to-r from-green-600 to-emerald-500 hover:opacity-95 active:scale-[0.98] transition text-white"
+  >
+    <Link to="/products" className="flex items-center gap-2">
+      Shop Now
+      <ArrowRight className="w-5 h-5" />
+    </Link>
+  </Button>
+
+  {/* Tiny trust line (optional but makes it feel like a real brand) */}
+  <div className="text-xs text-neutral-500 font-body tracking-wide">
+    Cold-pressed <span className="text-green-600">•</span> Fresh daily <span className="text-green-600">•</span> fast delivery
+  </div>
+</motion.div>
       </div>
     </motion.section>
   );
