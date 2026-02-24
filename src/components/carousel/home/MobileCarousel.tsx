@@ -49,7 +49,7 @@ const MobileCarousel: React.FC = () => {
 
     intervalRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % mobileImages.length);
-    }, 4000);
+    }, 2000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
