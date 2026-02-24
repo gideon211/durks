@@ -72,7 +72,7 @@ const DesktopCarousel: React.FC = () => {
 
   return (
     <div className="relative w-full min-h-screen overflow-hidden bg-gray-900">
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence initial={false}>
         <motion.img
           key={currentIndex}
           src={desktopImages[currentIndex]}

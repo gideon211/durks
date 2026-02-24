@@ -64,7 +64,7 @@ const MobileCarousel: React.FC = () => {
 
   return (
     <div className="relative h-[500px] md:h-[600px] w-full overflow-hidden bg-gray-900">
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence initial={false}>
         <motion.img
           key={currentIndex}
           src={mobileImages[currentIndex]}
