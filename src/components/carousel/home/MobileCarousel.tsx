@@ -11,14 +11,14 @@ import mobileImage6 from "@/assets/carousel/mobile/image6.jpg";
 const MobileCarousel: React.FC = () => {
   const mobileImages = useMemo<string[]>(() => {
     return [
+      mobileImage6,
       mobileImage1,
       mobileImage3,
       mobileImage2,
       mobileImage4,
-      mobileImage1,
       mobileImage5,
-      mobileImage2,
-      mobileImage6,
+      
+      
     ];
   }, []);
 
