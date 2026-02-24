@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Banner from "../components/CallToOrderBanner";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 
-type PackEntry = { pack: number; price: number };
+type PackEntry = { pack: number; price: number; oldPrice?: number | null };
 
 type Product = {
   _id?: string;
@@ -42,7 +42,11 @@ const CACHE_TTL_MS = 1000 * 60 * 5; // 5 minutes
 // fast, robust normalize with memoization
 const packsMemo = new Map<string | number | Product, PackEntry[]>();
 
-function normalizePacks(raw: unknown, fallbackPrice = 0, memoKey?: string | number | Product): PackEntry[] {
+function normalizePacks(
+  raw: unknown,
+  fallbackPrice = 0,
+  memoKey?: string | number | Product
+): PackEntry[] {
   // memo lookup
   if (memoKey != null) {
     const hit = packsMemo.get(memoKey);
@@ -58,37 +62,75 @@ function normalizePacks(raw: unknown, fallbackPrice = 0, memoKey?: string | numb
   if (Array.isArray(raw)) {
     for (const item of raw) {
       if (item == null) continue;
+
       if (typeof item === "object" && "pack" in (item as any) && "price" in (item as any)) {
         const packNum = Number((item as any).pack);
         const priceNum = Number((item as any).price);
-        if (!Number.isNaN(packNum) && !Number.isNaN(priceNum)) out.push({ pack: packNum, price: priceNum });
+
+        const oldPriceRaw = (item as any).oldPrice;
+        const oldPriceNum =
+          oldPriceRaw === undefined || oldPriceRaw === null || oldPriceRaw === ""
+            ? null
+            : Number(oldPriceRaw);
+
+        if (!Number.isNaN(packNum) && !Number.isNaN(priceNum)) {
+          out.push({
+            pack: packNum,
+            price: priceNum,
+            oldPrice: oldPriceNum === null || Number.isNaN(oldPriceNum) ? null : oldPriceNum,
+          });
+        }
         continue;
       }
+
       if (typeof item === "number") {
-        out.push({ pack: item, price: fallbackPrice });
+        out.push({ pack: item, price: fallbackPrice, oldPrice: null });
         continue;
       }
+
       if (typeof item === "string") {
         const trimmed = item.trim();
         if (!trimmed) continue;
         const sep = trimmed.includes(":") ? ":" : trimmed.includes("-") ? "-" : null;
+
         if (sep) {
           const [p, pr] = trimmed.split(sep).map((s) => s.trim());
           const packNum = Number(p);
           const priceNum = Number(pr ?? fallbackPrice);
-          if (!Number.isNaN(packNum)) out.push({ pack: packNum, price: Number.isNaN(priceNum) ? fallbackPrice : priceNum });
+          if (!Number.isNaN(packNum)) {
+            out.push({
+              pack: packNum,
+              price: Number.isNaN(priceNum) ? fallbackPrice : priceNum,
+              oldPrice: null,
+            });
+          }
         } else {
           const packNum = Number(trimmed);
-          if (!Number.isNaN(packNum)) out.push({ pack: packNum, price: fallbackPrice });
+          if (!Number.isNaN(packNum)) out.push({ pack: packNum, price: fallbackPrice, oldPrice: null });
         }
         continue;
       }
+
       if (typeof item === "object") {
         const packNum = Number((item as any).pack ?? (item as any).size ?? (item as any).qty);
         const priceNum = Number((item as any).price ?? (item as any).amount ?? fallbackPrice);
-        if (!Number.isNaN(packNum)) out.push({ pack: packNum, price: Number.isNaN(priceNum) ? fallbackPrice : priceNum });
+
+        const oldPriceRaw = (item as any).oldPrice;
+        const oldPriceNum =
+          oldPriceRaw === undefined || oldPriceRaw === null || oldPriceRaw === ""
+            ? null
+            : Number(oldPriceRaw);
+
+        if (!Number.isNaN(packNum)) {
+          out.push({
+            pack: packNum,
+            price: Number.isNaN(priceNum) ? fallbackPrice : priceNum,
+            oldPrice: oldPriceNum === null || Number.isNaN(oldPriceNum) ? null : oldPriceNum,
+          });
+        }
       }
     }
+
     if (memoKey != null) packsMemo.set(memoKey, out);
     return out;
   }
@@ -98,7 +140,9 @@ function normalizePacks(raw: unknown, fallbackPrice = 0, memoKey?: string | numb
     for (const [k, v] of entries) {
       const packNum = Number(k);
       const priceNum = Number(v as any);
-      if (!Number.isNaN(packNum) && !Number.isNaN(priceNum)) out.push({ pack: packNum, price: priceNum });
+      if (!Number.isNaN(packNum) && !Number.isNaN(priceNum)) {
+        out.push({ pack: packNum, price: priceNum, oldPrice: null });
+      }
     }
     if (out.length) {
       if (memoKey != null) packsMemo.set(memoKey, out);
@@ -107,7 +151,7 @@ function normalizePacks(raw: unknown, fallbackPrice = 0, memoKey?: string | numb
   }
 
   if (typeof raw === "number") {
-    const r = [{ pack: raw, price: fallbackPrice }];
+    const r: PackEntry[] = [{ pack: raw, price: fallbackPrice, oldPrice: null }];
     if (memoKey != null) packsMemo.set(memoKey, r);
     return r;
   }
@@ -124,19 +168,31 @@ function normalizePacks(raw: unknown, fallbackPrice = 0, memoKey?: string | numb
       if (memoKey != null) packsMemo.set(memoKey, result);
       return result;
     } catch {
-      const parts = s.split(",").map((p) => p.trim()).filter(Boolean);
+      const parts = s
+        .split(",")
+        .map((p) => p.trim())
+        .filter(Boolean);
+
       for (const part of parts) {
         const sep = part.includes(":") ? ":" : part.includes("-") ? "-" : null;
+
         if (sep) {
           const [p, pr] = part.split(sep).map((x) => x.trim());
           const packNum = Number(p);
           const priceNum = Number(pr ?? fallbackPrice);
-          if (!Number.isNaN(packNum)) out.push({ pack: packNum, price: Number.isNaN(priceNum) ? fallbackPrice : priceNum });
+          if (!Number.isNaN(packNum)) {
+            out.push({
+              pack: packNum,
+              price: Number.isNaN(priceNum) ? fallbackPrice : priceNum,
+              oldPrice: null,
+            });
+          }
         } else {
           const packNum = Number(part);
-          if (!Number.isNaN(packNum)) out.push({ pack: packNum, price: fallbackPrice });
+          if (!Number.isNaN(packNum)) out.push({ pack: packNum, price: fallbackPrice, oldPrice: null });
         }
       }
+
       if (memoKey != null) packsMemo.set(memoKey, out);
       return out;
     }
@@ -147,33 +203,38 @@ function normalizePacks(raw: unknown, fallbackPrice = 0, memoKey?: string | numb
 }
 
 // lightweight memo wrapper for ProductCard props to avoid rerenders
-const MemoProductCard = React.memo(function MemoProductCard(props: {
-  id?: string | number;
-  name: string;
-  description?: string;
-  image?: string;
-  price?: number | null;
-  category?: string;
-  size?: string;
-  packs?: PackEntry[];
-}) {
-  return <ProductCard {...(props as any)} />;
-}, (a, b) => {
-  // shallow compare keys likely to change
-  if (a.id !== b.id) return false;
-  if (a.name !== b.name) return false;
-  if (a.image !== b.image) return false;
-  if (a.price !== b.price) return false;
-  if (a.category !== b.category) return false;
-  if (a.size !== b.size) return false;
-  const pa = a.packs || [];
-  const pb = b.packs || [];
-  if (pa.length !== pb.length) return false;
-  for (let i = 0; i < pa.length; ++i) {
-    if (pa[i].pack !== pb[i].pack || pa[i].price !== pb[i].price) return false;
+const MemoProductCard = React.memo(
+  function MemoProductCard(props: {
+    id?: string | number;
+    name: string;
+    description?: string;
+    image?: string;
+    price?: number | null;
+    category?: string;
+    size?: string;
+    packs?: PackEntry[];
+  }) {
+    return <ProductCard {...(props as any)} />;
+  },
+  (a, b) => {
+    // shallow compare keys likely to change
+    if (a.id !== b.id) return false;
+    if (a.name !== b.name) return false;
+    if (a.image !== b.image) return false;
+    if (a.price !== b.price) return false;
+    if (a.category !== b.category) return false;
+    if (a.size !== b.size) return false;
+    const pa = a.packs || [];
+    const pb = b.packs || [];
+    if (pa.length !== pb.length) return false;
+    for (let i = 0; i < pa.length; ++i) {
+      if (pa[i].pack !== pb[i].pack || pa[i].price !== pb[i].price) return false;
+      // include oldPrice so memo doesn't block UI updates
+      if ((pa[i].oldPrice ?? null) !== (pb[i].oldPrice ?? null)) return false;
+    }
+    return true;
   }
-  return true;
-});
+);
 
 export default function Products(): JSX.Element {
   const { category: urlCategory } = useParams<{ category?: string }>();
@@ -304,13 +365,16 @@ export default function Products(): JSX.Element {
     return () => obs.disconnect();
   }, [filteredProducts.length]);
 
-  const handleCategoryChange = useCallback((categorySlug: string) => {
-    setActiveCategory(categorySlug);
-    // update url without reload
-    const base = "/products";
-    if (categorySlug === "all") navigate(base, { replace: true });
-    else navigate(`${base}/${categorySlug}`, { replace: true });
-  }, [navigate]);
+  const handleCategoryChange = useCallback(
+    (categorySlug: string) => {
+      setActiveCategory(categorySlug);
+      // update url without reload
+      const base = "/products";
+      if (categorySlug === "all") navigate(base, { replace: true });
+      else navigate(`${base}/${categorySlug}`, { replace: true });
+    },
+    [navigate]
+  );
 
   const handleShopClick = useCallback(() => {
     if (location.pathname.startsWith("/products")) {
@@ -391,13 +455,19 @@ export default function Products(): JSX.Element {
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {visibleProducts.map((product) => {
                 const memoKey = getKeyForProduct(product);
+
                 const packsProp: PackEntry[] = normalizePacks(
                   product.packs,
                   typeof product.price === "number" ? product.price : 0,
                   memoKey
                 );
+
                 const finalPacks: PackEntry[] =
-                  packsProp.length > 0 ? packsProp : typeof product.price === "number" ? [{ pack: 1, price: product.price }] : [];
+                  packsProp.length > 0
+                    ? packsProp
+                    : typeof product.price === "number"
+                    ? [{ pack: 1, price: product.price, oldPrice: null }]
+                    : [];
 
                 return (
                   <div key={memoKey} className="transform transition duration-150 hover:-translate-y-0.5">
@@ -420,10 +490,7 @@ export default function Products(): JSX.Element {
 
             {visibleProducts.length < filteredProducts.length && (
               <div className="py-6 text-center">
-                <Button
-                  onClick={() => setVisibleCount((v) => Math.min(filteredProducts.length, v + PAGE_SIZE))}
-                  size="sm"
-                >
+                <Button onClick={() => setVisibleCount((v) => Math.min(filteredProducts.length, v + PAGE_SIZE))} size="sm">
                   Load more
                 </Button>
               </div>

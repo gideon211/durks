@@ -14,7 +14,12 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,12 +32,12 @@ interface Product {
   description?: string;
   status?: string;
   imageUrl?: string;
-  packs?: { pack: number; price: number }[];
+  packs?: { pack: number; price: number; oldPrice?: number | null }[];
 }
 
 const categories = [
   { id: "all", name: "ALL PRODUCTS", slug: "all" },
-  {id: "bundles", name:"BUNDLES", slug: "bundle"},
+  { id: "bundles", name: "BUNDLES", slug: "bundle" },
   { id: "pure-juice", name: "PURE JUICES", slug: "pure-juice" },
   { id: "cleanse", name: "CLEANSE JUICES", slug: "cleanse" },
   { id: "shots", name: "WELLNESS SHOTS", slug: "shots" },
@@ -41,7 +46,6 @@ const categories = [
   { id: "cut-fruits", name: "CUT FRUITS", slug: "cut-fruits" },
   { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs" },
   { id: "events", name: "EVENTS", slug: "events" },
-  
 ];
 
 const API_BASE = "https://updated-duks-backend-1-0.onrender.com/api";
@@ -65,7 +69,11 @@ export default function Products() {
     size: "",
     description: "",
     status: "Active",
-    packs: [{ pack: "", price: "" }] as { pack: string; price: string }[],
+    packs: [{ pack: "", price: "", oldPrice: "" }] as {
+      pack: string;
+      price: string;
+      oldPrice?: string;
+    }[],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -73,7 +81,9 @@ export default function Products() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // track selected pack per product (for grid dropdown)
-  const [selectedPackByProduct, setSelectedPackByProduct] = useState<Record<string, number | "">>({});
+  const [selectedPackByProduct, setSelectedPackByProduct] = useState<
+    Record<string, number | "">
+  >({});
 
   // Helper: safe read of stored user object (local copy)
   const getStoredUser = () =>
@@ -186,7 +196,10 @@ export default function Products() {
       }
 
       if (!newToken) {
-        console.warn("callRefreshEndpoint: refresh returned 200 but no token found", data);
+        console.warn(
+          "callRefreshEndpoint: refresh returned 200 but no token found",
+          data
+        );
         return null;
       }
 
@@ -197,7 +210,10 @@ export default function Products() {
         login(updatedUser);
         return updatedUser;
       } catch (e) {
-        console.error("callRefreshEndpoint: failed to persist refreshed token", e);
+        console.error(
+          "callRefreshEndpoint: failed to persist refreshed token",
+          e
+        );
         return null;
       }
     } catch (err) {
@@ -225,7 +241,10 @@ export default function Products() {
       // attempt to read server message for debugging
       try {
         const t = await res.text();
-        console.warn("fetchWithAuth: initial request unauthorized. response body:", t);
+        console.warn(
+          "fetchWithAuth: initial request unauthorized. response body:",
+          t
+        );
       } catch (e) {
         console.warn("fetchWithAuth: couldn't read initial 401 body", e);
       }
@@ -234,7 +253,9 @@ export default function Products() {
       const refreshedUser = await callRefreshEndpoint();
       if (!refreshedUser || !refreshedUser.token) {
         // refresh failed -> force logout and throw
-        try { logout(); } catch {}
+        try {
+          logout();
+        } catch {}
         throw new Error("Session expired. Please login again.");
       }
 
@@ -250,9 +271,15 @@ export default function Products() {
         let body = "Unauthorized";
         try {
           const t = await retryRes.text();
-          try { body = JSON.parse(t).message ?? t; } catch { body = t; }
+          try {
+            body = JSON.parse(t).message ?? t;
+          } catch {
+            body = t;
+          }
         } catch {}
-        try { logout(); } catch {}
+        try {
+          logout();
+        } catch {}
         throw new Error(body || "Session expired. Please login again.");
       }
 
@@ -271,7 +298,13 @@ export default function Products() {
     description: p.description ?? "",
     status: p.status ?? "Active",
     imageUrl: p.imageUrl ?? p.image ?? "",
-    packs: Array.isArray(p.packs) ? p.packs.map((x: any) => ({ pack: x.pack, price: x.price })) : [],
+    packs: Array.isArray(p.packs)
+      ? p.packs.map((x: any) => ({
+          pack: x.pack,
+          price: x.price,
+          oldPrice: x.oldPrice ?? null, // ✅ include oldPrice
+        }))
+      : [],
   });
 
   // Initial fetch
@@ -289,7 +322,9 @@ export default function Products() {
         // payload might be: { success, count, drinks: [...] }
         const rawItems = Array.isArray(payload) ? payload : payload?.drinks ?? [];
 
-        const normalized: Product[] = rawItems.map((item: any) => normalizeDrink(item));
+        const normalized: Product[] = rawItems.map((item: any) =>
+          normalizeDrink(item)
+        );
         setProducts(normalized);
       } catch (err) {
         console.error("fetchInitial error:", err);
@@ -321,7 +356,9 @@ export default function Products() {
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
       const payload = await res.json();
       const rawItems = Array.isArray(payload) ? payload : payload?.drinks ?? [];
-      const normalized: Product[] = rawItems.map((item: any) => normalizeDrink(item));
+      const normalized: Product[] = rawItems.map((item: any) =>
+        normalizeDrink(item)
+      );
       setProducts(normalized);
     } catch (err) {
       console.error("fetchProducts error:", err);
@@ -333,7 +370,14 @@ export default function Products() {
 
   const openNew = () => {
     setEditingId(null);
-    setForm({ name: "", category: "", size: "", description: "", status: "Active", packs: [{ pack: "", price: "" }] });
+    setForm({
+      name: "",
+      category: "",
+      size: "",
+      description: "",
+      status: "Active",
+      packs: [{ pack: "", price: "", oldPrice: "" }],
+    });
     clearSelectedFile();
     setOpenModal(true);
   };
@@ -347,7 +391,17 @@ export default function Products() {
       description: product.description ?? "",
       status: product.status ?? "Active",
       // store as strings so inputs can be empty/edited
-      packs: product.packs && product.packs.length > 0 ? product.packs.map(p => ({ pack: String(p.pack), price: String(p.price) })) : [{ pack: "", price: "" }],
+      packs:
+        product.packs && product.packs.length > 0
+          ? product.packs.map((p) => ({
+              pack: String(p.pack),
+              price: String(p.price),
+              oldPrice:
+                p.oldPrice !== undefined && p.oldPrice !== null && p.oldPrice !== ""
+                  ? String(p.oldPrice)
+                  : "",
+            }))
+          : [{ pack: "", price: "", oldPrice: "" }],
     });
     setPreviewUrl(product.imageUrl ?? null);
     clearSelectedFile();
@@ -388,13 +442,20 @@ export default function Products() {
       fd.append("category", form.category);
       fd.append("description", form.description || "");
       fd.append("status", form.status);
-      fd.append("size", form.size || ""); 
+      fd.append("size", form.size || "");
       if (selectedFile) fd.append("image", selectedFile);
 
       // Filter out packs where pack (size) is empty
       const packsToSend = form.packs
-        .filter(p => p.pack !== "")
-        .map(p => ({ pack: Number(p.pack), price: parseFloat(p.price) }));
+        .filter((p) => p.pack !== "")
+        .map((p) => ({
+          pack: Number(p.pack),
+          price: parseFloat(p.price),
+          oldPrice:
+            p.oldPrice !== undefined && p.oldPrice !== null && String(p.oldPrice).trim() !== ""
+              ? parseFloat(String(p.oldPrice))
+              : null,
+        }));
 
       fd.append("packs", JSON.stringify(packsToSend));
 
@@ -425,7 +486,10 @@ export default function Products() {
       await fetchProducts();
     } catch (err) {
       console.error("handleSaveProduct error:", err);
-      toast.error((err as Error).message || "Failed to save product. Check backend and token.");
+      toast.error(
+        (err as Error).message ||
+          "Failed to save product. Check backend and token."
+      );
     } finally {
       setSaving(false);
     }
@@ -438,7 +502,7 @@ export default function Products() {
     try {
       const res = await fetchWithAuth(`${DRINKS_BASE}/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
-      setProducts(prev => prev.filter(p => p.id !== id));
+      setProducts((prev) => prev.filter((p) => p.id !== id));
       toast.success("Product deleted");
     } catch (err) {
       console.error("handleDelete error:", err);
@@ -448,7 +512,10 @@ export default function Products() {
 
   // Handler to update selected pack for a product in the grid
   const onSelectPackForProduct = (productId: string | number, packValue: string) => {
-    setSelectedPackByProduct(prev => ({ ...prev, [`${productId}`]: packValue === "" ? "" : Number(packValue) }));
+    setSelectedPackByProduct((prev) => ({
+      ...prev,
+      [`${productId}`]: packValue === "" ? "" : Number(packValue),
+    }));
   };
 
   return (
@@ -457,10 +524,20 @@ export default function Products() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
           <h1 className="text-2xl sm:text-3xl font-semibold">Products</h1>
           <div className="flex flex-wrap gap-2 justify-end w-full sm:w-auto">
-            <Button variant="outline" size="icon" onClick={() => setViewMode("grid")} className={viewMode === "grid" ? "bg-muted" : ""}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setViewMode("grid")}
+              className={viewMode === "grid" ? "bg-muted" : ""}
+            >
               <Grid3x3 className="h-5 w-5 sm:h-4 sm:w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={() => setViewMode("list")} className={viewMode === "list" ? "bg-muted" : ""}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setViewMode("list")}
+              className={viewMode === "list" ? "bg-muted" : ""}
+            >
               <List className="h-5 w-5 sm:h-4 sm:w-4" />
             </Button>
             <Button onClick={openNew} className="hidden sm:flex items-center p-6">
@@ -472,22 +549,38 @@ export default function Products() {
           </div>
         </div>
 
-        {loading && <div className="p-6 bg-muted/30 rounded text-center w-full">Loading products...</div>}
-        {!loading && products.length === 0 && <div className="p-6 bg-muted/30 rounded text-center w-full">No products found. Click Add Product to seed your catalog.</div>}
+        {loading && (
+          <div className="p-6 bg-muted/30 rounded text-center w-full">
+            Loading products...
+          </div>
+        )}
+        {!loading && products.length === 0 && (
+          <div className="p-6 bg-muted/30 rounded text-center w-full">
+            No products found. Click Add Product to seed your catalog.
+          </div>
+        )}
 
         {viewMode === "grid" && products.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 w-full">
-            {products.map(product => {
+            {products.map((product) => {
               const key = `${product.id}`;
               const selectedPack = selectedPackByProduct[key] ?? "";
-              const selectedPackObj = product.packs?.find(p => p.pack === selectedPack) ?? null;
+              const selectedPackObj =
+                product.packs?.find((p) => p.pack === selectedPack) ?? null;
 
               return (
-                <Card key={product.id} className="hover:border-primary/40 border-2 transition-all duration-150 relative flex flex-col">
+                <Card
+                  key={product.id}
+                  className="hover:border-primary/40 border-2 transition-all duration-150 relative flex flex-col"
+                >
                   <CardContent className="p-3 sm:p-4 flex flex-col h-full">
                     <div className="aspect-square bg-muted rounded-lg mb-3 overflow-hidden relative w-full">
                       {product.imageUrl ? (
-                        <img src={product.imageUrl} alt={product.name ?? "Product image"} className="w-full h-full object-cover" />
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name ?? "Product image"}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                           <ImageIcon className="h-6 w-6" />
@@ -497,19 +590,32 @@ export default function Products() {
 
                     <div className="flex flex-col flex-grow text-center">
                       <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
-                        <Badge variant={product.status === "Active" ? "default" : "destructive"} className="text-xs">
+                        <Badge
+                          variant={product.status === "Active" ? "default" : "destructive"}
+                          className="text-xs"
+                        >
                           {product.status ?? "Active"}
                         </Badge>
                       </div>
 
-                      <h3 className="font-semibold text-sm sm:text-base truncate">{product.name}</h3>
-                      <p className="text-xs text-muted-foreground truncate">{product.category}</p>
-                      {product.size && <p className="text-xs text-muted-foreground truncate">Size: {product.size}</p>}
+                      <h3 className="font-semibold text-sm sm:text-base truncate">
+                        {product.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {product.category}
+                      </p>
+                      {product.size && (
+                        <p className="text-xs text-muted-foreground truncate">
+                          Size: {product.size}
+                        </p>
+                      )}
 
                       {/* PACKS DROPDOWN (no default price shown) */}
                       {product.packs && product.packs.length > 0 && (
                         <div className="mt-2 w-full">
-                          <label htmlFor={`pack-select-${key}`} className="sr-only">Select pack</label>
+                          <label htmlFor={`pack-select-${key}`} className="sr-only">
+                            Select pack
+                          </label>
                           <select
                             id={`pack-select-${key}`}
                             value={selectedPack === "" ? "" : String(selectedPack)}
@@ -534,10 +640,20 @@ export default function Products() {
                       )}
 
                       <div className="mt-3 flex gap-2 justify-center flex-wrap">
-                        <Button variant="ghost" size="sm" onClick={() => openEdit(product)} className="flex-1 min-w-[100px]">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEdit(product)}
+                          className="flex-1 min-w-[100px]"
+                        >
                           <Edit2 className="h-4 w-4 mr-2" /> Edit
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDelete(product.id)} className="flex-1 min-w-[100px]">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(product.id)}
+                          className="flex-1 min-w-[100px]"
+                        >
                           <Trash2 className="h-4 w-4 mr-2" /> Delete
                         </Button>
                       </div>
@@ -550,32 +666,70 @@ export default function Products() {
         )}
 
         <Dialog open={openModal} onOpenChange={setOpenModal}>
-          <DialogContent className="w-full rounded-md px-6 max-w-lg overflow-y-auto" style={{ maxHeight: "90vh" }}>
+          <DialogContent
+            className="w-full rounded-md px-6 max-w-lg overflow-y-auto"
+            style={{ maxHeight: "90vh" }}
+          >
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between text-base sm:text-lg font-semibold">
                 {editingId ? "Edit Product" : "Add Product"}
               </DialogTitle>
             </DialogHeader>
 
-            <form className="space-y-2" onSubmit={e => { e.preventDefault(); handleSaveProduct(); }}>
+            <form
+              className="space-y-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSaveProduct();
+              }}
+            >
               {/* NAME */}
               <div>
-                <Label htmlFor="name" className="text-sm font-medium">Name</Label>
-                <Input id="name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Drink name" className="mt-1 w-full" required />
+                <Label htmlFor="name" className="text-sm font-medium">
+                  Name
+                </Label>
+                <Input
+                  id="name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Drink name"
+                  className="mt-1 w-full"
+                  required
+                />
               </div>
 
               {/* SIZE + CATEGORY */}
               <div className="flex sm:gap-3 flex-col sm:flex-row">
                 <div className="flex-1">
-                  <Label htmlFor="size" className="text-sm font-medium">Size</Label>
-                  <Input id="size" placeholder="e.g. 300ml / Small" value={form.size} onChange={e => setForm({ ...form, size: e.target.value })} className="mt-1 w-full" />
+                  <Label htmlFor="size" className="text-sm font-medium">
+                    Size
+                  </Label>
+                  <Input
+                    id="size"
+                    placeholder="e.g. 300ml / Small"
+                    value={form.size}
+                    onChange={(e) => setForm({ ...form, size: e.target.value })}
+                    className="mt-1 w-full"
+                  />
                 </div>
 
                 <div className="flex-1">
-                  <Label htmlFor="category" className="text-sm font-medium">Category</Label>
-                  <select id="category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="mt-1 w-full rounded-md border px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" required>
+                  <Label htmlFor="category" className="text-sm font-medium">
+                    Category
+                  </Label>
+                  <select
+                    id="category"
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    className="mt-1 w-full rounded-md border px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
+                  >
                     <option value="">Select category</option>
-                    {categories.map(c => <option key={c.id} value={c.slug}>{c.name}</option>)}
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.slug}>
+                        {c.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -584,16 +738,31 @@ export default function Products() {
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="flex-shrink-0">
                   {previewUrl ? (
-                    <img src={previewUrl} alt="Preview" className="w-28 h-28 object-cover rounded-md border" />
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="w-28 h-28 object-cover rounded-md border"
+                    />
                   ) : (
-                    <div className="w-28 h-28 rounded-md border bg-muted flex items-center justify-center text-muted-foreground">No image</div>
+                    <div className="w-28 h-28 rounded-md border bg-muted flex items-center justify-center text-muted-foreground">
+                      No image
+                    </div>
                   )}
                 </div>
 
                 <div className="flex-1">
                   <Label className="text-sm font-medium">Image</Label>
-                  <input type="file" accept="image/*" ref={fileInputRef} onChange={onFileChange} className="mt-1 w-full text-sm" aria-label="Upload product image" />
-                  <p className="text-xs text-muted-foreground mt-2">Recommended: JPG/PNG. Max 2MB.</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={onFileChange}
+                    className="mt-1 w-full text-sm"
+                    aria-label="Upload product image"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Recommended: JPG/PNG. Max 2MB.
+                  </p>
                 </div>
               </div>
 
@@ -607,33 +776,65 @@ export default function Products() {
                       type="number"
                       placeholder="Pack size"
                       value={p.pack}
-                      onChange={e => {
+                      onChange={(e) => {
                         const newPacks = [...form.packs];
                         newPacks[idx].pack = e.target.value; // store as string
                         setForm({ ...form, packs: newPacks });
                       }}
-                      className="w-1/2"
+                      className="w-1/3"
                       step={1}
                     />
                     <Input
                       type="number"
                       placeholder="Price"
                       value={p.price}
-                      onChange={e => {
+                      onChange={(e) => {
                         const newPacks = [...form.packs];
                         newPacks[idx].price = e.target.value;
                         setForm({ ...form, packs: newPacks });
                       }}
-                      className="w-1/2"
+                      className="w-1/3"
                       step={0.01}
                     />
-                    <Button variant="destructive" onClick={() => setForm({ ...form, packs: form.packs.filter((_, i) => i !== idx) })} size="icon">&times;</Button>
+
+                    {/* ✅ OLD PRICE INPUT */}
+                    <Input
+                      type="number"
+                      placeholder="Old price"
+                      value={p.oldPrice ?? ""}
+                      onChange={(e) => {
+                        const newPacks = [...form.packs];
+                        newPacks[idx].oldPrice = e.target.value;
+                        setForm({ ...form, packs: newPacks });
+                      }}
+                      className="w-1/3"
+                      step={0.01}
+                    />
+
+                    <Button
+                      variant="destructive"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          packs: form.packs.filter((_, i) => i !== idx),
+                        })
+                      }
+                      size="icon"
+                      type="button"
+                    >
+                      &times;
+                    </Button>
                   </div>
                 ))}
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setForm({ ...form, packs: [...form.packs, { pack: "", price: "" }] })}
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      packs: [...form.packs, { pack: "", price: "", oldPrice: "" }],
+                    })
+                  }
                   className="mt-2"
                 >
                   + Add Pack
@@ -642,13 +843,24 @@ export default function Products() {
 
               {/* ACTIONS */}
               <div className="mt-4 mb-4 flex sm:flex sm:justify-end gap-2 sticky bottom-0 bg-background p-2 z-10">
-                <Button type="button" variant="outline" onClick={() => setOpenModal(false)} className="w-full sm:w-auto">Cancel</Button>
-                <Button type="submit" className="w-full sm:w-auto" aria-busy={saving} disabled={saving}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpenModal(false)}
+                  className="w-full sm:w-auto"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="w-full sm:w-auto"
+                  aria-busy={saving}
+                  disabled={saving}
+                >
                   {saving ? "Saving..." : editingId ? "Update Product" : "Add Product"}
                 </Button>
               </div>
             </form>
-
           </DialogContent>
         </Dialog>
       </div>

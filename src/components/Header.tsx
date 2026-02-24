@@ -9,6 +9,10 @@ import {
   Loader2,
   Package,
   LayoutDashboard,
+  Home,
+  ShoppingBag,
+  Phone,
+
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -80,8 +84,13 @@ const Header = () => {
       ].join(" ");
   }, []);
 
-  const mobileLinkClass =
-    "px-4 py-3 rounded-lg hover:bg-muted/70 transition-colors font-medium text-foreground/90 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+    const mobileLinkClass =
+    "px-4 py-3 rounded-xl font-medium text-sm text-foreground/90 " +
+    "hover:bg-muted/70 hover:text-foreground transition " +
+    "flex items-center gap-3 " +
+    "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 " +
+    "focus-visible:ring-offset-2 focus-visible:ring-offset-background " +
+    "active:scale-[0.98]";
 
   return (
     <header
@@ -216,19 +225,24 @@ const Header = () => {
 
             <SheetContent
               side="right"
-              className="w-[80vw] sm:w-[60vw] max-w-sm bg-card border-l border-border"
+              className="w-[70vw] sm:w-[60vw] max-w-sm bg-card border-l border-border px-5 py-6 "
             >
               <div className="flex flex-col gap-6 mt-4">
                 {/* Top area */}
-                <div className="flex items-center justify-between">
-                  <div className="font-semibold">Menu</div>
-                </div>
+<div className="flex items-center justify-between">
+  <div className="flex flex-col">
+    <div className="font-heading text-xl font-semibold tracking-tight">Menu</div>
+    <div className="text-xs text-muted-foreground">Browse & manage your account</div>
+  </div>
+</div>
+
+<div className="h-px w-full bg-border/70" />
 
                 {/* User info */}
                 {user ? (
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-muted flex items-center justify-center font-bold text-base sm:text-lg uppercase flex-shrink-0">
-                      {userInitial}
+                    <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-base uppercase ring-1 ring-primary/20">
+                    {userInitial}
                     </div>
                     <div className="flex flex-col gap-1 overflow-hidden">
                       <div className="font-semibold truncate">{user.username}</div>
@@ -252,78 +266,92 @@ const Header = () => {
 
                 {/* Mobile nav links */}
                 <nav className="flex flex-col gap-2" aria-label="Mobile navigation">
-                  <Link to="/" onClick={() => setIsMenuOpen(false)} className={mobileLinkClass}>
-                    Home
-                  </Link>
 
-                  <Link
+                {/* Home */}
+                <Link
+                    to="/"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={[mobileLinkClass, "flex items-center gap-3"].join(" ")}
+                >
+                    <Home className="h-4 w-4 text-muted-foreground" />
+                    Home
+                </Link>
+
+                {/* Shop */}
+                <Link
                     to="/products"
                     onClick={() => setIsMenuOpen(false)}
-                    className={mobileLinkClass}
-                  >
+                    className={[mobileLinkClass, "flex items-center gap-3"].join(" ")}
+                >
+                    <ShoppingBag className="h-4 w-4 text-muted-foreground" />
                     Shop
-                  </Link>
+                </Link>
 
-                  {user && (
+                {/* My Orders */}
+                {user && (
                     <button
-                      onClick={() => {
+                    onClick={() => {
                         setIsMenuOpen(false);
                         navigate("/orders");
-                      }}
-                      className={[
+                    }}
+                    className={[
                         mobileLinkClass,
-                        "text-left flex items-center gap-2",
-                      ].join(" ")}
+                        "text-left flex items-center gap-3",
+                    ].join(" ")}
                     >
-                      <Package className="h-4 w-4" />
-                      My Orders
+                    <Package className="h-4 w-4 text-muted-foreground" />
+                    My Orders
                     </button>
-                  )}
+                )}
 
-                  <Link
+                {/* Contact */}
+                <Link
                     to="/contact"
                     onClick={() => setIsMenuOpen(false)}
-                    className={mobileLinkClass}
-                  >
+                    className={[mobileLinkClass, "flex items-center gap-3"].join(" ")}
+                >
+                    <Phone className="h-4 w-4 text-muted-foreground" />
                     Contact
-                  </Link>
+                </Link>
 
-                  {/* Admin */}
-                  {user?.role === "admin" && (
+                {/* Admin */}
+                {user?.role === "admin" && (
                     <Button
-                      onClick={() => {
+                    
+                    onClick={() => {
                         navigate("/admin");
                         setIsMenuOpen(false);
-                      }}
-                      className="w-full mt-2"
+                    }}
+                    className="w-full mt-2 py-6 flex items-center gap-2"
                     >
-                      <LayoutDashboard className="h-4 w-4 mr-2" />
-                      Admin Dashboard
+                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+                    Admin Dashboard
                     </Button>
-                  )}
+                )}
 
-                  {/* Logout */}
-                  {user && (
+                {/* Logout */}
+                {user && (
                     <button
-                      onClick={handleLogout}
-                      disabled={isLoggingOut}
-                      className={[
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className={[
                         "w-full text-left px-4 py-3 flex items-center gap-3 rounded-lg",
                         "hover:bg-muted/70 transition-colors",
                         "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         "text-red-600",
-                      ].join(" ")}
+                    ].join(" ")}
                     >
-                      {isLoggingOut ? (
+                    {isLoggingOut ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
+                    ) : (
                         <LogOut className="h-4 w-4" />
-                      )}
-                      <span className="text-sm">
+                    )}
+                    <span className="text-sm">
                         {isLoggingOut ? "Signing out..." : "Sign Out"}
-                      </span>
+                    </span>
                     </button>
-                  )}
+                )}
+
                 </nav>
               </div>
             </SheetContent>

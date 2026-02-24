@@ -89,7 +89,7 @@ function HeroSection() {
   </div>
 
   {/* Headline (better hierarchy + spacing) */}
-  <h1 className="text-4xl sm:text-5xl font-heading font-extrabold tracking-tight leading-[1.05] text-neutral-900">
+  <h1 className="text-5xl sm:text-5xl font-heading font-extrabold tracking-tight leading-[1.05] text-neutral-900">
     Fall into
     <br />
     <span className="bg-gradient-to-r from-green-600 via-emerald-500 to-lime-500 bg-clip-text text-transparent">

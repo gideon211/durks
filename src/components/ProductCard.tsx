@@ -8,6 +8,8 @@ import { toast } from "sonner";
 interface PackEntry {
   pack: number;
   price: number;
+  oldPrice?: number | null;
+  
 }
 
 interface ProductCardProps {
@@ -38,6 +40,12 @@ function formatPrice(p: number | undefined) {
   return `₵${n.toFixed(2)}`;
 }
 
+function calcDiscountPercent(oldPrice: number, price: number) {
+  if (!oldPrice || oldPrice <= 0) return 0;
+  const pct = Math.round(((oldPrice - price) / oldPrice) * 100);
+  return pct > 0 ? pct : 0;
+}
+
 function ProductCardInner({
   id,
   name,
@@ -50,26 +58,37 @@ function ProductCardInner({
 }: ProductCardProps) {
   const addToCart = useCartStore((s) => s.addToCart);
 
-  const stablePacks = useMemo(() => {
-    return Array.isArray(packs) && packs.length > 0
-      ? packs.map((p) => ({ pack: Number(p.pack) || 1, price: Number(p.price) || 0 }))
-      : [{ pack: 1, price: price || 0 }];
-  }, [packs, price]);
+const stablePacks = useMemo(() => {
+  return Array.isArray(packs) && packs.length > 0
+    ? packs.map((p) => ({
+        pack: Number(p.pack) || 1,
+        price: Number(p.price) || 0,
+        oldPrice:
+        p.oldPrice !== undefined && p.oldPrice !== null
+            ? Number(p.oldPrice)
+            : null,
+      }))
+    : [{ pack: 1, price: price || 0, oldPrice: null }];
+}, [packs, price]);
 
   const initialPack = stablePacks[0].pack;
   const initialPrice = stablePacks[0].price;
 
   const [selectedPack, setSelectedPack] = useState<number>(initialPack);
   const [selectedPrice, setSelectedPrice] = useState<number>(initialPrice);
+  const [selectedOldPrice, setSelectedOldPrice] = useState<number | null>(
+  stablePacks[0].oldPrice ?? null
+);
   const [isLoading, setIsLoading] = useState(false);
   const [addedMessage, setAddedMessage] = useState(false);
 
   const addedTimerRef = useRef<number | null>(null);
 
-  useEffect(() => {
+    useEffect(() => {
     setSelectedPack(initialPack);
     setSelectedPrice(initialPrice);
-  }, [initialPack, initialPrice]);
+    setSelectedOldPrice(stablePacks[0].oldPrice ?? null);
+    }, [initialPack, initialPrice, stablePacks]);
 
   useEffect(() => {
     return () => {
@@ -77,11 +96,15 @@ function ProductCardInner({
     };
   }, []);
 
-  const handlePackChange = useCallback((pack: number) => {
-    setSelectedPack(pack);
-    const found = stablePacks.find((p) => p.pack === pack);
-    setSelectedPrice(found ? found.price : stablePacks[0].price);
-  }, [stablePacks]);
+    const handlePackChange = useCallback(
+    (pack: number) => {
+        setSelectedPack(pack);
+        const found = stablePacks.find((p) => p.pack === pack) ?? stablePacks[0];
+        setSelectedPrice(found.price);
+        setSelectedOldPrice(found.oldPrice ?? null);
+    },
+    [stablePacks]
+    );
 
   const handleAddToCart = useCallback(
     async (e: React.MouseEvent) => {
@@ -111,7 +134,7 @@ function ProductCardInner({
         console.error("Add to cart error:", err);
         try {
           toast.error("Could not add item to cart");
-        } catch {}
+        } catch {console.error("Add to cart error:", err);}
       } finally {
         setIsLoading(false);
       }
@@ -187,20 +210,35 @@ function ProductCardInner({
         )}
 
         {sizeLabel && (
-          <div className="absolute left-2 bottom-2">
+          <div className="absolute inset-x-2 left-2 bottom-2 flex justify-between items-end">
             <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-black/70 text-white backdrop-blur-sm shadow">
               {sizeLabel}
             </span>
+
+            {typeof selectedOldPrice === "number" && selectedOldPrice !== selectedPrice && (
+                <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-700 border border-green-200">
+                  -{calcDiscountPercent(selectedOldPrice, selectedPrice)}%
+                </span>
+            )}
           </div>
         )}
       </div>
 
       <div className="p-4 flex flex-col gap-2 flex-grow items-center text-center">
+
+        <div className="flex">
         {category && (
           <Badge variant="outline" className="mb-0.5 mx-auto text-xs">
             {category}
           </Badge>
+
+          
         )}
+
+
+
+        </div>
+
 
         <div className="w-full flex flex-col items-center text-center">
           <h3
@@ -227,9 +265,22 @@ function ProductCardInner({
           )}
         </div>
 
-        <p className="font-heading font-semibold text-sm text-foreground">
-          {formatPrice(selectedPrice)}
-        </p>
+<div className="flex flex-col items-center justify-center gap-">
+
+
+  <span className="font-heading font-semibold text-sm text-foreground">
+    {formatPrice(selectedPrice)}
+  </span>
+
+    {typeof selectedOldPrice === "number" && selectedOldPrice !== selectedPrice && (
+        <span className="text-[11px] text-gray-400 line-through font-medium tracking-tight">
+        {formatPrice(selectedOldPrice)}
+        </span>
+
+    )}
+
+
+</div>
 
         <div className="flex flex-col gap-2 mt-1 w-full">
           <select
