@@ -64,11 +64,11 @@ const DesktopCarousel: React.FC = () => {
   }, [preloaded, desktopImages.length]);
 
   // Same transition/variants as mobile
-  const fadeVariants = {
-    enter: { opacity: 0 },
-    center: { opacity: 1 },
-    exit: { opacity: 0 },
-  };
+    const fadeVariants = {
+    enter: { opacity: 0, scale: 1.02 },   // tiny zoom in
+    center: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.99 },    // tiny zoom out
+    };
 
   return (
     <div className="relative w-full min-h-screen overflow-hidden bg-gray-900">
@@ -81,7 +81,10 @@ const DesktopCarousel: React.FC = () => {
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ duration: 0.6, ease: "easeInOut" }}
+            transition={{
+          opacity: { duration: 0.9, ease: [0.22, 1, 0.36, 1] }, // smooth
+          scale: { duration: 1.2, ease: [0.22, 1, 0.36, 1] },   // slower zoom
+        }}
           className="absolute inset-0 w-full h-full object-cover"
         />
       </AnimatePresence>
