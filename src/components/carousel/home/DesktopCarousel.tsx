@@ -56,7 +56,7 @@ const DesktopCarousel: React.FC = () => {
 
     intervalRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % desktopImages.length);
-    }, 4000); // same as mobile timing
+    }, 5000); // same as mobile timing
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -65,9 +65,9 @@ const DesktopCarousel: React.FC = () => {
 
   // Same transition/variants as mobile
     const fadeVariants = {
-    enter: { opacity: 0, scale: 1.02 },   // tiny zoom in
+    enter: { opacity: 0, scale: 1.03 },
     center: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.99 },    // tiny zoom out
+    exit: { opacity: 0, scale: 0.98 },
     };
 
   return (
@@ -82,9 +82,9 @@ const DesktopCarousel: React.FC = () => {
           animate="center"
           exit="exit"
             transition={{
-          opacity: { duration: 0.9, ease: [0.22, 1, 0.36, 1] }, // smooth
-          scale: { duration: 1.2, ease: [0.22, 1, 0.36, 1] },   // slower zoom
-        }}
+            opacity: { duration: 1.6, ease: "easeInOut" },
+            scale: { duration: 2.2, ease: "easeOut" },
+            }}
           className="absolute inset-0 w-full h-full object-cover"
         />
       </AnimatePresence>

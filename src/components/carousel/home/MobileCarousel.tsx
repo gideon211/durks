@@ -49,18 +49,18 @@ const MobileCarousel: React.FC = () => {
 
     intervalRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % mobileImages.length);
-    }, 3000);
+    }, 4000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [preloaded, mobileImages.length]);
 
-  const fadeVariants = {
-    enter: { opacity: 0 },
-    center: { opacity: 1 },
-    exit: { opacity: 0 },
-  };
+    const fadeVariants = {
+    enter: { opacity: 0, scale: 1.03 },
+    center: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.98 },
+    };
 
   return (
     <div className="relative h-[500px] md:h-[600px] w-full overflow-hidden bg-gray-900">
@@ -73,7 +73,10 @@ const MobileCarousel: React.FC = () => {
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ duration: 0.6, ease: "easeInOut" }}
+          transition={{
+          opacity: { duration: 1.6, ease: "easeInOut" },
+          scale: { duration: 2.2, ease: "easeOut" },
+          }}
           className="absolute inset-0 w-full h-full object-cover"
         />
       </AnimatePresence>
