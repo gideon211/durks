@@ -22,9 +22,7 @@ export const Footer = () => {
                 alt="Duks Logo"
                 className="w-14 h-14 md:w-16 md:h-16 object-contain"
             />
-            <h2 className="text-white font-bold text-2xl md:text-3xl ">
-                DUKS JUICE
-            </h2>
+
             </div>
 
             <p className="text-white font-normal text-sm md:text-base leading-relaxed max-w-sm">
