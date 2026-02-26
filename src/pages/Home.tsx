@@ -507,44 +507,46 @@ export default function Home() {
             </motion.div>
 
             <motion.div
-              className="grid md:grid-cols-3 gap-6 md:gap-8 "
-              variants={containerVariants}
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5 md:gap-8"
+            variants={containerVariants}
             >
-              {[
+            {[
                 {
-                  icon: Leaf,
-                  title: "Credibility",
-                  text: "Juices are all pure with no added sugar, preservatives and artificial colors. Juices are bottled as juiced.",
+                icon: Leaf,
+                title: "Credibility",
+                text: "Juices are all pure with no added sugar, preservatives and artificial colors. Juices are bottled as juiced.",
                 },
                 {
-                  icon: Sparkles,
-                  title: "Bursting with Benefits",
-                  text: "Cold-press technology preserves maximum vitamins, minerals, and enzymes.",
+                icon: Sparkles,
+                title: "Bursting with Benefits",
+                text: "Cold-press technology preserves maximum vitamins, minerals, and enzymes.",
                 },
                 {
-                  icon: Heart,
-                  title: "Deliciously Elevated",
-                  text: "Our master blenders create flavor combinations that excite your taste buds while nourishing your body.",
+                icon: Heart,
+                title: "Deliciously Elevated",
+                text: "Our master blenders create flavor combinations that excite your taste buds while nourishing your body.",
                 },
-              ].map((item, index) => (
+            ].map((item, index) => (
                 <motion.div
-                  key={index}
-                  className="border border-green-400 rounded-md p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
-                  variants={cardVariants}
+                key={index}
+                className="border border-green-400 rounded-md p-3 sm:p-4 md:p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                variants={cardVariants}
                 >
-                  <div className="flex items-center gap-4 px-4 py-2">
-                    <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
-                      <item.icon className="w-6 h-6 text-accent" />
+                <div className="flex items-center gap-3 sm:gap-4 px-2 sm:px-4 py-2">
+                    <div className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                    <item.icon className="w-4 h-4 sm:w-6 sm:h-6 text-accent" />
                     </div>
-                    <div className="text-xl font-semibold">{item.title}</div>
-                  </div>
-                  <div>
-                    <div className="text-base font-body leading-relaxed px-4 text-center py-2">
-                      {item.text}
+
+                    <div className="text-base sm:text-lg md:text-xl font-semibold leading-tight">
+                    {item.title}
                     </div>
-                  </div>
+                </div>
+
+                <div className="text-sm sm:text-base font-body leading-relaxed px-2 sm:px-4 text-left sm:text-center pt-1">
+                    {item.text}
+                </div>
                 </motion.div>
-              ))}
+            ))}
             </motion.div>
           </div>
         </motion.section>
