@@ -4,25 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/Authcontext";
-import {
-  Plus,
-  Grid3x3,
-  List,
-  Edit2,
-  Trash2,
-  ImageIcon,
-} from "lucide-react";
+import { Plus, Grid3x3, List, Edit2, Trash2, ImageIcon } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
 interface Product {
   id: string | number;
@@ -46,6 +33,7 @@ const categories = [
   { id: "cut-fruits", name: "CUT FRUITS", slug: "cut-fruits" },
   { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs" },
   { id: "events", name: "EVENTS", slug: "events" },
+  { id: "training", name: "TRAINING", slug: "training" },
 ];
 
 const API_BASE = "https://updated-duks-backend-1-0.onrender.com/api";
@@ -80,10 +68,13 @@ export default function Products() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // ✅ track blob preview URL so we ONLY revoke object URLs
+  const blobPreviewRef = useRef<string | null>(null);
+  // ✅ keep the original product image url while editing (remote url)
+  const existingImageUrlRef = useRef<string | null>(null);
+
   // track selected pack per product (for grid dropdown)
-  const [selectedPackByProduct, setSelectedPackByProduct] = useState<
-    Record<string, number | "">
-  >({});
+  const [selectedPackByProduct, setSelectedPackByProduct] = useState<Record<string, number | "">>({});
 
   // Helper: safe read of stored user object (local copy)
   const getStoredUser = () =>
@@ -101,8 +92,8 @@ export default function Products() {
   const getToken = async (): Promise<string | null> => {
     const u = getStoredUser();
     if (!u) return null;
+
     if (!u.token) {
-      // try context refresh if available
       try {
         const refreshed = await tryRefreshToken();
         return refreshed?.token ?? null;
@@ -119,7 +110,6 @@ export default function Products() {
         const exp = payload?.exp;
         const now = Math.floor(Date.now() / 1000);
         if (exp && exp < now) {
-          // expired -> try context refresh
           try {
             const refreshed = await tryRefreshToken();
             return refreshed?.token ?? null;
@@ -129,7 +119,6 @@ export default function Products() {
         }
       }
     } catch {
-      // decode failed -> attempt refresh
       try {
         const refreshed = await tryRefreshToken();
         return refreshed?.token ?? null;
@@ -141,7 +130,6 @@ export default function Products() {
     return u.token;
   };
 
-  // Build headers merging simple shapes
   const mergeHeaders = (base?: RequestInit["headers"]) => {
     const headers: Record<string, string> = {};
     if (!base) return headers;
@@ -157,7 +145,7 @@ export default function Products() {
     return headers;
   };
 
-  // IMPORTANT: direct refresh call used here so we control request shape and persist token immediately
+  // direct refresh call used here so we control request shape and persist token immediately
   const callRefreshEndpoint = async () => {
     const u = getStoredUser();
     if (!u?.refreshToken) return null;
@@ -166,7 +154,6 @@ export default function Products() {
       const res = await fetch(`${API_BASE}/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // many backends expect { refreshToken } in body — change if your backend expects something else
         body: JSON.stringify({ refreshToken: u.refreshToken }),
       });
 
@@ -180,40 +167,25 @@ export default function Products() {
 
       console.log("callRefreshEndpoint response:", res.status, data);
 
-      if (!res.ok) {
-        return null;
-      }
+      if (!res.ok) return null;
 
-      // Determine where token lives in response
-      // Common shapes: { token }, { accessToken }, { data: { token } }
       let newToken: string | undefined;
       if (data?.token) newToken = data.token;
       else if (data?.accessToken) newToken = data.accessToken;
       else if (data?.data?.token) newToken = data.data.token;
-      else if (typeof data === "string") {
-        // backend might return plain token string (rare)
-        newToken = data;
-      }
+      else if (typeof data === "string") newToken = data;
 
       if (!newToken) {
-        console.warn(
-          "callRefreshEndpoint: refresh returned 200 but no token found",
-          data
-        );
+        console.warn("callRefreshEndpoint: refresh returned 200 but no token found", data);
         return null;
       }
 
-      // persist new token in context (and localStorage) using login()
       try {
-        // Preserve other user fields and update token
         const updatedUser = { ...(u as any), token: newToken };
         login(updatedUser);
         return updatedUser;
       } catch (e) {
-        console.error(
-          "callRefreshEndpoint: failed to persist refreshed token",
-          e
-        );
+        console.error("callRefreshEndpoint: failed to persist refreshed token", e);
         return null;
       }
     } catch (err) {
@@ -222,44 +194,30 @@ export default function Products() {
     }
   };
 
-  // fetch wrapper that injects Authorization header and retries once on 401/403
   const fetchWithAuth = async (input: RequestInfo | URL, init: RequestInit = {}) => {
-    // Get token (may trigger tryRefreshToken)
     let token = await getToken();
     if (!token) throw new Error("No active token. Please login.");
 
-    // Build headers for initial request
     const headers = mergeHeaders(init.headers);
     headers["Authorization"] = `Bearer ${token}`;
 
     const initToSend: RequestInit = { ...init, headers };
-
     let res = await fetch(input, initToSend);
 
-    // If initial unauthorized, attempt refresh via dedicated call then retry once
     if (res.status === 401 || res.status === 403) {
-      // attempt to read server message for debugging
       try {
         const t = await res.text();
-        console.warn(
-          "fetchWithAuth: initial request unauthorized. response body:",
-          t
-        );
-      } catch (e) {
-        console.warn("fetchWithAuth: couldn't read initial 401 body", e);
-      }
+        console.warn("fetchWithAuth: initial request unauthorized. response body:", t);
+      } catch {}
 
-      // Call our refresh endpoint directly and persist token
       const refreshedUser = await callRefreshEndpoint();
       if (!refreshedUser || !refreshedUser.token) {
-        // refresh failed -> force logout and throw
         try {
           logout();
         } catch {}
         throw new Error("Session expired. Please login again.");
       }
 
-      // Retry original request with refreshed token
       const retryHeaders = mergeHeaders(init.headers);
       retryHeaders["Authorization"] = `Bearer ${refreshedUser.token}`;
       const retryInit: RequestInit = { ...init, headers: retryHeaders };
@@ -267,7 +225,6 @@ export default function Products() {
       const retryRes = await fetch(input, retryInit);
 
       if (retryRes.status === 401 || retryRes.status === 403) {
-        // read body to show server message
         let body = "Unauthorized";
         try {
           const t = await retryRes.text();
@@ -289,7 +246,6 @@ export default function Products() {
     return res;
   };
 
-  // helper to normalize backend drink -> Product
   const normalizeDrink = (p: any): Product => ({
     id: p._id ?? p.id,
     name: p.name ?? "",
@@ -302,14 +258,25 @@ export default function Products() {
       ? p.packs.map((x: any) => ({
           pack: x.pack,
           price: x.price,
-          oldPrice: x.oldPrice ?? null, // ✅ include oldPrice
+          oldPrice: x.oldPrice ?? null,
         }))
       : [],
   });
 
+  // ✅ revoke blob preview on unmount
+  useEffect(() => {
+    return () => {
+      if (blobPreviewRef.current && blobPreviewRef.current.startsWith("blob:")) {
+        URL.revokeObjectURL(blobPreviewRef.current);
+      }
+      blobPreviewRef.current = null;
+    };
+  }, []);
+
   // Initial fetch
   useEffect(() => {
     let mounted = true;
+
     const fetchInitial = async () => {
       try {
         setLoading(true);
@@ -319,12 +286,8 @@ export default function Products() {
         if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
         const payload = await res.json();
 
-        // payload might be: { success, count, drinks: [...] }
         const rawItems = Array.isArray(payload) ? payload : payload?.drinks ?? [];
-
-        const normalized: Product[] = rawItems.map((item: any) =>
-          normalizeDrink(item)
-        );
+        const normalized: Product[] = rawItems.map((item: any) => normalizeDrink(item));
         setProducts(normalized);
       } catch (err) {
         console.error("fetchInitial error:", err);
@@ -334,17 +297,10 @@ export default function Products() {
       }
     };
 
-    (async () => {
-      try {
-        await fetchInitial();
-      } catch (e) {
-        // handled above
-      }
-    })();
+    fetchInitial();
 
     return () => {
       mounted = false;
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -356,9 +312,7 @@ export default function Products() {
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
       const payload = await res.json();
       const rawItems = Array.isArray(payload) ? payload : payload?.drinks ?? [];
-      const normalized: Product[] = rawItems.map((item: any) =>
-        normalizeDrink(item)
-      );
+      const normalized: Product[] = rawItems.map((item: any) => normalizeDrink(item));
       setProducts(normalized);
     } catch (err) {
       console.error("fetchProducts error:", err);
@@ -368,8 +322,37 @@ export default function Products() {
     }
   };
 
+  const resetFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const revokeBlobPreviewIfAny = () => {
+    if (blobPreviewRef.current && blobPreviewRef.current.startsWith("blob:")) {
+      URL.revokeObjectURL(blobPreviewRef.current);
+    }
+    blobPreviewRef.current = null;
+  };
+
+  const clearSelectedFile = () => {
+    // ✅ only revoke blob previews (not remote urls)
+    revokeBlobPreviewIfAny();
+    setSelectedFile(null);
+    resetFileInput();
+
+    // restore existing image preview if we’re editing a product
+    if (existingImageUrlRef.current) {
+      setPreviewUrl(existingImageUrlRef.current);
+    } else {
+      setPreviewUrl(null);
+    }
+  };
+
   const openNew = () => {
     setEditingId(null);
+    existingImageUrlRef.current = null;
+
     setForm({
       name: "",
       category: "",
@@ -378,19 +361,20 @@ export default function Products() {
       status: "Active",
       packs: [{ pack: "", price: "", oldPrice: "" }],
     });
+
     clearSelectedFile();
     setOpenModal(true);
   };
 
   const openEdit = (product: Product) => {
     setEditingId(product.id);
+
     setForm({
       name: product.name,
       category: product.category,
       size: product.size ?? "",
       description: product.description ?? "",
       status: product.status ?? "Active",
-      // store as strings so inputs can be empty/edited
       packs:
         product.packs && product.packs.length > 0
           ? product.packs.map((p) => ({
@@ -403,35 +387,67 @@ export default function Products() {
             }))
           : [{ pack: "", price: "", oldPrice: "" }],
     });
-    setPreviewUrl(product.imageUrl ?? null);
-    clearSelectedFile();
-    setOpenModal(true);
-  };
 
-  const clearSelectedFile = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    // keep original remote url for restore
+    existingImageUrlRef.current = product.imageUrl ?? null;
+
+    // clear any previous blob preview, then show remote image
+    revokeBlobPreviewIfAny();
     setSelectedFile(null);
+    resetFileInput();
+
+    setPreviewUrl(product.imageUrl ?? null);
+    setOpenModal(true);
   };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null;
+
     if (!f) {
+      // if user cancels file picker, keep existing preview if editing
       setSelectedFile(null);
-      setPreviewUrl(null);
+      if (existingImageUrlRef.current) setPreviewUrl(existingImageUrlRef.current);
+      else setPreviewUrl(null);
       return;
     }
+
     if (!f.type.startsWith("image/")) {
       toast.error("Please select an image file.");
+      resetFileInput();
       return;
     }
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+
+    // ✅ revoke old blob preview, create new one
+    revokeBlobPreviewIfAny();
+
+    const objUrl = URL.createObjectURL(f);
+    blobPreviewRef.current = objUrl;
+
     setSelectedFile(f);
-    setPreviewUrl(URL.createObjectURL(f));
+    setPreviewUrl(objUrl);
   };
 
   const handleSaveProduct = async () => {
     if (!form.name.trim() || !form.category || form.packs.length === 0) {
       toast.error("Please fill name, category, and at least one pack.");
+      return;
+    }
+
+    // basic pack validation (keeps your UI)
+    const packsToSend = form.packs
+      .filter((p) => String(p.pack).trim() !== "")
+      .map((p) => ({
+        pack: Number(p.pack),
+        price: Number(p.price),
+        oldPrice:
+          p.oldPrice !== undefined && p.oldPrice !== null && String(p.oldPrice).trim() !== ""
+            ? Number(p.oldPrice)
+            : null,
+      }))
+      .filter((p) => Number.isFinite(p.pack) && Number.isFinite(p.price));
+
+    if (packsToSend.length === 0) {
+      toast.error("Please add at least one valid pack with a price.");
       return;
     }
 
@@ -444,19 +460,6 @@ export default function Products() {
       fd.append("status", form.status);
       fd.append("size", form.size || "");
       if (selectedFile) fd.append("image", selectedFile);
-
-      // Filter out packs where pack (size) is empty
-      const packsToSend = form.packs
-        .filter((p) => p.pack !== "")
-        .map((p) => ({
-          pack: Number(p.pack),
-          price: parseFloat(p.price),
-          oldPrice:
-            p.oldPrice !== undefined && p.oldPrice !== null && String(p.oldPrice).trim() !== ""
-              ? parseFloat(String(p.oldPrice))
-              : null,
-        }));
-
       fd.append("packs", JSON.stringify(packsToSend));
 
       let res: Response;
@@ -483,13 +486,17 @@ export default function Products() {
 
       toast.success("Product saved successfully");
       setOpenModal(false);
+
+      // after successful save, cleanup blob preview
+      revokeBlobPreviewIfAny();
+      setSelectedFile(null);
+      resetFileInput();
+      existingImageUrlRef.current = null;
+
       await fetchProducts();
     } catch (err) {
       console.error("handleSaveProduct error:", err);
-      toast.error(
-        (err as Error).message ||
-          "Failed to save product. Check backend and token."
-      );
+      toast.error((err as Error).message || "Failed to save product. Check backend and token.");
     } finally {
       setSaving(false);
     }
@@ -510,7 +517,6 @@ export default function Products() {
     }
   };
 
-  // Handler to update selected pack for a product in the grid
   const onSelectPackForProduct = (productId: string | number, packValue: string) => {
     setSelectedPackByProduct((prev) => ({
       ...prev,
@@ -549,11 +555,7 @@ export default function Products() {
           </div>
         </div>
 
-        {loading && (
-          <div className="p-6 bg-muted/30 rounded text-center w-full">
-            Loading products...
-          </div>
-        )}
+        {loading && <div className="p-6 bg-muted/30 rounded text-center w-full">Loading products...</div>}
         {!loading && products.length === 0 && (
           <div className="p-6 bg-muted/30 rounded text-center w-full">
             No products found. Click Add Product to seed your catalog.
@@ -565,8 +567,7 @@ export default function Products() {
             {products.map((product) => {
               const key = `${product.id}`;
               const selectedPack = selectedPackByProduct[key] ?? "";
-              const selectedPackObj =
-                product.packs?.find((p) => p.pack === selectedPack) ?? null;
+              const selectedPackObj = product.packs?.find((p) => p.pack === selectedPack) ?? null;
 
               return (
                 <Card
@@ -598,19 +599,10 @@ export default function Products() {
                         </Badge>
                       </div>
 
-                      <h3 className="font-semibold text-sm sm:text-base truncate">
-                        {product.name}
-                      </h3>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {product.category}
-                      </p>
-                      {product.size && (
-                        <p className="text-xs text-muted-foreground truncate">
-                          Size: {product.size}
-                        </p>
-                      )}
+                      <h3 className="font-semibold text-sm sm:text-base truncate">{product.name}</h3>
+                      <p className="text-xs text-muted-foreground truncate">{product.category}</p>
+                      {product.size && <p className="text-xs text-muted-foreground truncate">Size: {product.size}</p>}
 
-                      {/* PACKS DROPDOWN (no default price shown) */}
                       {product.packs && product.packs.length > 0 && (
                         <div className="mt-2 w-full">
                           <label htmlFor={`pack-select-${key}`} className="sr-only">
@@ -630,7 +622,6 @@ export default function Products() {
                             ))}
                           </select>
 
-                          {/* show selected pack price only when a pack is chosen */}
                           {selectedPackObj && (
                             <p className="font-semibold mt-2 text-foreground">
                               Selected: {selectedPackObj.pack}-pack — ₵{selectedPackObj.price}
@@ -665,11 +656,19 @@ export default function Products() {
           </div>
         )}
 
-        <Dialog open={openModal} onOpenChange={setOpenModal}>
-          <DialogContent
-            className="w-full rounded-md px-6 max-w-lg overflow-y-auto"
-            style={{ maxHeight: "90vh" }}
-          >
+        <Dialog
+          open={openModal}
+          onOpenChange={(v) => {
+            setOpenModal(v);
+            // ✅ when closing modal, clear file selection + blob preview safely
+            if (!v) {
+              clearSelectedFile();
+              existingImageUrlRef.current = null;
+              setEditingId(null);
+            }
+          }}
+        >
+          <DialogContent className="w-full rounded-md px-6 max-w-lg overflow-y-auto" style={{ maxHeight: "90vh" }}>
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between text-base sm:text-lg font-semibold">
                 {editingId ? "Edit Product" : "Add Product"}
@@ -683,7 +682,6 @@ export default function Products() {
                 handleSaveProduct();
               }}
             >
-              {/* NAME */}
               <div>
                 <Label htmlFor="name" className="text-sm font-medium">
                   Name
@@ -698,7 +696,6 @@ export default function Products() {
                 />
               </div>
 
-              {/* SIZE + CATEGORY */}
               <div className="flex sm:gap-3 flex-col sm:flex-row">
                 <div className="flex-1">
                   <Label htmlFor="size" className="text-sm font-medium">
@@ -734,15 +731,10 @@ export default function Products() {
                 </div>
               </div>
 
-              {/* IMAGE */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="flex-shrink-0">
                   {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt="Preview"
-                      className="w-28 h-28 object-cover rounded-md border"
-                    />
+                    <img src={previewUrl} alt="Preview" className="w-28 h-28 object-cover rounded-md border" />
                   ) : (
                     <div className="w-28 h-28 rounded-md border bg-muted flex items-center justify-center text-muted-foreground">
                       No image
@@ -760,25 +752,21 @@ export default function Products() {
                     className="mt-1 w-full text-sm"
                     aria-label="Upload product image"
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Recommended: JPG/PNG. Max 2MB.
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">Recommended: JPG/PNG. Max 2MB.</p>
                 </div>
               </div>
 
-              {/* PACKS */}
               <div>
                 <Label className="text-sm font-medium">Available Packs</Label>
                 {form.packs.map((p, idx) => (
                   <div key={idx} className="flex gap-2 mt-1">
-                    {/* pack stored as string so it can be empty and deletable */}
                     <Input
                       type="number"
                       placeholder="Pack size"
                       value={p.pack}
                       onChange={(e) => {
                         const newPacks = [...form.packs];
-                        newPacks[idx].pack = e.target.value; // store as string
+                        newPacks[idx].pack = e.target.value;
                         setForm({ ...form, packs: newPacks });
                       }}
                       className="w-1/3"
@@ -797,7 +785,6 @@ export default function Products() {
                       step={0.01}
                     />
 
-                    {/* ✅ OLD PRICE INPUT */}
                     <Input
                       type="number"
                       placeholder="Old price"
@@ -841,7 +828,6 @@ export default function Products() {
                 </Button>
               </div>
 
-              {/* ACTIONS */}
               <div className="mt-4 mb-4 flex sm:flex sm:justify-end gap-2 sticky bottom-0 bg-background p-2 z-10">
                 <Button
                   type="button"
@@ -851,12 +837,7 @@ export default function Products() {
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  className="w-full sm:w-auto"
-                  aria-busy={saving}
-                  disabled={saving}
-                >
+                <Button type="submit" className="w-full sm:w-auto" aria-busy={saving} disabled={saving}>
                   {saving ? "Saving..." : editingId ? "Update Product" : "Add Product"}
                 </Button>
               </div>
