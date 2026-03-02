@@ -12,6 +12,7 @@ import {
   Home,
   ShoppingBag,
   Phone,
+  GraduationCap,
 
 } from "lucide-react";
 import { toast } from "sonner";
@@ -122,6 +123,9 @@ const Header = () => {
           </NavLink>
           <NavLink to="/contact" className={navLinkClass}>
             Contact
+          </NavLink>
+          <NavLink to="/training" className={navLinkClass}>
+            Training Program
           </NavLink>
         </nav>
 
@@ -303,6 +307,17 @@ const Header = () => {
                     My Orders
                     </button>
                 )}
+
+
+                {/* Training Program */}
+                <Link
+                to="/training"
+                onClick={() => setIsMenuOpen(false)}
+                className={[mobileLinkClass, "flex items-center gap-3"].join(" ")}
+                >
+                <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                Training Program
+                </Link>
 
                 {/* Contact */}
                 <Link

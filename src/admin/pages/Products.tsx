@@ -33,7 +33,6 @@ const categories = [
   { id: "cut-fruits", name: "CUT FRUITS", slug: "cut-fruits" },
   { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs" },
   { id: "events", name: "EVENTS", slug: "events" },
-  { id: "training", name: "TRAINING", slug: "training" },
 ];
 
 const API_BASE = "https://updated-duks-backend-1-0.onrender.com/api";

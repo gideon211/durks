@@ -30,6 +30,7 @@ import CSRReports from "./admin/pages/CSRReports";
 import Analytics from "./admin/pages/Analytics";
 import Users from "./admin/pages/Users";
 import Settings from "./admin/pages/Settings";
+import Training from "./pages/Training";
 
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ function AnimatedRoutes() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/bulk-quote" element={<BulkQuote />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/training" element={<Training />} />
             <Route path="*" element={<NotFound />} />
             <Route path="orders" element={<Orders />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
