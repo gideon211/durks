@@ -266,7 +266,7 @@ export default function Training() {
 
       {/* VIDEO (mobile position) */}
       <div className="mt-6 order-2 lg:hidden">
-        <div className="relative overflow-hidden rounded-2xl ring-1 ring-border shadow-md">
+        <div className="relative overflow-hidden rounded-md ring-1 ring-border shadow-md">
 
           {/* blurred fill */}
           <video
@@ -345,7 +345,7 @@ export default function Training() {
 
     {/* VIDEO (desktop position) */}
     <div className="hidden lg:block lg:col-span-6">
-      <div className="relative overflow-hidden rounded-2xl ring-1 ring-border shadow-md">
+      <div className="relative overflow-hidden rounded-md ring-1 ring-border shadow-md">
 
         {/* blurred fill */}
         <video
