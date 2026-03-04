@@ -68,7 +68,12 @@ const PROGRAMS: Program[] = [
     duration: "4 weeks",
     format: "In-person",
     level: "Beginner → Intermediate",
-    bullets: ["Sourcing & hygiene SOPs", "Batching workflow", "Costing & pricing", "Retail + bulk ops"],
+    bullets: [
+      "Sourcing & hygiene SOPs",
+      "Batching workflow",
+      "Costing & pricing",
+      "Retail + bulk ops",
+    ],
   },
   {
     key: "quality",
@@ -77,7 +82,12 @@ const PROGRAMS: Program[] = [
     duration: "2 weeks",
     format: "Lab",
     level: "Intermediate → Advanced",
-    bullets: ["Consistency standards", "QC checks & logs", "Cold chain basics", "Packaging consistency"],
+    bullets: [
+      "Consistency standards",
+      "QC checks & logs",
+      "Cold chain basics",
+      "Packaging consistency",
+    ],
   },
   {
     key: "retail",
@@ -100,7 +110,8 @@ function sanitizePhone(phone: string) {
 
 export default function Training() {
   const [applyOpen, setApplyOpen] = React.useState(false);
-  const [selectedProgram, setSelectedProgram] = React.useState<ProgramKey>("bootcamp");
+  const [selectedProgram, setSelectedProgram] =
+    React.useState<ProgramKey>("bootcamp");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const [form, setForm] = React.useState<ApplyForm>({
@@ -150,6 +161,7 @@ export default function Training() {
   const handleApplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // honeypot
     if (form.website.trim()) {
       toast.error("Something went wrong. Please try again.");
       return;
@@ -157,9 +169,18 @@ export default function Training() {
 
     const phone = sanitizePhone(form.phone);
 
-    if (!isValidEmail(form.email)) return toast.error("Please enter a valid email address.");
-    if (phone.length < 9) return toast.error("Please enter a valid phone number.");
-    if (form.goals.trim().length < 10) return toast.error("Please add a short note (at least 10 characters).");
+    if (!isValidEmail(form.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    if (phone.length < 9) {
+      toast.error("Please enter a valid phone number.");
+      return;
+    }
+    if (form.goals.trim().length < 10) {
+      toast.error("Please add a short note (at least 10 characters).");
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -193,183 +214,98 @@ export default function Training() {
     }
   };
 
+  const COMING_SOON = true;
+
+  const handlecomingsoon = () => {
+    if(COMING_SOON) {
+        toast.message("Training registration is coming soon");
+        return true;
+
+    }
+
+    return false;
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1">
-        {/* Rich Hero (less text, more premium look) */}
+      <main className="flex-1 ">
+        {/* HERO (polished desktop: open, not choked) */}
         <section className="relative overflow-hidden">
           {/* Background layers */}
           <div className="absolute inset-0 bg-background" />
           <div className="absolute inset-0 bg-gradient-to-b from-soft-sand/70 via-background to-background" />
-          <div className="absolute -top-28 -right-28 h-[30rem] w-[30rem] rounded-full bg-primary/20 blur-3xl" />
-          <div className="absolute -bottom-28 -left-28 h-[30rem] w-[30rem] rounded-full bg-secondary/20 blur-3xl" />
+          <div className="absolute -top-28 -right-28 h-[34rem] w-[34rem] rounded-full bg-primary/20 blur-3xl" />
+          <div className="absolute -bottom-28 -left-28 h-[34rem] w-[34rem] rounded-full bg-secondary/20 blur-3xl" />
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
-<div className="relative container mx-auto px-4 py-12 md:py-16">
-  <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-    {/* Left */}
-    <div className="lg:col-span-7 ">
+          {/* Wider container on desktop so it breathes */}
+<div className="relative mx-auto w-full max-w-[1240px] px-4 md:px-6 py-10 md:py-14 lg:py-16 mt-12">
+
+  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+
+    {/* TEXT COLUMN */}
+    <div className="lg:col-span-6 flex flex-col">
+
       {/* Chip */}
-      <div className="inline-flex items-center mt-6 md:mt-10 gap-2 rounded-full border bg-background/70 px-4 py-2 text-xs text-muted-foreground backdrop-blur">
+      <div className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-4 py-2 text-xs text-muted-foreground backdrop-blur font-semibold">
         <Sparkles className="h-4 w-4" />
         DUKS Training • Practical • Premium
       </div>
 
       {/* Heading */}
-      <h1 className="mt-6 md:mt-10 mx-auto font-heading font-bold text-3xl md:text-6xl tracking-tight leading-[1.06]">
-       A premium hands-on training program for juice production & growth.
+      <h1 className="mt-5 font-heading font-bold text-3xl md:text-5xl lg:text-6xl tracking-tight leading-[1.06]">
+        A premium hands-on training program for juice production & growth.
       </h1>
 
-<div
-  className={[
-    // ✅ mobile: stacked, desktop: 2 columns
-    "mt-8 grid gap-6 lg:gap-10",
-    "grid-cols-1 lg:grid-cols-12",
-    // ✅ align to top (your video is tall)
-    "items-start",
-  ].join(" ")}
->
-  {/* VIDEO */}
-  <div className="lg:col-span-7">
-    <div className="relative overflow-hidden rounded-2xl ring-1 ring-border shadow-md">
-      <video
-        className="w-full h-[450px] sm:h-[420px] md:h-[520px] lg:h-[650px] object-cover"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-      >
-        <source src="/banners/training.mp4" type="video/mp4" />
-      </video>
-
-      {/* Premium overlay */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent" />
-
-      {/* subtle vignette */}
-      <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10" />
-    </div>
-  </div>
-
-  {/* RIGHT CARD */}
-  <div className="lg:col-span-5">
-    <div className="lg:sticky lg:top-24">
-      <div className="relative rounded-2xl border bg-card/70 backdrop-blur p-5 md:p-6 shadow-sm">
-        <div className="absolute inset-x-6 -top-3 h-6 rounded-full bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 blur-md" />
-
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs text-muted-foreground">Track</p>
-            <h3 className="mt-1 font-heading font-bold text-xl">{selected.title}</h3>
-          </div>
-          <Badge className="rounded-full">{selected.badge}</Badge>
-        </div>
-
-<div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
-  {[
-    { icon: Clock, label: "Duration", value: selected.duration },
-    { icon: Users, label: "Format", value: selected.format },
-    { icon: GraduationCap, label: "Level", value: selected.level, wide: true },
-  ].map((it, idx) => (
-    <div
-      key={idx}
-      className={[
-        "rounded-2xl border bg-background/60 p-3",
-        it.wide ? "col-span-2 sm:col-span-1" : "",
-      ].join(" ")}
-    >
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <it.icon className="h-4 w-4 shrink-0" />
-        <span className="text-xs">{it.label}</span>
-      </div>
-      <div className="mt-1 font-semibold text-sm leading-snug line-clamp-2">
-        {it.value}
-      </div>
-    </div>
-  ))}
-</div>
-
-        <Separator className="my-4" />
-
-        <div className="space-y-2">
-          {selected.bullets.slice(0, 4).map((b, i) => (
-            <div key={i} className="flex items-start gap-2 text-sm">
-              <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary" />
-              <span className="text-muted-foreground">{b}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* CTA + Program badges */}
-        <div className="mt-5 flex flex-col gap-3">
-          <Button className="rounded-xl w-full py-2" onClick={() => openApply(selected.key)}>
-            Register
-          </Button>
-
-          <div className="grid grid-cols-3 gap-2">
-            {PROGRAMS.map((p) => (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => setSelectedProgram(p.key)}
-                className={[
-                  "rounded-2xl border px-3 py-3 text-xs font-medium transition-colors",
-                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                  p.key === selectedProgram
-                    ? "bg-muted/40 border-2"
-                    : "hover:bg-muted/20 bg-background/60",
-                ].join(" ")}
-                aria-label={`Select ${p.title}`}
-              >
-                {p.badge}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Contact */}
-        <div className="mt-5 grid sm:grid-cols-2 gap-2">
-          <a
-            href="tel:+233202427880"
-            className="flex items-center justify-between rounded-2xl border bg-muted/20 px-4 py-3 hover:bg-muted/40 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <Phone className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Call</span>
-            </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-          </a>
-
-          <a
-            href="mailto:info@duksjuice.com"
-            className="flex items-center justify-between rounded-2xl border bg-muted/20 px-4 py-3 hover:bg-muted/40 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <Mail className="h-4 w-4 text-secondary" />
-              <span className="text-sm font-medium">Email</span>
-            </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-      {/* Minimal subtext */}
-      <p className="mt-4 text-muted-foreground text-base md:text-lg max-w-2xl">
+      {/* Subtext */}
+      <p className="mt-4 text-muted-foreground text-base md:text-lg max-w-xl">
         Hands-on sessions. Small cohorts. Clear SOPs.
       </p>
 
-      {/* Buttons: no overflow, good mobile */}
-      <div className="mt-7 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-start">
+      {/* VIDEO (mobile position) */}
+      <div className="mt-6 order-2 lg:hidden">
+        <div className="relative overflow-hidden rounded-2xl ring-1 ring-border shadow-md">
+
+          {/* blurred fill */}
+          <video
+            className="absolute inset-0 h-full w-full object-cover blur-2xl scale-110 opacity-40"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+          >
+            <source src="/banners/training.mp4" type="video/mp4" />
+          </video>
+
+          {/* foreground portrait */}
+          <video
+            className="relative z-10 mx-auto h-[420px] w-auto object-contain"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+          >
+            <source src="/banners/training.mp4" type="video/mp4" />
+          </video>
+
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
+        </div>
+      </div>
+
+      {/* BUTTONS */}
+      <div className="mt-6 flex flex-col sm:flex-row gap-3">
         <Button
           size="md"
-          className="rounded-xl w-full sm:w-auto"
-          onClick={() => openApply()}
+          className="rounded-2xl w-full sm:w-auto"
+          onClick={() => {
+            if (handlecomingsoon()) return;
+            openApply();
+            }}
+            disabled={COMING_SOON}
         >
           Register <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
@@ -377,17 +313,19 @@ export default function Training() {
         <Button
           size="md"
           variant="outline"
-          className="rounded-xl w-full sm:w-auto text-sm px-5"
-          onClick={() => {
-            toast.message("For enquiries, use the contact buttons below.");
-          }}
+          className="rounded-2xl w-full sm:w-auto"
+          disabled={COMING_SOON}
+            onClick={() => {
+            if (handlecomingsoon()) return;
+            openApply();
+            }}
         >
           Learn more
         </Button>
       </div>
 
-      {/* Quick signals */}
-      <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* Signals */}
+      <div className="mt-7 grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { icon: ShieldCheck, label: "Hygiene SOPs" },
           { icon: Zap, label: "Hands-on" },
@@ -405,91 +343,50 @@ export default function Training() {
       </div>
     </div>
 
- 
+    {/* VIDEO (desktop position) */}
+    <div className="hidden lg:block lg:col-span-6">
+      <div className="relative overflow-hidden rounded-2xl ring-1 ring-border shadow-md">
+
+        {/* blurred fill */}
+        <video
+          className="absolute inset-0 h-full w-full object-cover blur-2xl scale-110 opacity-40"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+        >
+          <source src="/banners/training.mp4" type="video/mp4" />
+        </video>
+
+        {/* foreground portrait */}
+        <video
+          className="relative z-10 mx-auto h-[640px] w-auto object-contain"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+        >
+          <source src="/banners/training.mp4" type="video/mp4" />
+        </video>
+
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
+      </div>
+    </div>
+
   </div>
 </div>
         </section>
 
-        {/* Tracks (compact, premium cards, minimal copy) */}
-        {/* <section className="container mx-auto px-4 py-10 md:py-12">
-          <div className="flex items-end justify-between gap-6 flex-wrap">
-            <div>
-              <h2 className="font-heading font-bold text-2xl md:text-4xl">Tracks</h2>
-              <p className="text-muted-foreground mt-2">Choose a track. Register in seconds.</p>
-            </div>
-            <Button variant="outline" className="rounded-2xl" onClick={() => openApply()}>
-              Register
-            </Button>
-          </div>
-
-          <div className="mt-6 grid lg:grid-cols-3 gap-5">
-            {PROGRAMS.map((p) => {
-              const active = p.key === selectedProgram;
-              return (
-                <Card
-                  key={p.key}
-                  className={[
-                    "rounded-[1.75rem] overflow-hidden transition-all",
-                    active ? "border-2 shadow-sm" : "border",
-                  ].join(" ")}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <CardTitle className="text-lg font-heading">{p.title}</CardTitle>
-                      <Badge variant={p.badge === "Popular" ? "default" : "secondary"} className="rounded-full">
-                        {p.badge}
-                      </Badge>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                      <span className="rounded-full border bg-muted/20 px-3 py-1">{p.duration}</span>
-                      <span className="rounded-full border bg-muted/20 px-3 py-1">{p.format}</span>
-                      <span className="rounded-full border bg-muted/20 px-3 py-1">{p.level}</span>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="pb-6">
-                    <div className="grid grid-cols-2 gap-2">
-                      {p.bullets.slice(0, 4).map((b, i) => (
-                        <div key={i} className="rounded-2xl border bg-muted/10 p-3 text-sm">
-                          <div className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary" />
-                            <span className="text-muted-foreground">{b}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-4 flex gap-3">
-                      <Button
-                        className="rounded-2xl w-full"
-                        onClick={() => {
-                          setSelectedProgram(p.key);
-                          openApply(p.key);
-                        }}
-                      >
-                        Register
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="rounded-2xl w-full"
-                        onClick={() => setSelectedProgram(p.key)}
-                      >
-                        Select
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </section> */}
-
-        {/* Cohort / Logistics (compact, not salesy) */}
-        <section className="container mx-auto px-4 pb-12">
+        {/* Cohort / Logistics (unchanged, already clean) */}
+        <section className="container mx-auto px-4 pb-12 mt-10">
           <div className="grid lg:grid-cols-5 gap-6 items-start">
             <Card className="lg:col-span-3 rounded-[1.75rem]">
               <CardHeader className="pb-3">
-                <CardTitle className="font-heading text-xl md:text-2xl">How it works</CardTitle>
+                <CardTitle className="font-heading text-xl md:text-2xl">
+                  How it works
+                </CardTitle>
                 <p className="text-sm text-muted-foreground">
                   A clean structure: learn, practice, and leave with SOPs.
                 </p>
@@ -529,80 +426,110 @@ export default function Training() {
               </CardContent>
             </Card>
 
-            <div className="lg:col-span-2 space-y-5">
-              <Card className="rounded-[1.75rem]">
-                <CardHeader className="pb-3">
-                  <CardTitle className="font-heading text-xl">Next cohort</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <CalendarDays className="h-5 w-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="font-medium">Start</p>
-                      <p className="text-sm text-muted-foreground">To be announced</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Clock className="h-5 w-5 text-secondary mt-0.5" />
-                    <div>
-                      <p className="font-medium">Schedule</p>
-                      <p className="text-sm text-muted-foreground">Weekday & weekend options</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-accent mt-0.5" />
-                    <div>
-                      <p className="font-medium">Location</p>
-                      <p className="text-sm text-muted-foreground">Accra (shared after registration)</p>
-                    </div>
-                  </div>
+<Card className="rounded-[1.75rem]">
+  <CardHeader className="pb-3">
+    <div className="flex items-start justify-between gap-3">
+      <CardTitle className="font-heading text-xl">Next cohort</CardTitle>
 
-                  <Button size="md" className="rounded-2xl w-full" onClick={() => openApply()}>
-                    Join Now
-                  </Button>
+      {/* Optional: show selected program badge */}
+      <Badge className="rounded-full">{selected.badge}</Badge>
+    </div>
+  </CardHeader>
 
-                  <p className="text-xs text-muted-foreground">
-                    Team training available (on-site or at our venue).
-                  </p>
-                </CardContent>
-              </Card>
+  <CardContent className="space-y-4">
+    {/* Meta row: Duration / Format / Level */}
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      {[
+        { icon: Clock, label: "Duration", value: selected.duration },
+        { icon: Users, label: "Format", value: selected.format },
+        { icon: GraduationCap, label: "Level", value: selected.level, wide: true },
+      ].map((it, idx) => (
+        <div
+          key={idx}
+          className={[
+            "rounded-2xl border bg-muted/10 p-3",
+            it.wide ? "col-span-2 sm:col-span-1" : "",
+          ].join(" ")}
+        >
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <it.icon className="h-4 w-4 shrink-0" />
+            <span className="text-xs">{it.label}</span>
+          </div>
+          <div className="mt-1 text-sm font-semibold leading-snug line-clamp-2">
+            {it.value}
+          </div>
+        </div>
+      ))}
+    </div>
 
-              <Card className="rounded-[1.75rem]">
-                <CardHeader className="pb-3">
-                  <CardTitle className="font-heading text-xl">Contact</CardTitle>
-                </CardHeader>
-                <CardContent className="grid gap-2">
-                  <a
-                    href="tel:+233202427880"
-                    className="flex items-center justify-between rounded-2xl border bg-muted/20 px-4 py-3 hover:bg-muted/40 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Phone className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">+233 202 427 880</span>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  </a>
+    {/* Date / schedule / location */}
+    <div className="space-y-3">
+      <div className="flex items-start gap-3">
+        <CalendarDays className="h-5 w-5 text-primary mt-0.5" />
+        <div>
+          <p className="font-medium">Start Date</p>
+          <p className="text-sm text-muted-foreground">To be announced</p>
+        </div>
+      </div>
 
-                  <a
-                    href="mailto:info@duksjuice.com"
-                    className="flex items-center justify-between rounded-2xl border bg-muted/20 px-4 py-3 hover:bg-muted/40 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Mail className="h-4 w-4 text-secondary" />
-                      <span className="text-sm font-medium">orderduksjuice@gmail.com</span>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  </a>
-                </CardContent>
-              </Card>
-            </div>
+      <div className="flex items-start gap-3">
+        <Clock className="h-5 w-5 text-secondary mt-0.5" />
+        <div>
+          <p className="font-medium">Schedule</p>
+          <p className="text-sm text-muted-foreground">Weekday & weekend options</p>
+        </div>
+      </div>
+
+      <div className="flex items-start gap-3">
+        <MapPin className="h-5 w-5 text-accent mt-0.5" />
+        <div>
+          <p className="font-medium">Location</p>
+          <p className="text-sm text-muted-foreground">Accra (shared after registration)</p>
+        </div>
+      </div>
+    </div>
+
+    <Separator />
+
+    {/* Fee section */}
+    <div className="rounded-2xl border bg-soft-sand/40 p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs text-muted-foreground">Fee</p>
+          <p className="text-lg font-heading font-bold leading-tight">
+            {/* Put your real price here */}
+            coming soon!
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Includes materials + certificate
+          </p>
+        </div>
+
+        {/* Optional: quick payment note */}
+        <Badge variant="secondary" className="rounded-full h-fit text-xs">
+          Limited
+        </Badge>
+      </div>
+    </div>
+
+    <Button size="md" className="rounded-2xl w-full" onClick={() => {
+        if (handlecomingsoon()) return;
+        openApply();
+        }} disabled={COMING_SOON}>
+      Join Now
+    </Button>
+
+    <p className="text-xs text-muted-foreground">
+      Team training available (on-site or at our venue).
+    </p>
+  </CardContent>
+</Card>
           </div>
         </section>
 
         {/* APPLY MODAL */}
         <Dialog open={applyOpen} onOpenChange={setApplyOpen}>
           <DialogContent className="sm:max-w-[720px] rounded-[1.75rem] p-0 overflow-hidden">
-            {/* Rich header strip */}
             <div className="relative px-6 pt-6 pb-5 bg-gradient-to-b from-soft-sand/70 via-background to-background">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
               <DialogHeader>
@@ -624,6 +551,7 @@ export default function Training() {
             </div>
 
             <form onSubmit={handleApplySubmit} className="px-6 pb-6">
+              {/* honeypot */}
               <input
                 value={form.website}
                 onChange={onChange("website")}
@@ -706,7 +634,11 @@ export default function Training() {
                         <button
                           type="button"
                           key={opt.key}
-                          onClick={() => onSet("schedulePreference", opt.key as ApplyForm["schedulePreference"])}
+                          disabled={COMING_SOON}
+                            onClick={() => {
+                                if (handlecomingsoon()) return;
+                                openApply();
+                            }}
                           className={[
                             "rounded-xl border px-3 py-2 text-sm transition-colors",
                             active ? "bg-muted/40 border-2" : "hover:bg-muted/20",
@@ -733,7 +665,11 @@ export default function Training() {
                         <button
                           type="button"
                           key={opt.key}
-                          onClick={() => onSet("experienceLevel", opt.key as ApplyForm["experienceLevel"])}
+                            disabled={COMING_SOON}
+                          onClick={() => {
+                            if (handlecomingsoon()) return;
+                            openApply();
+                          }}
                           className={[
                             "rounded-xl border px-3 py-2 text-sm transition-colors",
                             active ? "bg-muted/40 border-2" : "hover:bg-muted/20",
@@ -746,6 +682,7 @@ export default function Training() {
                   </div>
                 </div>
 
+                {/* Note */}
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="goals">Note</Label>
                   <Textarea
@@ -764,9 +701,7 @@ export default function Training() {
               </div>
 
               <DialogFooter className="mt-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                <p className="text-xs text-muted-foreground">
-                  We’ll contact you with the next steps.
-                </p>
+                <p className="text-xs text-muted-foreground">We’ll contact you with the next steps.</p>
 
                 <div className="flex gap-3 w-full sm:w-auto">
                   <Button
@@ -778,7 +713,15 @@ export default function Training() {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" className="rounded-2xl w-full sm:w-auto" disabled={!canSubmit}>
+                  <Button
+                    type="submit"
+                    className="rounded-2xl w-full sm:w-auto"
+                      onClick={() => {
+                            if (handlecomingsoon()) return;
+                            openApply();
+                        }}
+                    disabled={COMING_SOON}
+                  >
                     {isSubmitting ? "Submitting..." : "Submit"}
                   </Button>
                 </div>
