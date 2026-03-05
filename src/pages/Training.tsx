@@ -306,7 +306,7 @@ export default function Training() {
             if (handlecomingsoon()) return;
             openApply();
             }}
-            disabled={COMING_SOON}
+         
         >
           Register <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
@@ -315,7 +315,7 @@ export default function Training() {
           size="md"
           variant="outline"
           className="rounded-2xl w-full sm:w-auto"
-          disabled={COMING_SOON}
+
             onClick={() => {
             if (handlecomingsoon()) return;
             openApply();
@@ -516,7 +516,7 @@ export default function Training() {
     <Button size="md" className="rounded-2xl w-full" onClick={() => {
         if (handlecomingsoon()) return;
         openApply();
-        }} disabled={COMING_SOON}>
+        }}>
       Join Now
     </Button>
 
@@ -665,9 +665,7 @@ export default function Training() {
                       return (
                         <button
                           type="button"
-                          key={opt.key}
-                            disabled={COMING_SOON}
-                          onClick={() => {
+                          key={opt.key}                          onClick={() => {
                             if (handlecomingsoon()) return;
                             openApply();
                           }}
@@ -710,7 +708,6 @@ export default function Training() {
                     variant="outline"
                     className="rounded-2xl w-full sm:w-auto"
                     onClick={() => setApplyOpen(false)}
-                    disabled={isSubmitting}
                   >
                     Cancel
                   </Button>
@@ -721,7 +718,6 @@ export default function Training() {
                             if (handlecomingsoon()) return;
                             openApply();
                         }}
-                    disabled={COMING_SOON}
                   >
                     {isSubmitting ? "Submitting..." : "Submit"}
                   </Button>
