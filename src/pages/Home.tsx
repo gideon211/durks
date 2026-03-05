@@ -65,7 +65,7 @@ const flavor3 = "/images/flavor3.jpg";
 const flavor4 = "/images/flavor4.jpg";
 
 import { useRef, useState, useEffect } from "react";
-import { Description } from "@radix-ui/react-toast";
+import TrainingPreview from "@/components/TrainingPreview"
 
 const productCategories = [
   // 1. Bundles → 4 images
@@ -470,6 +470,14 @@ export default function Home() {
               </span>
             ))}
           </motion.div>
+        </div>
+
+
+
+        <div>
+
+            <TrainingPreview />
+            
         </div>
 
         {/* Health Benefits (unchanged) */}

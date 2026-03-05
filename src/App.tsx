@@ -15,6 +15,7 @@ import Home from "./pages/Home"
 import PaymentSuccess from "./pages/PaymentSuccess"
 import Training from "./pages/Training";
 
+
 //admin
 
 import Dashboard from "./admin/pages/Dashboard";
@@ -50,7 +51,9 @@ function AnimatedRoutes() {
             <Route path="/training" element={<Training />} />
             <Route path="*" element={<NotFound />} />
             <Route path="orders" element={<Orders />} />
+            <Route path="/training" element={<Training />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
+            
 
 
 
