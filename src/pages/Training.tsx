@@ -381,152 +381,151 @@ export default function Training() {
         </section>
 
         {/* Cohort / Logistics (unchanged, already clean) */}
-        <section className="container mx-auto px-4 pb-12 mt-10">
-          <div className="grid lg:grid-cols-5 gap-6 items-start">
-            <Card className="lg:col-span-3 rounded-[1.75rem]">
-              <CardHeader className="pb-3">
-                <CardTitle className="font-heading text-xl md:text-2xl">
-                  How it works
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  A clean structure: learn, practice, and leave with SOPs.
-                </p>
-              </CardHeader>
+<section className="container mx-auto px-4 pb-12 mt-10">
+  <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 items-start">
+    <Card className="lg:col-span-3 rounded-[1.75rem]">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-heading text-xl md:text-2xl">
+          How it works
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          A clean structure: learn, practice, and leave with SOPs.
+        </p>
+      </CardHeader>
 
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-3">
-                  {[
-                    { title: "Session style", desc: "Practical demos + guided practice" },
-                    { title: "Cohort size", desc: "Small groups for real support" },
-                    { title: "Materials", desc: "Templates + checklists included" },
-                    { title: "Outcome", desc: "Repeatable daily workflow" },
-                  ].map((it, idx) => (
-                    <div key={idx} className="rounded-[1.25rem] border bg-muted/10 p-4">
-                      <div className="flex items-center gap-2">
-                        <Info className="h-4 w-4 text-primary" />
-                        <p className="font-semibold text-sm">{it.title}</p>
-                      </div>
-                      <p className="mt-2 text-sm text-muted-foreground">{it.desc}</p>
-                    </div>
-                  ))}
-                </div>
+      <CardContent>
+        <div className="grid md:grid-cols-2 gap-3">
+          {[
+            { title: "Session style", desc: "Practical demos + guided practice" },
+            { title: "Cohort size", desc: "Small groups for real support" },
+            { title: "Materials", desc: "Templates + checklists included" },
+            { title: "Outcome", desc: "Repeatable daily workflow" },
+          ].map((it, idx) => (
+            <div key={idx} className="rounded-[1.25rem] border bg-muted/10 p-4">
+              <div className="flex items-center gap-2">
+                <Info className="h-4 w-4 text-primary" />
+                <p className="font-semibold text-sm">{it.title}</p>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">{it.desc}</p>
+            </div>
+          ))}
+        </div>
 
-                <Separator className="my-5" />
+        <Separator className="my-5" />
 
-                <div className="rounded-[1.5rem] border bg-soft-sand/40 p-4">
-                  <div className="flex items-start gap-3">
-                    <ShieldCheck className="h-5 w-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-sm">Focus areas</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Hygiene SOPs, consistency, packaging discipline, and operations that scale.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="rounded-[1.5rem] border bg-soft-sand/40 p-4">
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <p className="font-semibold text-sm">Focus areas</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Hygiene SOPs, consistency, packaging discipline, and operations that scale.
+              </p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
 
-<Card className="rounded-[1.75rem]">
-  <CardHeader className="pb-3">
-    <div className="flex items-start justify-between gap-3">
-      <CardTitle className="font-heading text-xl">Next cohort</CardTitle>
+    <Card className="lg:col-span-2 rounded-[1.75rem] h-full">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <CardTitle className="font-heading text-xl">Next cohort</CardTitle>
+          <Badge className="rounded-full">{selected.badge}</Badge>
+        </div>
+      </CardHeader>
 
-      {/* Optional: show selected program badge */}
-      <Badge className="rounded-full">{selected.badge}</Badge>
-    </div>
-  </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {[
+            { icon: Clock, label: "Duration", value: selected.duration },
+            { icon: Users, label: "Format", value: selected.format },
+            { icon: GraduationCap, label: "Level", value: selected.level, wide: true },
+          ].map((it, idx) => (
+            <div
+              key={idx}
+              className={[
+                "rounded-2xl border bg-muted/10 p-3",
+                it.wide ? "col-span-2 sm:col-span-1" : "",
+              ].join(" ")}
+            >
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <it.icon className="h-4 w-4 shrink-0" />
+                <span className="text-xs">{it.label}</span>
+              </div>
+              <div className="mt-1 text-sm font-semibold leading-snug line-clamp-2">
+                {it.value}
+              </div>
+            </div>
+          ))}
+        </div>
 
-  <CardContent className="space-y-4">
-    {/* Meta row: Duration / Format / Level */}
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-      {[
-        { icon: Clock, label: "Duration", value: selected.duration },
-        { icon: Users, label: "Format", value: selected.format },
-        { icon: GraduationCap, label: "Level", value: selected.level, wide: true },
-      ].map((it, idx) => (
-        <div
-          key={idx}
-          className={[
-            "rounded-2xl border bg-muted/10 p-3",
-            it.wide ? "col-span-2 sm:col-span-1" : "",
-          ].join(" ")}
+        <div className="space-y-3">
+          <div className="flex items-start gap-3">
+            <CalendarDays className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <p className="font-medium">Start Date</p>
+              <p className="text-sm text-muted-foreground">To be announced</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <Clock className="h-5 w-5 text-secondary mt-0.5" />
+            <div>
+              <p className="font-medium">Schedule</p>
+              <p className="text-sm text-muted-foreground">Weekday & weekend options</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <MapPin className="h-5 w-5 text-accent mt-0.5" />
+            <div>
+              <p className="font-medium">Location</p>
+              <p className="text-sm text-muted-foreground">
+                Accra (shared after registration)
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="rounded-2xl border bg-soft-sand/40 p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Fee</p>
+              <p className="text-lg font-heading font-bold leading-tight">
+                coming soon!
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Includes materials + certificate
+              </p>
+            </div>
+
+            <Badge variant="secondary" className="rounded-full h-fit text-xs">
+              Limited
+            </Badge>
+          </div>
+        </div>
+
+        <Button
+          size="md"
+          className="rounded-2xl w-full"
+          onClick={() => {
+            if (handlecomingsoon()) return;
+            openApply();
+          }}
         >
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <it.icon className="h-4 w-4 shrink-0" />
-            <span className="text-xs">{it.label}</span>
-          </div>
-          <div className="mt-1 text-sm font-semibold leading-snug line-clamp-2">
-            {it.value}
-          </div>
-        </div>
-      ))}
-    </div>
+          Join Now
+        </Button>
 
-    {/* Date / schedule / location */}
-    <div className="space-y-3">
-      <div className="flex items-start gap-3">
-        <CalendarDays className="h-5 w-5 text-primary mt-0.5" />
-        <div>
-          <p className="font-medium">Start Date</p>
-          <p className="text-sm text-muted-foreground">To be announced</p>
-        </div>
-      </div>
-
-      <div className="flex items-start gap-3">
-        <Clock className="h-5 w-5 text-secondary mt-0.5" />
-        <div>
-          <p className="font-medium">Schedule</p>
-          <p className="text-sm text-muted-foreground">Weekday & weekend options</p>
-        </div>
-      </div>
-
-      <div className="flex items-start gap-3">
-        <MapPin className="h-5 w-5 text-accent mt-0.5" />
-        <div>
-          <p className="font-medium">Location</p>
-          <p className="text-sm text-muted-foreground">Accra (shared after registration)</p>
-        </div>
-      </div>
-    </div>
-
-    <Separator />
-
-    {/* Fee section */}
-    <div className="rounded-2xl border bg-soft-sand/40 p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs text-muted-foreground">Fee</p>
-          <p className="text-lg font-heading font-bold leading-tight">
-            {/* Put your real price here */}
-            coming soon!
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Includes materials + certificate
-          </p>
-        </div>
-
-        {/* Optional: quick payment note */}
-        <Badge variant="secondary" className="rounded-full h-fit text-xs">
-          Limited
-        </Badge>
-      </div>
-    </div>
-
-    <Button size="md" className="rounded-2xl w-full" onClick={() => {
-        if (handlecomingsoon()) return;
-        openApply();
-        }}>
-      Join Now
-    </Button>
-
-    <p className="text-xs text-muted-foreground">
-      Team training available (on-site or at our venue).
-    </p>
-  </CardContent>
-</Card>
-          </div>
-        </section>
+        <p className="text-xs text-muted-foreground">
+          Team training available (on-site or at our venue).
+        </p>
+      </CardContent>
+    </Card>
+  </div>
+</section>
 
         {/* APPLY MODAL */}
         <Dialog open={applyOpen} onOpenChange={setApplyOpen}>
