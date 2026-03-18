@@ -124,9 +124,9 @@ const Header = () => {
           <NavLink to="/contact" className={navLinkClass}>
             Contact
           </NavLink>
-          <NavLink to="/training" className={navLinkClass}>
+          {/* <NavLink to="/training" className={navLinkClass}>
             Training Program
-          </NavLink>
+          </NavLink> */}
         </nav>
 
         {/* Right section */}
@@ -310,14 +310,14 @@ const Header = () => {
 
 
                 {/* Training Program */}
-                <Link
+                {/* <Link
                 to="/training"
                 onClick={() => setIsMenuOpen(false)}
                 className={[mobileLinkClass, "flex items-center gap-3"].join(" ")}
                 >
                 <GraduationCap className="h-4 w-4 text-muted-foreground" />
                 Training Program
-                </Link>
+                </Link> */}
 
                 {/* Contact */}
                 <Link

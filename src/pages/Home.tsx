@@ -474,11 +474,11 @@ export default function Home() {
 
 
 
-        <div>
+        {/* <div>
 
             <TrainingPreview />
             
-        </div>
+        </div> */}
 
         {/* Health Benefits (unchanged) */}
         <motion.section
