@@ -435,7 +435,7 @@ export default function Home() {
                         </div>
 
                         {/* FIXED HEIGHT TEXT WRAPPER SO DESCRIPTION NEVER PUSHES CARD */}
-                        <div className="mt-2 text-white text-sm leading-relaxed opacity-100 md:opacity-90 md:group-hover:opacity-100 h-[70px] overflow-hidden">
+                        <div className="mt-2 text-white text-sm leading-relaxed opacity-100 md:opacity-90 md:group-hover:opacity-100 h-[78px] overflow-hidden">
                           <p className="text-xs opacity-95">
                             {category.description}
                           </p>

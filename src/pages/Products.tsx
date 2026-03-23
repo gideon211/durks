@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import axiosInstance from "@/api/axios";
+
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
@@ -22,6 +25,14 @@ type Product = {
   packs?: unknown;
 };
 
+type ProductsPage = {
+  items: Product[];
+  hasNextPage: boolean;
+  nextPage?: number;
+};
+
+const PAGE_SIZE = 12;
+
 const categories = [
   { id: "all", name: "ALL PRODUCTS", slug: "all" },
   { id: "bundles", name: "BUNDLES", slug: "bundle" },
@@ -34,10 +45,6 @@ const categories = [
   { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs" },
   { id: "events", name: "EVENTS", slug: "events" },
 ];
-
-const PRODUCTS_API = "https://updated-duks-backend-1-0.onrender.com/api/drinks/";
-const CACHE_KEY = "duks_products_cache_v2";
-const CACHE_TTL_MS = 1000 * 60 * 5; // 5 minutes
 
 // fast, robust normalize with memoization
 const packsMemo = new Map<string | number | Product, PackEntry[]>();
@@ -224,18 +231,47 @@ const MemoProductCard = React.memo(
   }
 );
 
+async function fetchProductsPage(category: string, pageParam: number): Promise<ProductsPage> {
+  const params: Record<string, string | number> = {
+    page: pageParam,
+    limit: PAGE_SIZE,
+  };
+
+  if (category !== "all") {
+    params.category = category;
+  }
+
+  const res = await axiosInstance.get("/drinks", { params });
+  const data = res.data;
+
+  const items: Product[] = Array.isArray(data?.drinks)
+    ? data.drinks
+    : Array.isArray(data?.items)
+    ? data.items
+    : Array.isArray(data)
+    ? data
+    : [];
+
+  const hasNextPage =
+    typeof data?.hasMore === "boolean"
+      ? data.hasMore
+      : typeof data?.nextPage === "number"
+      ? true
+      : items.length === PAGE_SIZE;
+
+  const nextPage = typeof data?.nextPage === "number" ? data.nextPage : pageParam + 1;
+
+  return { items, hasNextPage, nextPage };
+}
+
 export default function Products(): JSX.Element {
   const { category: urlCategory } = useParams<{ category?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
 
-  // ✅ URL is the source of truth (no bouncing back to all)
+  //  URL is the source of truth (no bouncing back to all)
   const [activeCategory, setActiveCategory] = useState<string>(urlCategory ?? "all");
-
-  const [products, setProducts] = useState<Product[]>([]);
-  const lastSuccessfulRef = useRef<Product[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState<boolean>(true);
-  const [productsError, setProductsError] = useState<string | null>(null);
 
   // tabs wrapper (scroll container)
   const tabsWrapRef = useRef<HTMLDivElement | null>(null);
@@ -243,33 +279,40 @@ export default function Products(): JSX.Element {
   // anchor to scroll to (right under sticky tabs)
   const productsTopRef = useRef<HTMLDivElement | null>(null);
 
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  // React Query infinite data
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["products", activeCategory],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => fetchProductsPage(activeCategory, pageParam as number),
+    getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.nextPage : undefined),
+    staleTime: 1000 * 60 * 5,
+  });
 
-  const PAGE_SIZE = 12;
-  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+  const products = useMemo(() => {
+    return data?.pages.flatMap((page) => page.items) ?? [];
+  }, [data]);
 
-  // ✅ NEW: shuffle seed so "ALL PRODUCTS" doesn't reshuffle every render
-  const shuffleSeedRef = useRef<number>(Date.now());
-
-  // ✅ NEW: stable seeded shuffle (Fisher–Yates)
-  const shuffledAllProducts = useMemo(() => {
-    if (!products || products.length === 0) return products;
-
-    // create deterministic pseudo-random based on seed
-    let seed = shuffleSeedRef.current || 1;
-    const rand = () => {
-      // LCG
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      return seed / 4294967296;
-    };
-
-    const arr = products.slice();
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(rand() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }, [products]);
+  // prefetch first page for a category on hover
+  const prefetchCategory = useCallback(
+    (slug: string) => {
+      queryClient.prefetchInfiniteQuery({
+        queryKey: ["products", slug],
+        initialPageParam: 1,
+        queryFn: ({ pageParam }) => fetchProductsPage(slug, pageParam as number),
+        getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.nextPage : undefined),
+        staleTime: 1000 * 60 * 5,
+      });
+    },
+    [queryClient]
+  );
 
   // --- helpers ---
   const getHeaderOffset = useCallback(() => {
@@ -281,7 +324,7 @@ export default function Products(): JSX.Element {
     return headerH + tabsStickyOffset + 8;
   }, []);
 
-  // ✅ FIX: use computed window.scrollTo + retries to beat layout shifts
+  // FIX: use computed window.scrollTo + retries to beat layout shifts
   const scrollToProductsTop = useCallback(() => {
     const el = productsTopRef.current;
     if (!el) return;
@@ -309,98 +352,12 @@ export default function Products(): JSX.Element {
     btn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }, []);
 
-  // cache read
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(CACHE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as { ts: number; items: Product[] };
-        if (Array.isArray(parsed.items) && parsed.items.length > 0) {
-          setProducts(parsed.items);
-          lastSuccessfulRef.current = parsed.items;
-          const age = Date.now() - (parsed.ts || 0);
-          if (age < CACHE_TTL_MS) {
-            setLoadingProducts(false);
-            setProductsError(null);
-            return;
-          }
-        }
-      }
-    } catch {}
-  }, []);
-
-  const fetchProducts = useCallback(async (signal?: AbortSignal) => {
-    setProductsError(null);
-    try {
-      const res = await fetch(PRODUCTS_API, { signal });
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const json = await res.json();
-      const items: Product[] = Array.isArray(json.drinks) ? json.drinks : Array.isArray(json) ? json : [];
-      if (!Array.isArray(items)) throw new Error("Invalid response format");
-
-      // ✅ NEW: reset shuffle seed each time we load a fresh list
-      shuffleSeedRef.current = Date.now();
-
-      setProducts(items);
-      lastSuccessfulRef.current = items;
-      try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), items }));
-      } catch {}
-      setProductsError(null);
-    } catch (err: any) {
-      if (err?.name === "AbortError") return;
-      setProducts(lastSuccessfulRef.current || []);
-      setProductsError(err?.message ?? "Network error while loading products");
-    } finally {
-      setLoadingProducts(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const ctrl = new AbortController();
-    fetchProducts(ctrl.signal);
-    return () => ctrl.abort();
-  }, [fetchProducts]);
-
-  // ✅ keep activeCategory in sync with URL (single source of truth)
+  // keep activeCategory in sync with URL (single source of truth)
   useEffect(() => {
     setActiveCategory(urlCategory ?? "all");
   }, [urlCategory]);
 
-  // ✅ UPDATED: "all" uses shuffled list
-  const filteredProducts = useMemo(() => {
-    if (activeCategory === "all") return shuffledAllProducts;
-    return products.filter((p) => p.category === activeCategory);
-  }, [products, activeCategory, shuffledAllProducts]);
-
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-  }, [activeCategory, products.length]);
-
-  const visibleProducts = useMemo(() => {
-    return filteredProducts.slice(0, visibleCount);
-  }, [filteredProducts, visibleCount]);
-
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (observerRef.current) observerRef.current.disconnect();
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setVisibleCount((prev) => Math.min(filteredProducts.length, prev + PAGE_SIZE));
-          }
-        }
-      },
-      { root: null, rootMargin: "400px", threshold: 0.01 }
-    );
-
-    const obs = observerRef.current;
-    if (sentinelRef.current) obs.observe(sentinelRef.current);
-    return () => obs.disconnect();
-  }, [filteredProducts.length]);
-
-  // ✅ Trigger: center tab + scroll (animation safe)
+  // scroll to top and center tab on category change
   useEffect(() => {
     const t = window.setTimeout(() => {
       requestAnimationFrame(() => {
@@ -413,6 +370,24 @@ export default function Products(): JSX.Element {
 
     return () => clearTimeout(t);
   }, [activeCategory, centerActiveTab, scrollToProductsTop]);
+
+  // infinite scroll without manual intersection observer
+  useEffect(() => {
+    const onScroll = () => {
+      if (!hasNextPage || isFetchingNextPage) return;
+
+      const threshold = 600;
+      const scrolledToBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - threshold;
+
+      if (scrolledToBottom) {
+        fetchNextPage();
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleCategoryChange = useCallback(
     (categorySlug: string) => {
@@ -434,6 +409,9 @@ export default function Products(): JSX.Element {
 
   const getKeyForProduct = (product: Product) => product._id ?? product.id ?? product.name;
 
+  const loadingProducts = isLoading && products.length === 0;
+  const productsError = isError ? (error as Error)?.message ?? "Network error while loading products" : null;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -442,7 +420,7 @@ export default function Products(): JSX.Element {
         <Banner />
       </div>
 
-      {/* ✅ tabs wrapper ref for centering */}
+      {/*  tabs wrapper ref for centering */}
       <div ref={tabsWrapRef} className="mb-8 overflow-x-auto no-scrollbar sticky top-16 z-50 lg:mx-auto">
         <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
           <TabsList className="inline-flex w-auto">
@@ -452,6 +430,7 @@ export default function Products(): JSX.Element {
                 value={cat.slug}
                 data-tab-slug={cat.slug}
                 className="whitespace-nowrap font-semibold"
+                onMouseEnter={() => prefetchCategory(cat.slug)}
               >
                 {cat.name}
               </TabsTrigger>
@@ -460,7 +439,7 @@ export default function Products(): JSX.Element {
         </Tabs>
       </div>
 
-      {/* ✅ anchor right under the sticky tabs */}
+      {/*  anchor right under the sticky tabs */}
       <div ref={productsTopRef} className="h-0" aria-hidden="true" />
 
       {productsError && (
@@ -473,9 +452,7 @@ export default function Products(): JSX.Element {
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => {
-                  const c = new AbortController();
-                  setLoadingProducts(true);
-                  fetchProducts(c.signal);
+                  fetchNextPage();
                 }}
                 className="bg-red-600 text-white"
                 size="sm"
@@ -488,20 +465,20 @@ export default function Products(): JSX.Element {
       )}
 
       <div className="container mx-auto px-4">
-        {loadingProducts && products.length === 0 ? (
+        {loadingProducts ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {Array.from({ length: PAGE_SIZE }).map((_, idx) => (
               <ProductCardSkeleton key={idx} />
             ))}
           </div>
-        ) : visibleProducts.length === 0 ? (
+        ) : products.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-muted-foreground text-lg">No products found in this category.</p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {visibleProducts.map((product) => {
+              {products.map((product) => {
                 const memoKey = getKeyForProduct(product);
 
                 const packsProp: PackEntry[] = normalizePacks(
@@ -534,15 +511,14 @@ export default function Products(): JSX.Element {
               })}
             </div>
 
-            <div ref={sentinelRef} className="h-6" />
-
-            {visibleProducts.length < filteredProducts.length && (
+            {hasNextPage && (
               <div className="py-6 text-center">
                 <Button
-                  onClick={() => setVisibleCount((v) => Math.min(filteredProducts.length, v + PAGE_SIZE))}
+                  onClick={() => fetchNextPage()}
                   size="sm"
+                  disabled={isFetchingNextPage}
                 >
-                  Load more
+                  {isFetchingNextPage ? "Loading..." : "Load more"}
                 </Button>
               </div>
             )}
