@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "@/api/axios";
 
@@ -264,20 +264,31 @@ async function fetchProductsPage(category: string, pageParam: number): Promise<P
   return { items, hasNextPage, nextPage };
 }
 
+function hashString(input: string, seed: number) {
+  let h = seed >>> 0;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+    h ^= h >>> 13;
+  }
+  return h >>> 0;
+}
+
 export default function Products(): JSX.Element {
   const { category: urlCategory } = useParams<{ category?: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const queryClient = useQueryClient();
 
-  //  URL is the source of truth (no bouncing back to all)
-  const [activeCategory, setActiveCategory] = useState<string>(urlCategory ?? "all");
+  const activeCategory = urlCategory ?? "all";
 
   // tabs wrapper (scroll container)
   const tabsWrapRef = useRef<HTMLDivElement | null>(null);
 
   // anchor to scroll to (right under sticky tabs)
   const productsTopRef = useRef<HTMLDivElement | null>(null);
+
+  // stable seed so "all" stays mixed without reshuffling on every append
+  const shuffleSeedRef = useRef<number>(Date.now());
 
   // React Query infinite data
   const {
@@ -336,7 +347,6 @@ export default function Products(): JSX.Element {
       window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
     };
 
-    // run immediately + a couple times after to counter images/layout shifts
     doScroll();
     window.setTimeout(doScroll, 120);
     window.setTimeout(doScroll, 260);
@@ -352,11 +362,6 @@ export default function Products(): JSX.Element {
     btn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }, []);
 
-  // keep activeCategory in sync with URL (single source of truth)
-  useEffect(() => {
-    setActiveCategory(urlCategory ?? "all");
-  }, [urlCategory]);
-
   // scroll to top and center tab on category change
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -371,46 +376,35 @@ export default function Products(): JSX.Element {
     return () => clearTimeout(t);
   }, [activeCategory, centerActiveTab, scrollToProductsTop]);
 
-  // infinite scroll without manual intersection observer
-  useEffect(() => {
-    const onScroll = () => {
-      if (!hasNextPage || isFetchingNextPage) return;
-
-      const threshold = 600;
-      const scrolledToBottom =
-        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - threshold;
-
-      if (scrolledToBottom) {
-        fetchNextPage();
-      }
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
-
   const handleCategoryChange = useCallback(
     (categorySlug: string) => {
       const base = "/products";
       if (categorySlug === "all") navigate(base, { replace: true });
       else navigate(`${base}/${categorySlug}`, { replace: true });
-      // do NOT setActiveCategory here; URL effect sets it (prevents bouncing)
     },
     [navigate]
   );
-
-  const handleShopClick = useCallback(() => {
-    if (location.pathname.startsWith("/products")) {
-      navigate("/products", { replace: true });
-      return;
-    }
-    navigate("/products");
-  }, [location.pathname, navigate]);
 
   const getKeyForProduct = (product: Product) => product._id ?? product.id ?? product.name;
 
   const loadingProducts = isLoading && products.length === 0;
   const productsError = isError ? (error as Error)?.message ?? "Network error while loading products" : null;
+
+  const mixedProducts = useMemo(() => {
+    if (activeCategory !== "all") return products;
+
+    const seed = shuffleSeedRef.current;
+    return products
+      .map((product) => {
+        const key = String(getKeyForProduct(product));
+        return {
+          product,
+          order: hashString(key, seed),
+        };
+      })
+      .sort((a, b) => a.order - b.order)
+      .map((entry) => entry.product);
+  }, [products, activeCategory]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -420,7 +414,7 @@ export default function Products(): JSX.Element {
         <Banner />
       </div>
 
-      {/*  tabs wrapper ref for centering */}
+      {/* ✅ tabs wrapper ref for centering */}
       <div ref={tabsWrapRef} className="mb-8 overflow-x-auto no-scrollbar sticky top-16 z-50 lg:mx-auto">
         <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
           <TabsList className="inline-flex w-auto">
@@ -439,7 +433,7 @@ export default function Products(): JSX.Element {
         </Tabs>
       </div>
 
-      {/*  anchor right under the sticky tabs */}
+      {/* ✅ anchor right under the sticky tabs */}
       <div ref={productsTopRef} className="h-0" aria-hidden="true" />
 
       {productsError && (
@@ -478,7 +472,7 @@ export default function Products(): JSX.Element {
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {products.map((product) => {
+              {mixedProducts.map((product) => {
                 const memoKey = getKeyForProduct(product);
 
                 const packsProp: PackEntry[] = normalizePacks(
@@ -513,11 +507,7 @@ export default function Products(): JSX.Element {
 
             {hasNextPage && (
               <div className="py-6 text-center">
-                <Button
-                  onClick={() => fetchNextPage()}
-                  size="sm"
-                  disabled={isFetchingNextPage}
-                >
+                <Button onClick={() => fetchNextPage()} size="sm" disabled={isFetchingNextPage}>
                   {isFetchingNextPage ? "Loading..." : "Load more"}
                 </Button>
               </div>
