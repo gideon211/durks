@@ -1,8 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import axiosInstance from "@/api/axios";
-
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
@@ -10,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Banner from "../components/CallToOrderBanner";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
+import { getProducts } from "@/api/products";
 
 type PackEntry = { pack: number; price: number; oldPrice?: number | null };
 
@@ -25,14 +23,6 @@ type Product = {
   packs?: unknown;
 };
 
-type ProductsPage = {
-  items: Product[];
-  hasNextPage: boolean;
-  nextPage?: number;
-};
-
-const PAGE_SIZE = 12;
-
 const categories = [
   { id: "all", name: "ALL PRODUCTS", slug: "all" },
   { id: "bundles", name: "BUNDLES", slug: "bundle" },
@@ -45,6 +35,9 @@ const categories = [
   { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs" },
   { id: "events", name: "EVENTS", slug: "events" },
 ];
+
+const CACHE_KEY = "duks_products_cache_v2";
+const CACHE_TTL_MS = 1000 * 60 * 5; // 5 minutes
 
 // fast, robust normalize with memoization
 const packsMemo = new Map<string | number | Product, PackEntry[]>();
@@ -231,55 +224,18 @@ const MemoProductCard = React.memo(
   }
 );
 
-async function fetchProductsPage(category: string, pageParam: number): Promise<ProductsPage> {
-  const params: Record<string, string | number> = {
-    page: pageParam,
-    limit: PAGE_SIZE,
-  };
-
-  if (category !== "all") {
-    params.category = category;
-  }
-
-  const res = await axiosInstance.get("/drinks", { params });
-  const data = res.data;
-
-  const items: Product[] = Array.isArray(data?.drinks)
-    ? data.drinks
-    : Array.isArray(data?.items)
-    ? data.items
-    : Array.isArray(data)
-    ? data
-    : [];
-
-  const hasNextPage =
-    typeof data?.hasMore === "boolean"
-      ? data.hasMore
-      : typeof data?.nextPage === "number"
-      ? true
-      : items.length === PAGE_SIZE;
-
-  const nextPage = typeof data?.nextPage === "number" ? data.nextPage : pageParam + 1;
-
-  return { items, hasNextPage, nextPage };
-}
-
-function hashString(input: string, seed: number) {
-  let h = seed >>> 0;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-    h ^= h >>> 13;
-  }
-  return h >>> 0;
-}
-
 export default function Products(): JSX.Element {
   const { category: urlCategory } = useParams<{ category?: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const location = useLocation();
 
-  const activeCategory = urlCategory ?? "all";
+  // ✅ URL is the source of truth (no bouncing back to all)
+  const [activeCategory, setActiveCategory] = useState<string>(urlCategory ?? "all");
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const lastSuccessfulRef = useRef<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState<boolean>(true);
+  const [productsError, setProductsError] = useState<string | null>(null);
 
   // tabs wrapper (scroll container)
   const tabsWrapRef = useRef<HTMLDivElement | null>(null);
@@ -287,43 +243,33 @@ export default function Products(): JSX.Element {
   // anchor to scroll to (right under sticky tabs)
   const productsTopRef = useRef<HTMLDivElement | null>(null);
 
-  // stable seed so "all" stays mixed without reshuffling on every append
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  const PAGE_SIZE = 12;
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+
+  // ✅ NEW: shuffle seed so "ALL PRODUCTS" doesn't reshuffle every render
   const shuffleSeedRef = useRef<number>(Date.now());
 
-  // React Query infinite data
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["products", activeCategory],
-    initialPageParam: 1,
-    queryFn: ({ pageParam }) => fetchProductsPage(activeCategory, pageParam as number),
-    getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.nextPage : undefined),
-    staleTime: 1000 * 60 * 5,
-  });
+  // ✅ NEW: stable seeded shuffle (Fisher–Yates)
+  const shuffledAllProducts = useMemo(() => {
+    if (!products || products.length === 0) return products;
 
-  const products = useMemo(() => {
-    return data?.pages.flatMap((page) => page.items) ?? [];
-  }, [data]);
+    // create deterministic pseudo-random based on seed
+    let seed = shuffleSeedRef.current || 1;
+    const rand = () => {
+      // LCG
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
 
-  // prefetch first page for a category on hover
-  const prefetchCategory = useCallback(
-    (slug: string) => {
-      queryClient.prefetchInfiniteQuery({
-        queryKey: ["products", slug],
-        initialPageParam: 1,
-        queryFn: ({ pageParam }) => fetchProductsPage(slug, pageParam as number),
-        getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.nextPage : undefined),
-        staleTime: 1000 * 60 * 5,
-      });
-    },
-    [queryClient]
-  );
+    const arr = products.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, [products]);
 
   // --- helpers ---
   const getHeaderOffset = useCallback(() => {
@@ -335,7 +281,7 @@ export default function Products(): JSX.Element {
     return headerH + tabsStickyOffset + 8;
   }, []);
 
-  // FIX: use computed window.scrollTo + retries to beat layout shifts
+  // ✅ FIX: use computed window.scrollTo + retries to beat layout shifts
   const scrollToProductsTop = useCallback(() => {
     const el = productsTopRef.current;
     if (!el) return;
@@ -347,6 +293,7 @@ export default function Products(): JSX.Element {
       window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
     };
 
+    // run immediately + a couple times after to counter images/layout shifts
     doScroll();
     window.setTimeout(doScroll, 120);
     window.setTimeout(doScroll, 260);
@@ -362,7 +309,98 @@ export default function Products(): JSX.Element {
     btn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }, []);
 
-  // scroll to top and center tab on category change
+  // cache read
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { ts: number; items: Product[] };
+        if (Array.isArray(parsed.items) && parsed.items.length > 0) {
+          setProducts(parsed.items);
+          lastSuccessfulRef.current = parsed.items;
+          const age = Date.now() - (parsed.ts || 0);
+          if (age < CACHE_TTL_MS) {
+            setLoadingProducts(false);
+            setProductsError(null);
+            return;
+          }
+        }
+      }
+    } catch {}
+  }, []);
+
+const fetchProducts = useCallback(async () => {
+  setLoadingProducts(true);
+  setProductsError(null);
+
+  try {
+    const data = await getProducts();
+
+    const items: Product[] = Array.isArray(data.drinks)
+      ? data.drinks
+      : Array.isArray(data)
+      ? data
+      : [];
+
+    shuffleSeedRef.current = Date.now();
+    setProducts(items);
+    lastSuccessfulRef.current = items;
+
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ ts: Date.now(), items })
+    );
+  } catch (err: any) {
+    setProducts(lastSuccessfulRef.current || []);
+    setProductsError(err?.message ?? "Network error while loading products");
+  } finally {
+    setLoadingProducts(false);
+  }
+}, []);
+
+    useEffect(() => {
+    fetchProducts();
+    }, [fetchProducts]);
+
+  // ✅ keep activeCategory in sync with URL (single source of truth)
+  useEffect(() => {
+    setActiveCategory(urlCategory ?? "all");
+  }, [urlCategory]);
+
+  // ✅ UPDATED: "all" uses shuffled list
+  const filteredProducts = useMemo(() => {
+    if (activeCategory === "all") return shuffledAllProducts;
+    return products.filter((p) => p.category === activeCategory);
+  }, [products, activeCategory, shuffledAllProducts]);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [activeCategory, products.length]);
+
+  const visibleProducts = useMemo(() => {
+    return filteredProducts.slice(0, visibleCount);
+  }, [filteredProducts, visibleCount]);
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setVisibleCount((prev) => Math.min(filteredProducts.length, prev + PAGE_SIZE));
+          }
+        }
+      },
+      { root: null, rootMargin: "400px", threshold: 0.01 }
+    );
+
+    const obs = observerRef.current;
+    if (sentinelRef.current) obs.observe(sentinelRef.current);
+    return () => obs.disconnect();
+  }, [filteredProducts.length]);
+
+  // ✅ Trigger: center tab + scroll (animation safe)
   useEffect(() => {
     const t = window.setTimeout(() => {
       requestAnimationFrame(() => {
@@ -381,30 +419,20 @@ export default function Products(): JSX.Element {
       const base = "/products";
       if (categorySlug === "all") navigate(base, { replace: true });
       else navigate(`${base}/${categorySlug}`, { replace: true });
+      // do NOT setActiveCategory here; URL effect sets it (prevents bouncing)
     },
     [navigate]
   );
 
+  const handleShopClick = useCallback(() => {
+    if (location.pathname.startsWith("/products")) {
+      navigate("/products", { replace: true });
+      return;
+    }
+    navigate("/products");
+  }, [location.pathname, navigate]);
+
   const getKeyForProduct = (product: Product) => product._id ?? product.id ?? product.name;
-
-  const loadingProducts = isLoading && products.length === 0;
-  const productsError = isError ? (error as Error)?.message ?? "Network error while loading products" : null;
-
-  const mixedProducts = useMemo(() => {
-    if (activeCategory !== "all") return products;
-
-    const seed = shuffleSeedRef.current;
-    return products
-      .map((product) => {
-        const key = String(getKeyForProduct(product));
-        return {
-          product,
-          order: hashString(key, seed),
-        };
-      })
-      .sort((a, b) => a.order - b.order)
-      .map((entry) => entry.product);
-  }, [products, activeCategory]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -424,7 +452,6 @@ export default function Products(): JSX.Element {
                 value={cat.slug}
                 data-tab-slug={cat.slug}
                 className="whitespace-nowrap font-semibold"
-                onMouseEnter={() => prefetchCategory(cat.slug)}
               >
                 {cat.name}
               </TabsTrigger>
@@ -446,7 +473,7 @@ export default function Products(): JSX.Element {
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => {
-                  fetchNextPage();
+                fetchProducts();
                 }}
                 className="bg-red-600 text-white"
                 size="sm"
@@ -459,20 +486,20 @@ export default function Products(): JSX.Element {
       )}
 
       <div className="container mx-auto px-4">
-        {loadingProducts ? (
+        {loadingProducts && products.length === 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {Array.from({ length: PAGE_SIZE }).map((_, idx) => (
               <ProductCardSkeleton key={idx} />
             ))}
           </div>
-        ) : products.length === 0 ? (
+        ) : visibleProducts.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-muted-foreground text-lg">No products found in this category.</p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {mixedProducts.map((product) => {
+              {visibleProducts.map((product) => {
                 const memoKey = getKeyForProduct(product);
 
                 const packsProp: PackEntry[] = normalizePacks(
@@ -505,10 +532,15 @@ export default function Products(): JSX.Element {
               })}
             </div>
 
-            {hasNextPage && (
+            <div ref={sentinelRef} className="h-6" />
+
+            {visibleProducts.length < filteredProducts.length && (
               <div className="py-6 text-center">
-                <Button onClick={() => fetchNextPage()} size="sm" disabled={isFetchingNextPage}>
-                  {isFetchingNextPage ? "Loading..." : "Load more"}
+                <Button
+                  onClick={() => setVisibleCount((v) => Math.min(filteredProducts.length, v + PAGE_SIZE))}
+                  size="sm"
+                >
+                  Load more
                 </Button>
               </div>
             )}
