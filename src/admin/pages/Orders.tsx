@@ -263,7 +263,7 @@ export default function OrdersAdminPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-heading font-bold">Orders</h1>
-            <p className="text-muted-foreground text-sm md:text-base">Manage all customer orders and fulfillment</p>
+            <p className="text-muted-foreground text-sm md:text-base">Manage all orders and fulfillment</p>
           </div>
         </div>
 
