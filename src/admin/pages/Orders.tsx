@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/api/axios";
 import { toast } from "sonner";
 import { Modal } from "@/components/Modal";
+import { Helmet } from 'react-helmet-async';
 
 type RawOrder = any;
 
@@ -255,6 +256,9 @@ export default function OrdersAdminPage() {
 
   return (
     <AdminLayout>
+        <Helmet>
+          <meta name="robots" content="noindex" />
+        </Helmet>
       <div className="space-y-6 px-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
           <div>

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useCartStore, CartItem } from "@/store/cartStore";
 import { useAuth } from "@/context/Authcontext";
 import { Modal } from "@/components/Modal";
+import { Helmet } from 'react-helmet-async';
 
 const CartItemSkeleton = () => (
   <div className="bg-white border border-green-300 rounded-md p-3 flex flex-row items-center gap-3 animate-pulse">
@@ -121,6 +122,9 @@ export default function Cart() {
   if (!loadingCart && cartItems.length === 0) {
     return (
       <div className="min-h-screen flex flex-col">
+        <Helmet>
+          <meta name="robots" content="noindex" />
+        </Helmet>
         <Header />
         <main className="flex-1 flex items-center justify-center px-4 py-16">
           <div className="text-center max-w-md">
@@ -145,7 +149,14 @@ export default function Cart() {
   }
 
   return (
+
+    
     <AnimatePresence>
+
+        <Helmet>
+          <meta name="robots" content="noindex" />
+        </Helmet>
+
       <Header />
       <motion.div
         className="min-h-screen flex flex-col pb-32 bg-white"

@@ -27,6 +27,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { Helmet } from 'react-helmet-async';
 
 const salesData = [
   { name: "Mon", sales: 4000 },
@@ -119,6 +120,9 @@ export default function Dashboard() {
 
   return (
     <AdminLayout>
+      <Helmet>
+        <meta name="robots" content="noindex" />
+      </Helmet>
       <div className="space-y-6 px-4 sm:px-6 lg:px-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-heading font-bold py-2">

@@ -7,6 +7,7 @@ import { CartProvider } from "@/context/CartContext";
 import { BrowserRouter } from "react-router-dom";
 import { registerSW } from "virtual:pwa-register";
 import ScrollToTop from "@/components/ScrollToTop";
+import { HelmetProvider } from 'react-helmet-async';
 // Initialize Vercel Web Analytics
 inject();
 registerSW({ immediate: true });
@@ -17,7 +18,10 @@ createRoot(document.getElementById("root")!).render(
         
         <CartProvider>
             <AuthProvider>
-                <App />
+                <HelmetProvider>
+                    <App />
+                </HelmetProvider>
+            
             </AuthProvider>
             </CartProvider>
     </BrowserRouter>
