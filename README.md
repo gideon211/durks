@@ -1,158 +1,166 @@
 # DUKS Juice — Merchant Operations & Training Platform
 
-A full-stack MERN application designed to digitalize merchant operations, streamline order management, and centralize staff training into a single, scalable platform.
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+
+**DUKS Juice** is a full-stack MERN platform built to digitalize merchant operations, automate order workflows, and centralize staff training into one scalable system.
 
 ---
 
 ## Overview
 
-DUKS Juice replaces fragmented, manual workflows with a unified system that enables:
+DUKS Juice replaces manual, fragmented business processes with a centralized digital hub for:
 
-- Real-time order tracking and operational visibility  
-- Structured staff training delivery  
-- Secure payment processing and validation  
-- Centralized dashboards for business decision-making  
+- order tracking and management
+- operational dashboards and analytics
+- inventory visibility
+- secure payments and validation
+- staff training delivery
+- customer and admin management
 
-The platform is built with a strong focus on **performance, scalability, and maintainability**, making it suitable for real-world business environments.
+The system is structured to support day-to-day business operations with a strong focus on clarity, performance, security, and maintainability.
 
 ---
 
 ## Technical Architecture
 
-### Full-Stack System Design
+The codebase is organized around clear application boundaries:
 
-- **Frontend:** React + TypeScript (component-driven architecture)  
-- **Backend:** Node.js + Express (RESTful APIs)  
-- **Database:** MongoDB (operational data)  
-- **State Management:** Zustand  
-- **Authentication:** JWT-based secure access control  
+- `src/admin` contains the operational dashboard, analytics, inventory, orders, payments, customers, users, and settings modules.
+- `src/api` contains service modules for authentication, cart, products, and orders.
+- `src/components/ui` contains the reusable UI primitives that power the design system.
+- `src/context` and `src/store` centralize authentication, cart state, and user session behavior.
+- `src/pages` contains the customer-facing product, cart, checkout, training, and account flows.
 
-The system follows a modular architecture that separates concerns across UI, API, and data layers.
-
----
-
-## Admin Dashboard & Real-Time Operations
-
-The admin/dashboard system is designed for operational control and visibility:
-
-- **Order Tracking System:**  
-  Tracks order status across the lifecycle (creation → processing → completion)
-
-- **Inventory Awareness:**  
-  Dashboard reflects inventory and operational data in near real-time through efficient state updates and API polling strategies
-
-- **Analytics Layer:**  
-  Aggregates operational metrics (orders, usage patterns) to support business decisions
-
-- **Centralized Control Panel:**  
-  Enables merchants to manage orders, monitor activity, and oversee operations from a single interface
+This structure keeps UI, business logic, and API concerns separated, making the project easier to extend and maintain.
 
 ---
 
-## Security Architecture
+## Admin Dashboard & Operational Visibility
 
-Security is enforced through a **JWT-based authentication system** implemented in the API layer (`authApi.ts`):
+The admin area is built for daily merchant oversight and decision-making.
 
-- **Token-Based Authentication:**  
-  Users authenticate once and receive a signed JWT
+It includes dedicated sections for:
 
-- **Protected Routes:**  
-  Administrative endpoints are secured via middleware that validates tokens before granting access
+- dashboard overview
+- analytics
+- inventory
+- orders
+- preorders
+- payments
+- customers
+- quotes
+- CSR reports
+- users
+- settings
 
-- **Role-Based Access Control (RBAC):**  
-  Ensures only authorized users can access sensitive operations (e.g., payments, admin actions)
-
-- **Server-Side Payment Verification:**  
-  Prevents fraudulent or tampered transactions by validating payments on the backend
-
-This approach ensures **secure, stateless, and scalable authentication** across the platform.
+These modules give merchants a single place to monitor operations, track activity, and manage business workflows without switching between disconnected tools.
 
 ---
 
-## Performance Engineering
+## Security
 
-The platform achieves a **40% reduction in initial load time** through:
+Authentication is handled through a dedicated API layer in `authApi.ts`, which exposes sign-up, sign-in, refresh-token, and profile-me endpoints.
 
-- **Modular UI Component Library (`ui/`):**  
-  Reusable, optimized components reduce redundancy and improve rendering efficiency
+The security flow is built around:
 
-- **Efficient Rendering Strategies:**  
-  Component-level optimization minimizes unnecessary re-renders
+- JWT-based authentication
+- bearer token authorization
+- refresh-token support
+- authenticated API requests through a shared axios instance
+- protected admin and user flows through authenticated route access
 
-- **Media Optimization:**  
-  Controlled image loading and asset handling improve page performance
+The shared axios client automatically reads the stored token from local storage and attaches it to requests, which keeps API calls consistent across the app.
 
-- **Code Splitting & Structure:**  
-  Logical separation of features ensures faster load and execution times
+---
 
-These optimizations result in a faster, smoother experience for daily operational use.
+## Performance
+
+The UI is built on a reusable component library in `src/components/ui`, which helps reduce duplication and keeps rendering patterns consistent across the app.
+
+Performance-focused decisions include:
+
+- reusable UI primitives
+- modular page and component structure
+- optimized rendering patterns
+- lean separation of feature-specific code
+- image handling and component reuse for faster initial loads
+
+These choices helped reduce initial load time by 40% and created a smoother day-to-day experience for merchants and staff.
 
 ---
 
 ## Clean Code & Maintainability
 
-The codebase emphasizes long-term scalability and developer efficiency:
+DUKS Juice is written in TypeScript from end to end, improving type safety across UI, API, state, and business logic.
 
-- **TypeScript End-to-End:**  
-  Provides strong type safety across frontend and backend, reducing runtime errors
+The codebase emphasizes:
 
-- **Adapter Pattern (API Layer):**  
-  Abstracts third-party services (e.g., SMS, email, payments), making integrations modular and replaceable
+- strongly typed data flow
+- modular API service files
+- reusable UI components
+- centralized session and cart logic
+- clear separation of concerns
 
-- **Separation of Concerns:**  
-  Clear boundaries between UI, business logic, and data access layers
-
-- **Consistent Code Structure:**  
-  Improves readability, onboarding, and collaboration
-
-- **Test-Ready Architecture:**  
-  Designed to support unit and integration testing
+The API layer follows an adapter-style boundary by keeping endpoint calls inside dedicated service modules such as `authApi.ts`, `cartApi.ts`, `orders.ts`, and `products.ts`. That makes backend integrations easier to change without rewriting the UI.
 
 ---
 
 ## Business Impact
 
-DUKS Juice transforms how merchants operate:
+DUKS Juice turns manual operations into a centralized digital workflow.
 
-- **From Manual → Automated:**  
-  Eliminates manual order tracking and fragmented workflows
+It helps merchants:
 
-- **Operational Efficiency:**  
-  Merchants manage orders, payments, and workflows in one system
+- manage orders from one dashboard
+- track operational activity more efficiently
+- reduce manual validation work
+- give staff structured access to training content
+- handle payments and product workflows more reliably
 
-- **Workforce Enablement:**  
-  Staff access structured training without supervision
-
-- **Reduced Errors:**  
-  Server-side validation and centralized processes minimize mistakes
-
-- **Scalable Growth:**  
-  System supports increasing operational complexity without breaking workflows
-
-The result is a **centralized digital hub** that improves speed, accuracy, and overall business performance.
+Instead of relying on spreadsheets, chat messages, or fragmented tools, the business runs through a single system designed for visibility and speed.
 
 ---
 
 ## Key Features
 
-- Dashboard with operational visibility  
-- Real-time order tracking  
-- Secure authentication & authorization (JWT)  
-- Payment verification system  
-- Staff training modules  
-- Modular and scalable architecture  
+- customer-facing product browsing
+- cart and checkout flows
+- order history
+- training content access
+- admin dashboard
+- analytics and inventory management
+- customer and user administration
+- secure login and token refresh support
 
 ---
 
-## Conclusion
+## Tech Stack
 
-DUKS Juice is not just an application — it is a **production-ready operational platform** designed to handle real business workflows with a focus on performance, security, and scalability.
-
-It demonstrates strong capabilities in:
-- Full-stack system design  
-- Backend architecture  
-- Performance optimization  
-- Secure API development  
-- Business-driven engineering  
+**Frontend:** React, TypeScript, Tailwind CSS, Framer Motion  
+**Backend:** Node.js, Express.js  
+**Database:** MongoDB  
+**State Management:** Context API, Zustand  
+**Authentication:** JWT, refresh tokens  
+**UI System:** Reusable component library in `src/components/ui`
 
 ---
+
+## Folder Structure
+
+```text
+src/
+├── admin/
+│   ├── components/
+│   └── pages/
+├── api/
+├── components/
+│   ├── ui/
+│   └── shared components
+├── context/
+├── pages/
+├── store/
+├── App.tsx
+└── main.tsx
