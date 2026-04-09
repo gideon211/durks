@@ -1,22 +1,20 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import mobileImage1 from "@/assets/carousel/mobile/add1.png";
-import mobileImage2 from "@/assets/carousel/mobile/add2.png";
-import mobileImage3 from "@/assets/carousel/mobile/image3.jpg";
-import mobileImage4 from "@/assets/carousel/mobile/image4.jpg";
-import mobileImage5 from "@/assets/carousel/mobile/image5.jpg";
-import mobileImage6 from "@/assets/carousel/mobile/image6.jpg";
+import desktopImage3 from "@/assets/carousel/desktop/image3.jpg";
+import desktopImage4 from "@/assets/carousel/desktop/image4.jpg";
+import desktopImage5 from "@/assets/carousel/desktop/image5.jpg";
+import desktopImage6 from "@/assets/carousel/desktop/image6.jpg";
+import desktopImage7 from "@/assets/carousel/desktop/image7.jpg";
 
 const MobileCarousel: React.FC = () => {
   const mobileImages = useMemo<string[]>(() => {
     return [
-      mobileImage6,
-      mobileImage1,
-      mobileImage3,
-      mobileImage2,
-      mobileImage4,
-      mobileImage5,
+      desktopImage3,
+      desktopImage4,
+      desktopImage5,
+      desktopImage6,
+      desktopImage7,
       
       
     ];
