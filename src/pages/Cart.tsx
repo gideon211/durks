@@ -173,12 +173,13 @@ export default function Cart() {
   const totalItems = cartItems.reduce((sum, item) => sum + (item.qty || 0), 0);
 
   return (
+    <Helmet>
+      <meta name="robots" content="noindex" />
+    </Helmet>
+    <Header />
     <AnimatePresence>
-      <Helmet>
-        <meta name="robots" content="noindex" />
-      </Helmet>
-      <Header />
       <motion.div
+        key="cart-content"
         className="min-h-screen flex flex-col bg-background"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
