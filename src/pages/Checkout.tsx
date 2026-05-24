@@ -307,7 +307,7 @@ export default function Checkout(): JSX.Element {
         return;
       }
 
-      if (!user || !(user as any).token) {
+      if (!user || !user.token) {
         toast.error("You must be logged in to pay with card");
         setIsProcessing(false);
         return;
@@ -315,8 +315,7 @@ export default function Checkout(): JSX.Element {
 
       setIsRedirectModalOpen(true);
 
-      const userId =
-        (user as any)?._id ?? (user as any)?.id ?? null;
+      const userId = user.id;
       const metadataItems = authoritativeItems.map((it) => ({
         drinkId: it.drinkId,
         name: it.name,
@@ -329,7 +328,7 @@ export default function Checkout(): JSX.Element {
 
       const customerObj = {
         fullName: trimmedName,
-        email: trimmedEmail || (user as any)?.email,
+        email: trimmedEmail || user.email,
         phone: String(formData.phone || ""),
         address: trimmedAddress,
         city: trimmedCity,
@@ -338,7 +337,7 @@ export default function Checkout(): JSX.Element {
         deliveryTime: formData.deliveryTime || null,
       };
 
-      const payload: any = {
+      const payload = {
         email: customerObj.email,
         fullName: customerObj.fullName,
         phone: customerObj.phone,
@@ -372,7 +371,7 @@ export default function Checkout(): JSX.Element {
       } else {
         toast.error("Payment initialization failed");
       }
-    } catch (err: any) {
+    } catch {
       toast.error("Failed to process order");
       setIsRedirectModalOpen(false);
       setIsProcessing(false);
