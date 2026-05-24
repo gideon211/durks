@@ -173,6 +173,7 @@ export default function Cart() {
   const totalItems = cartItems.reduce((sum, item) => sum + (item.qty || 0), 0);
 
   return (
+    <>
     <Helmet>
       <meta name="robots" content="noindex" />
     </Helmet>
@@ -404,5 +405,6 @@ export default function Cart() {
         </Modal>
       </motion.div>
     </AnimatePresence>
+    </>
   );
 }
