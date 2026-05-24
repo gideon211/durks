@@ -17,6 +17,7 @@ type Product = {
   name: string;
   description?: string;
   imageUrl?: string;
+  image?: string;
   price?: number | null;
   category?: string;
   size?: string;
@@ -521,7 +522,7 @@ const fetchProducts = useCallback(async () => {
                       id={product._id || product.id}
                       name={product.name}
                       description={product.description}
-                      image={product.imageUrl}
+                      image={product.imageUrl ?? product.image}
                       price={product.price}
                       category={product.category}
                       size={product.size}
