@@ -211,9 +211,9 @@ export default function Cart() {
                     layout
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-xl border border-border/50 bg-card shadow-sm p-4 flex items-center gap-4"
+                    className="rounded-xl border border-border/50 bg-card shadow-sm px-4 py-3 flex items-center gap-4"
                   >
-                    <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
+                    <div className="w-24 self-stretch overflow-hidden flex-shrink-0 bg-muted">
                       <img
                         loading="lazy"
                         src={item.image || ""}
@@ -252,7 +252,7 @@ export default function Cart() {
                               updatePack(item.id, Number(val))
                             }
                           >
-                            <SelectTrigger className="w-20 sm:w-24 h-8 text-xs">
+                            <SelectTrigger className="w-24 h-8 text-xs">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
