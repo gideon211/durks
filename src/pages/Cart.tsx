@@ -184,7 +184,7 @@ export default function Cart() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        <main className="flex-1 container mx-auto px-4 py-8 mt-16">
+        <main className="flex-1 container mx-auto px-4 py-8 mt-16 pb-36">
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <h1 className="font-heading text-2xl font-bold">
@@ -242,15 +242,15 @@ export default function Cart() {
                         </button>
                       </div>
 
-                      <div className="mt-3 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
+                      <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
                           <Select
                             value={String(item.pack)}
                             onValueChange={(val) =>
                               updatePack(item.id, Number(val))
                             }
                           >
-                            <SelectTrigger className="w-24 h-8 text-xs">
+                            <SelectTrigger className="w-20 sm:w-24 h-8 text-xs">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -314,9 +314,9 @@ export default function Cart() {
                           </div>
                         </div>
 
-                        <div className="text-right">
+                        <div className="text-right self-end sm:self-auto">
                           <p className="text-xs text-muted-foreground">Total</p>
-                          <p className="font-heading font-semibold text-sm">
+                          <p className="font-heading font-semibold text-sm whitespace-nowrap">
                             ₵
                             {(
                               item.price * (item.qty || 1)
@@ -332,9 +332,9 @@ export default function Cart() {
           </div>
         </main>
 
-        <div className="sticky bottom-0 left-0 right-0 z-40 bg-card/80 backdrop-blur-xl border-t border-border/50 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-card/80 backdrop-blur-xl border-t border-border/50 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               {loadingCart ? (
                 <div className="flex items-center justify-between w-full">
                   <div className="h-6 w-48 bg-muted rounded animate-pulse" />
@@ -342,7 +342,7 @@ export default function Cart() {
                 </div>
               ) : (
                 <>
-                  <div>
+                  <div className="text-center sm:text-left">
                     <p className="text-xs text-muted-foreground font-medium">
                       Estimated Total
                     </p>
@@ -354,7 +354,7 @@ export default function Cart() {
                     size="lg"
                     onClick={handleCheckout}
                     disabled={checkingOut}
-                    className="min-w-[200px]"
+                    className="w-full sm:w-auto sm:min-w-[200px]"
                   >
                     {checkingOut ? (
                       <span className="flex items-center gap-2">
