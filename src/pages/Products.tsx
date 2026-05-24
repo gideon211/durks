@@ -328,7 +328,9 @@ export default function Products(): JSX.Element {
           }
         }
       }
-    } catch {}
+    } catch {
+      // cache read failure is non-critical
+    }
   }, []);
 
 const fetchProducts = useCallback(async () => {
