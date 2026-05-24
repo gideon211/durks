@@ -496,7 +496,7 @@ export default function Home() {
               transition={{ duration: 0.8 }}
             >
               <h2 className="text-xl md:text-4xl lg:text-5xl font-heading font-bold mb-4">
-                Why Choose Duks?
+                Why Choose Duks
               </h2>
               <div>
                 <motion.img
