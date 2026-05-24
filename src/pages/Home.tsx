@@ -25,7 +25,7 @@ import heroImage from "@/assets/hero-juice.webp";
 import pureJuiceImage from "@/assets/pure-juice.webp";
 import cleanseJuiceImage from "@/assets/cleanse-juice.webp";
 import wellnessPacksImage from "@/assets/wellness-shot.webp";
-import chooseImage from "@/assets/chooseImage.webp";
+import chooseImage from "@/assets/whychooseus.jpeg";
 import eventsImage from "@/assets/events.webp";
 import deskheroImage from "@/assets/desktopheroimage.webp";
 import tiktok1 from "@/assets/tiktok-1.webp";
@@ -503,7 +503,7 @@ export default function Home() {
                   src={chooseImage}
                   loading="lazy"
                   alt="why choose us Image"
-                  className="w-full object-cover h-[14rem] rounded-md lg:h-[30rem] lg:rounded-md py-4"
+                  className="w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto h-auto object-contain rounded-md py-4"
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   transition={{ duration: 1 }}
