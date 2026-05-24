@@ -193,7 +193,7 @@ const stablePacks = useMemo(() => {
             alt={name}
             loading="lazy"
             decoding="async"
-            fetchPriority={"low" as any}
+            fetchpriority="low"
             className="w-full h-full object-cover"
             width={600}
             height={600}
