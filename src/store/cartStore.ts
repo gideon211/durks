@@ -46,7 +46,7 @@ interface CartState {
 
 /* ---------------------- Helpers ---------------------- */
 
-function mapServerCartItem(item: any): CartItem {
+function mapServerCartItem(item: Record<string, unknown>): CartItem {
   // item may be shaped in multiple ways depending on backend
   const product = item?.drinkId && typeof item.drinkId === "object" ? item.drinkId : item?.Drink || {};
 
@@ -76,7 +76,7 @@ function mapServerCartItem(item: any): CartItem {
   } as CartItem;
 }
 
-function readPendingCart(): any[] {
+function readPendingCart(): Record<string, unknown>[] {
   try {
     if (typeof window === "undefined") return [];
     const raw = localStorage.getItem("pendingCart");
@@ -90,7 +90,7 @@ function readPendingCart(): any[] {
 }
 
 
-function writePendingCart(list: any[]) {
+function writePendingCart(list: Record<string, unknown>[]) {
   try {
     if (typeof window === "undefined") return;
     localStorage.setItem("pendingCart", JSON.stringify(list));
@@ -99,7 +99,7 @@ function writePendingCart(list: any[]) {
   }
 }
 
-function addOrMergePendingItem(item: any) {
+function addOrMergePendingItem(item: Record<string, unknown>) {
   try {
     const existing = readPendingCart();
     let updated = false;
@@ -241,8 +241,8 @@ export const useCartStore = create<CartState>((set, get) => ({
 
         // after server add, reconcile authoritative cart
         await get().fetchCart();
-      } catch (err: any) {
-        console.warn("Backend addToCart failed, storing to pendingCart:", err?.message || err);
+      } catch (err: unknown) {
+        console.warn("Backend addToCart failed, storing to pendingCart:", err instanceof Error ? err.message : err);
         // persist to pending list so we can merge when user logs in
         addOrMergePendingItem({
           id: optimisticId,

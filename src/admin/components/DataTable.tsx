@@ -9,19 +9,19 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 
-interface Column {
+interface Column<T = Record<string, unknown>> {
   key: string;
   label: string;
-  render?: (value: any, row: any) => ReactNode;
+  render?: (value: unknown, row: T) => ReactNode;
 }
 
-interface DataTableProps {
-  columns: Column[];
-  data: any[];
+interface DataTableProps<T = Record<string, unknown>> {
+  columns: Column<T>[];
+  data: T[];
   emptyMessage?: string;
 }
 
-export default function DataTable({
+export default function DataTable<T = Record<string, unknown>>({
   columns,
   data,
   emptyMessage = "No data available",

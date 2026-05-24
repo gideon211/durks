@@ -56,7 +56,7 @@ export default function Inventory() {
     {
       key: "stock",
       label: "Stock Level",
-      render: (value: number, row: any) => (
+      render: (value: number, row: Record<string, unknown>) => (
         <div className="space-y-1">
           <div className="flex items-center justify-between text-sm">
             <span>{value} units</span>

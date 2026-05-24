@@ -59,11 +59,11 @@ function normalizePacks(raw: unknown, fallbackPrice = 0, memoKey?: string | numb
     for (const item of raw) {
       if (item == null) continue;
 
-      if (typeof item === "object" && "pack" in (item as any) && "price" in (item as any)) {
-        const packNum = Number((item as any).pack);
-        const priceNum = Number((item as any).price);
-
-        const oldPriceRaw = (item as any).oldPrice;
+      if (typeof item === "object" && item !== null && "pack" in item && "price" in item) {
+        const it = item as Record<string, unknown>;
+        const packNum = Number(it.pack);
+        const priceNum = Number(it.price);
+        const oldPriceRaw = it.oldPrice;
         const oldPriceNum =
           oldPriceRaw === undefined || oldPriceRaw === null || oldPriceRaw === "" ? null : Number(oldPriceRaw);
 
@@ -105,11 +105,12 @@ function normalizePacks(raw: unknown, fallbackPrice = 0, memoKey?: string | numb
         continue;
       }
 
-      if (typeof item === "object") {
-        const packNum = Number((item as any).pack ?? (item as any).size ?? (item as any).qty);
-        const priceNum = Number((item as any).price ?? (item as any).amount ?? fallbackPrice);
+      if (typeof item === "object" && item !== null) {
+        const it = item as Record<string, unknown>;
+        const packNum = Number(it.pack ?? it.size ?? it.qty);
+        const priceNum = Number(it.price ?? it.amount ?? fallbackPrice);
 
-        const oldPriceRaw = (item as any).oldPrice;
+        const oldPriceRaw = it.oldPrice;
         const oldPriceNum =
           oldPriceRaw === undefined || oldPriceRaw === null || oldPriceRaw === "" ? null : Number(oldPriceRaw);
 
@@ -131,7 +132,7 @@ function normalizePacks(raw: unknown, fallbackPrice = 0, memoKey?: string | numb
     const entries = Object.entries(raw as Record<string, unknown>);
     for (const [k, v] of entries) {
       const packNum = Number(k);
-      const priceNum = Number(v as any);
+      const priceNum = Number(v as string);
       if (!Number.isNaN(packNum) && !Number.isNaN(priceNum)) {
         out.push({ pack: packNum, price: priceNum, oldPrice: null });
       }
@@ -205,7 +206,7 @@ const MemoProductCard = React.memo(
     size?: string;
     packs?: PackEntry[];
   }) {
-    return <ProductCard {...(props as any)} />;
+    return <ProductCard {...(props as React.ComponentProps<typeof ProductCard>)} />;
   },
   (a, b) => {
     if (a.id !== b.id) return false;
@@ -351,9 +352,10 @@ const fetchProducts = useCallback(async () => {
       CACHE_KEY,
       JSON.stringify({ ts: Date.now(), items })
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Network error while loading products";
     setProducts(lastSuccessfulRef.current || []);
-    setProductsError(err?.message ?? "Network error while loading products");
+    setProductsError(msg);
   } finally {
     setLoadingProducts(false);
   }

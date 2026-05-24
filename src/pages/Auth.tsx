@@ -23,17 +23,17 @@ export default function Auth() {
 
   // track active tab so we can animate titles/subtitles
   const [activeTab, setActiveTab] = useState<"signin" | "signup">(
-    (location.state as any)?.tab === "signup" ? "signup" : "signin",
+    (location.state as { tab?: string })?.tab === "signup" ? "signup" : "signin",
   );
 
   // prefill email on the sign-in form after successful signup
   const [prefillEmail, setPrefillEmail] = useState<string>(
-    (location.state as any)?.prefillEmail || "",
+    (location.state as { prefillEmail?: string })?.prefillEmail || "",
   );
 
   // If the route state requested a specific tab (navigated from elsewhere), honour it once.
   useEffect(() => {
-    const s = (location.state as any) || {};
+    const s = (location.state as { tab?: string; prefillEmail?: string }) || {};
     if (s.tab === "signup" || s.tab === "signin") setActiveTab(s.tab);
     if (s.prefillEmail) setPrefillEmail(s.prefillEmail);
     // we intentionally do not clear location.state here; it's fine to let it be
@@ -60,11 +60,12 @@ export default function Auth() {
         role: data.role,
         token: data.token,
         refreshToken: data.refreshToken,
-      } as any);
+      });
       toast.success("Welcome back!");
       navigate("/");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to sign in");
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(e.response?.data?.message || "Failed to sign in");
     } finally {
       setIsLoading(false);
     }
@@ -97,8 +98,9 @@ export default function Auth() {
       setActiveTab("signin");
 
       form.reset();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to create account");
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(e.response?.data?.message || "Failed to create account");
     } finally {
       setIsLoading(false);
     }

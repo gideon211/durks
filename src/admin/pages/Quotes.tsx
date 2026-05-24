@@ -64,7 +64,7 @@ export default function Quotes() {
     {
       key: "actions",
       label: "Actions",
-      render: (_, row: any) => (
+      render: (_, row: Record<string, unknown>) => (
         <div className="flex gap-2">
           <Button variant="ghost" size="sm">
             <Eye className="h-4 w-4" />

@@ -62,9 +62,10 @@ export default function OrdersAdminPage() {
         ? backendOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         : [];
       setOrders(sorted);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to fetch orders:", err);
-      const msg = err?.response?.data?.message || err.message || "Failed to load orders";
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      const msg = e?.response?.data?.message || e.message || "Failed to load orders";
       setFetchError(msg);
       toast.error(msg);
     } finally {
@@ -80,23 +81,29 @@ export default function OrdersAdminPage() {
 
   const rows: TableRow[] = useMemo(
     () =>
-      orders.map((o: any) => {
+      orders.map((o: Record<string, unknown>) => {
         const id = o._id;
         const customer =
-          o.customer?.fullName?.trim() && o.customer?.fullName !== "null null"
-            ? o.customer.fullName
-            : o.customer?.email || "Unknown";
-        const customerCity = o.customer?.city || "—";
-        const itemsArr = o.items || [];
+          typeof o.customer === "object" && o.customer !== null
+            ? ((o.customer as Record<string, unknown>)?.fullName as string)?.trim() &&
+              (o.customer as Record<string, unknown>)?.fullName !== "null null"
+              ? (o.customer as Record<string, unknown>)?.fullName as string
+              : (o.customer as Record<string, unknown>)?.email as string || "Unknown"
+            : "Unknown";
+        const customerCity =
+          typeof o.customer === "object" && o.customer !== null
+            ? ((o.customer as Record<string, unknown>)?.city as string) || "—"
+            : "—";
+        const itemsArr = (o.items as Record<string, unknown>[]) || [];
         const itemsSummary =
           itemsArr.length > 0
             ? itemsArr
                 .slice(0, 3)
-                .map((it: any) => `${it.name} x ${it.quantity}`)
+                .map((it: Record<string, unknown>) => `${it.name as string} x ${it.quantity as number}`)
                 .join(", ") +
               (itemsArr.length > 3 ? ` +${itemsArr.length - 3} more` : "")
             : "—";
-        const qty = itemsArr.reduce((s: number, it: any) => s + (it.quantity || 0), 0);
+        const qty = itemsArr.reduce((s: number, it: Record<string, unknown>) => s + ((it.quantity as number) || 0), 0);
         const totalAmount = o.totalAmount || 0;
         const payment = (o.paymentStatus || "pending").toLowerCase();
         const fulfillment = (o.orderStatus || "pending").toLowerCase();
@@ -172,9 +179,10 @@ export default function OrdersAdminPage() {
         )
       );
       toast.success("Order marked as completed");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Mark completed failed:", err);
-      toast.error(err?.response?.data?.message || "Failed to update order");
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(e?.response?.data?.message || "Failed to update order");
     } finally {
       setUpdatingOrderId(null);
     }
@@ -196,9 +204,10 @@ export default function OrdersAdminPage() {
         )
       );
       toast.success("Order cancelled");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Cancel order failed:", err);
-      toast.error(err?.response?.data?.message || "Failed to cancel order");
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(e?.response?.data?.message || "Failed to cancel order");
     } finally {
       setUpdatingOrderId(null);
     }
@@ -235,7 +244,7 @@ export default function OrdersAdminPage() {
     {
       key: "actions",
       label: "Actions",
-      render: (_: any, row?: TableRow) => {
+      render: (_: unknown, row?: TableRow) => {
         const rowId = row?.id;
         return (
           <div className="flex gap-2 justify-center">
@@ -273,7 +282,7 @@ export default function OrdersAdminPage() {
             <Input placeholder="Search by order ID or customer..." className="pl-10 w-full" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
 
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v)}>
             <SelectTrigger className="w-full sm:w-[180px] flex-1 min-w-[160px]">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Status" />
@@ -288,7 +297,7 @@ export default function OrdersAdminPage() {
             </SelectContent>
           </Select>
 
-          <Select value={paymentFilter} onValueChange={(v) => setPaymentFilter(v as any)}>
+          <Select value={paymentFilter} onValueChange={(v) => setPaymentFilter(v)}>
             <SelectTrigger className="w-full sm:w-[180px] flex-1 min-w-[160px]">
               <SelectValue placeholder="Payment" />
             </SelectTrigger>
@@ -300,7 +309,7 @@ export default function OrdersAdminPage() {
             </SelectContent>
           </Select>
 
-          <Select value={dateRange} onValueChange={(v) => setDateRange(v as any)}>
+          <Select value={dateRange} onValueChange={(v) => setDateRange(v)}>
             <SelectTrigger className="w-full sm:w-[180px] flex-1 min-w-[160px]">
               <SelectValue placeholder="Date Range" />
             </SelectTrigger>
@@ -373,7 +382,7 @@ export default function OrdersAdminPage() {
               <h3 className="text-sm font-bold">ITEMS</h3>
               {selectedOrder?.items?.length ? (
                 <ul className="list-disc text-sm max-h-40 overflow-auto space-y-2">
-                  {selectedOrder.items.map((it: any, idx: number) => (
+                  {selectedOrder.items.map((it: Record<string, unknown>, idx: number) => (
                     <li key={idx} className="flex flex-col gap-1 border-2 border-gray-400 p-2">
                       <span>
                         <strong>Quantity:</strong> {it.quantity}

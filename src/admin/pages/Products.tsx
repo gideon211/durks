@@ -157,7 +157,7 @@ export default function Products() {
       });
 
       const text = await res.text();
-      let data: any = null;
+      let data: unknown = null;
       try {
         data = JSON.parse(text);
       } catch {
@@ -180,7 +180,7 @@ export default function Products() {
       }
 
       try {
-        const updatedUser = { ...(u as any), token: newToken };
+        const updatedUser = { ...(u as Record<string, unknown>), token: newToken };
         login(updatedUser);
         return updatedUser;
       } catch (e) {
@@ -245,7 +245,7 @@ export default function Products() {
     return res;
   };
 
-  const normalizeDrink = (p: any): Product => ({
+  const normalizeDrink = (p: Record<string, unknown>): Product => ({
     id: p._id ?? p.id,
     name: p.name ?? "",
     category: p.category ?? "",
@@ -254,7 +254,7 @@ export default function Products() {
     status: p.status ?? "Active",
     imageUrl: p.imageUrl ?? p.image ?? "",
     packs: Array.isArray(p.packs)
-      ? p.packs.map((x: any) => ({
+      ? p.packs.map((x: Record<string, unknown>) => ({
           pack: x.pack,
           price: x.price,
           oldPrice: x.oldPrice ?? null,
@@ -286,7 +286,7 @@ export default function Products() {
         const payload = await res.json();
 
         const rawItems = Array.isArray(payload) ? payload : payload?.drinks ?? [];
-        const normalized: Product[] = rawItems.map((item: any) => normalizeDrink(item));
+        const normalized: Product[] = rawItems.map((item: Record<string, unknown>) => normalizeDrink(item));
         setProducts(normalized);
       } catch (err) {
         console.error("fetchInitial error:", err);
@@ -311,7 +311,7 @@ export default function Products() {
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
       const payload = await res.json();
       const rawItems = Array.isArray(payload) ? payload : payload?.drinks ?? [];
-      const normalized: Product[] = rawItems.map((item: any) => normalizeDrink(item));
+      const normalized: Product[] = rawItems.map((item: Record<string, unknown>) => normalizeDrink(item));
       setProducts(normalized);
     } catch (err) {
       console.error("fetchProducts error:", err);

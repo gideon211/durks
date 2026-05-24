@@ -48,26 +48,26 @@ export default function Orders() {
         setLoading(true);
         const { data } = await axiosInstance.get("/orders/my-orders");
 
-        const parsed: Order[] = (data.orders || []).map((o: any) => ({
-          id: o._id,
+        const parsed: Order[] = (data.orders || []).map((o: Record<string, unknown>) => ({
+          id: o._id as string,
           items: Array.isArray(o.items)
-            ? o.items.map((it: any) => ({
-                image: it.image ?? it.imageUrl ?? null,
-                name: it.name ?? "Item",
+            ? (o.items as Record<string, unknown>[]).map((it: Record<string, unknown>) => ({
+                image: (it.image ?? it.imageUrl ?? null) as string | null,
+                name: (it.name ?? "Item") as string,
                 quantity: Number(it.quantity ?? it.qty ?? 1),
                 price: Number(it.price ?? 0),
-                pack: it.pack ?? null,
+                pack: it.pack as string | undefined,
                 drinkId: it.drinkId ? String(it.drinkId) : undefined,
               }))
             : [],
           totalAmount: Number(o.totalAmount ?? 0),
-          orderStatus: o.orderStatus ?? "confirmed",
-          paymentStatus: o.paymentStatus ?? "pending",
-          createdAt: o.createdAt ?? new Date().toISOString(),
-          deliveryDate: o.deliveryDate ?? null,
-          deliveryTime: o.deliveryTime ?? null,
-          address: o.customer?.address ?? "No address provided",
-          city: o.customer?.city ?? "No city provided",
+          orderStatus: (o.orderStatus ?? "confirmed") as string,
+          paymentStatus: (o.paymentStatus ?? "pending") as string,
+          createdAt: (o.createdAt ?? new Date().toISOString()) as string,
+          deliveryDate: (o.deliveryDate ?? null) as string | null | undefined,
+          deliveryTime: (o.deliveryTime ?? null) as string | null | undefined,
+          address: ((o.customer as Record<string, unknown>)?.address ?? "No address provided") as string,
+          city: ((o.customer as Record<string, unknown>)?.city ?? "No city provided") as string,
         }));
 
         setOrders(
@@ -75,8 +75,9 @@ export default function Orders() {
             (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           )
         );
-      } catch (err: any) {
-        if (err?.response?.status === 401) {
+      } catch (err: unknown) {
+        const e = err as { response?: { status?: number } };
+        if (e?.response?.status === 401) {
           toast.error("You are not authorized. Please sign in again.");
           navigate("/auth");
         } else {
