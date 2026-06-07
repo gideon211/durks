@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import { ShoppingCart, Loader2, CheckCircle2 } from "lucide-react";
+import { ShoppingCart, Loader2, CheckCircle2, Share2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import {
@@ -191,9 +191,28 @@ const stablePacks = useMemo(() => {
     });
   }, []);
 
+  const handleShare = useCallback(async () => {
+    const url = `${window.location.origin}/products/${category || ""}?product=${encodeURIComponent(name)}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: name, url }); } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast("Link copied!", { icon: "🔗", duration: 2000 });
+    }
+  }, [name, category]);
+
+  const cardId = `product-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
+
   return (
-    <div className="bg-card rounded-xl border-2 border-green-200 overflow-hidden hover:border-green-300 hover:shadow-xl transition-all duration-150 flex flex-col h-full">
+    <div id={cardId} className="group bg-card rounded-xl border-2 border-green-200 overflow-hidden hover:border-green-300 hover:shadow-xl transition-all duration-150 flex flex-col h-full">
       <div className="relative aspect-square overflow-hidden bg-muted block">
+        <button
+          onClick={(e) => { e.preventDefault(); handleShare(); }}
+          className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100"
+          aria-label={`Share ${name}`}
+        >
+          <Share2 className="h-4 w-4 text-white" />
+        </button>
         {image ? (
           <img
             src={image}

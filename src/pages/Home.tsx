@@ -8,6 +8,7 @@ import {
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
+  Share2,
   Leaf,
   Heart,
   Sparkles,
@@ -55,6 +56,7 @@ const flavor3 = "/images/flavor3.jpg";
 const flavor4 = "/images/flavor4.jpg";
 
 import { useRef, useState, useEffect } from "react";
+import { toast } from "sonner";
 
 const productCategories = [
   {
@@ -235,6 +237,23 @@ export default function Home() {
     });
   };
 
+  const handleShare = async (name: string, slug: string) => {
+    const url = `${window.location.origin}/products/${slug}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: name, url });
+      } catch {
+        // user cancelled
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast("Link copied!", {
+        icon: "🔗",
+        duration: 2000,
+      });
+    }
+  };
+
   const sectionViewport = { once: true, amount: 0.2 as const };
 
   return (
@@ -338,6 +357,13 @@ export default function Home() {
                           />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent pointer-events-none" />
+                        <button
+                          onClick={() => handleShare(category.name, category.slug)}
+                          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100"
+                          aria-label={`Share ${category.name}`}
+                        >
+                          <Share2 className="h-4 w-4 text-white" />
+                        </button>
                       </div>
 
                       <div className="absolute bottom-0 inset-x-0 p-4 backdrop-blur-md bg-black/40 rounded-t-2xl transition-all duration-700 md:group-hover:bg-black/60">

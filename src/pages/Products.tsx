@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -232,6 +232,8 @@ export default function Products(): JSX.Element {
   const { category: urlCategory } = useParams<{ category?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const productParam = searchParams.get("product");
 
   const [activeCategory, setActiveCategory] = useState<string>(urlCategory ?? "all");
 
@@ -321,6 +323,20 @@ export default function Products(): JSX.Element {
   const visibleProducts = useMemo(() => {
     return filteredProducts.slice(0, visibleCount);
   }, [filteredProducts, visibleCount]);
+
+  useEffect(() => {
+    if (!productParam || visibleProducts.length === 0) return;
+    const id = `product-${productParam.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
+    requestAnimationFrame(() => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("shadow-[0_0_12px_rgba(34,197,94,0.7)]", "ring-2", "ring-green-400", "rounded-xl");
+      setTimeout(() => {
+        el.classList.remove("shadow-[0_0_12px_rgba(34,197,94,0.7)]", "ring-2", "ring-green-400");
+      }, 3000);
+    });
+  }, [productParam, visibleProducts]);
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
