@@ -62,7 +62,7 @@ function Calendar24({
             <Button
               variant="outline"
               id="date-picker"
-              className="w-32 justify-between font-normal p-4"
+              className="w-32 justify-between font-normal h-12"
             >
               {date ? date.toLocaleDateString() : "Select date"}
               <ChevronDownIcon />
@@ -96,7 +96,7 @@ function Calendar24({
             setTime(e.target.value);
             onTimeChange?.(e.target.value);
           }}
-          className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
+          className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
         />
       </div>
     </div>
@@ -442,7 +442,7 @@ export default function Checkout(): JSX.Element {
                       onChange={handleChange}
                       required
                       disabled={isProcessing}
-                      placeholder="John Doe"
+                      className="focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
                     />
                   </div>
                   <div className="space-y-2">
@@ -455,7 +455,7 @@ export default function Checkout(): JSX.Element {
                       onChange={handleChange}
                       required
                       disabled={isProcessing}
-                      placeholder="john@example.com"
+                      className="focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
                     />
                   </div>
                   <div className="space-y-2">
@@ -467,7 +467,7 @@ export default function Checkout(): JSX.Element {
                       onChange={handleChange}
                       required
                       disabled={isProcessing}
-                      placeholder="+233 XX XXX XXXX"
+                      className="focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
                     />
                   </div>
                   <div className="space-y-2">
@@ -480,6 +480,7 @@ export default function Checkout(): JSX.Element {
                       placeholder="Accra"
                       required
                       disabled={isProcessing}
+                      className="focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
                     />
                   </div>
                 </div>
@@ -494,6 +495,7 @@ export default function Checkout(): JSX.Element {
                     onChange={handleChange}
                     required
                     disabled={isProcessing}
+                    className="focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
                   />
                 </div>
               </CardContent>
