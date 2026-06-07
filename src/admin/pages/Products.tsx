@@ -3,13 +3,20 @@ import AdminLayout from "@/admin/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/context/Authcontext";
-import { Plus, Grid3x3, List, Edit2, Trash2, ImageIcon } from "lucide-react";
+import { Plus, Grid3x3, List, Edit2, Trash2, ImageIcon, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import axiosInstance from "@/api/axios";
 
 interface Product {
   id: string | number;
@@ -35,15 +42,17 @@ const categories = [
   { id: "events", name: "EVENTS", slug: "events" },
 ];
 
-const API_BASE = "https://updated-duks-backend-2-0.onrender.com/api";
-const DRINKS_BASE = `${API_BASE}/drinks`;
+const CATEGORY_MATCH: Record<string, string[]> = Object.fromEntries(
+  categories.filter((c) => c.slug !== "all").map((c) => [
+    c.slug,
+    [...new Set([c.slug, c.id, c.name.toLowerCase().replace(/\s+/g, "-"), c.name.toLowerCase()])],
+  ])
+);
 
 export default function Products() {
-  // include logout + login to persist refreshed token
-  const { user, login, tryRefreshToken, logout } = useAuth();
-
   const [products, setProducts] = useState<Product[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -75,242 +84,28 @@ export default function Products() {
   // track selected pack per product (for grid dropdown)
   const [selectedPackByProduct, setSelectedPackByProduct] = useState<Record<string, number | "">>({});
 
-  // Helper: safe read of stored user object (local copy)
-  const getStoredUser = () =>
-    user ??
-    (() => {
-      try {
-        const raw = localStorage.getItem("user");
-        return raw ? JSON.parse(raw) : null;
-      } catch {
-        return null;
-      }
-    })();
-
-  // Get token; if expired try tryRefreshToken (keeps backwards compatibility)
-  const getToken = async (): Promise<string | null> => {
-    const u = getStoredUser();
-    if (!u) return null;
-
-    if (!u.token) {
-      try {
-        const refreshed = await tryRefreshToken();
-        return refreshed?.token ?? null;
-      } catch {
-        return null;
-      }
-    }
-
-    // try decode exp
-    try {
-      const parts = u.token.split(".");
-      if (parts.length === 3) {
-        const payload = JSON.parse(atob(parts[1]));
-        const exp = payload?.exp;
-        const now = Math.floor(Date.now() / 1000);
-        if (exp && exp < now) {
-          try {
-            const refreshed = await tryRefreshToken();
-            return refreshed?.token ?? null;
-          } catch {
-            return null;
-          }
-        }
-      }
-    } catch {
-      try {
-        const refreshed = await tryRefreshToken();
-        return refreshed?.token ?? null;
-      } catch {
-        return null;
-      }
-    }
-
-    return u.token;
-  };
-
-  const mergeHeaders = (base?: RequestInit["headers"]) => {
-    const headers: Record<string, string> = {};
-    if (!base) return headers;
-    if (base instanceof Headers) {
-      base.forEach((v, k) => (headers[k] = v));
-      return headers;
-    }
-    if (Array.isArray(base)) {
-      (base as Array<[string, string]>).forEach(([k, v]) => (headers[k] = v));
-      return headers;
-    }
-    Object.assign(headers, base as Record<string, string>);
-    return headers;
-  };
-
-  // direct refresh call used here so we control request shape and persist token immediately
-  const callRefreshEndpoint = async () => {
-    const u = getStoredUser();
-    if (!u?.refreshToken) return null;
-
-    try {
-      const res = await fetch(`${API_BASE}/auth/refresh`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken: u.refreshToken }),
-      });
-
-      const text = await res.text();
-      let data: unknown = null;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        data = text;
-      }
-
-      console.log("callRefreshEndpoint response:", res.status, data);
-
-      if (!res.ok) return null;
-
-      let newToken: string | undefined;
-      if (data?.token) newToken = data.token;
-      else if (data?.accessToken) newToken = data.accessToken;
-      else if (data?.data?.token) newToken = data.data.token;
-      else if (typeof data === "string") newToken = data;
-
-      if (!newToken) {
-        console.warn("callRefreshEndpoint: refresh returned 200 but no token found", data);
-        return null;
-      }
-
-      try {
-        const updatedUser = { ...(u as Record<string, unknown>), token: newToken };
-        login(updatedUser);
-        return updatedUser;
-      } catch (e) {
-        console.error("callRefreshEndpoint: failed to persist refreshed token", e);
-        return null;
-      }
-    } catch (err) {
-      console.error("callRefreshEndpoint error:", err);
-      return null;
-    }
-  };
-
-  const fetchWithAuth = async (input: RequestInfo | URL, init: RequestInit = {}) => {
-    let token = await getToken();
-    if (!token) throw new Error("No active token. Please login.");
-
-    const headers = mergeHeaders(init.headers);
-    headers["Authorization"] = `Bearer ${token}`;
-
-    const initToSend: RequestInit = { ...init, headers };
-    let res = await fetch(input, initToSend);
-
-    if (res.status === 401 || res.status === 403) {
-      try {
-        const t = await res.text();
-        console.warn("fetchWithAuth: initial request unauthorized. response body:", t);
-      } catch {}
-
-      const refreshedUser = await callRefreshEndpoint();
-      if (!refreshedUser || !refreshedUser.token) {
-        try {
-          logout();
-        } catch {}
-        throw new Error("Session expired. Please login again.");
-      }
-
-      const retryHeaders = mergeHeaders(init.headers);
-      retryHeaders["Authorization"] = `Bearer ${refreshedUser.token}`;
-      const retryInit: RequestInit = { ...init, headers: retryHeaders };
-
-      const retryRes = await fetch(input, retryInit);
-
-      if (retryRes.status === 401 || retryRes.status === 403) {
-        let body = "Unauthorized";
-        try {
-          const t = await retryRes.text();
-          try {
-            body = JSON.parse(t).message ?? t;
-          } catch {
-            body = t;
-          }
-        } catch {}
-        try {
-          logout();
-        } catch {}
-        throw new Error(body || "Session expired. Please login again.");
-      }
-
-      return retryRes;
-    }
-
-    return res;
-  };
-
   const normalizeDrink = (p: Record<string, unknown>): Product => ({
-    id: p._id ?? p.id,
-    name: p.name ?? "",
-    category: p.category ?? "",
-    size: p.size ?? "",
-    description: p.description ?? "",
-    status: p.status ?? "Active",
-    imageUrl: p.imageUrl ?? p.image ?? "",
+    id: (p._id ?? p.id) as string | number,
+    name: (p.name ?? "") as string,
+    category: (p.category ?? "") as string,
+    size: (p.size ?? "") as string,
+    description: (p.description ?? "") as string,
+    status: (p.status ?? "Active") as string,
+    imageUrl: (p.imageUrl ?? p.image ?? "") as string,
     packs: Array.isArray(p.packs)
-      ? p.packs.map((x: Record<string, unknown>) => ({
-          pack: x.pack,
-          price: x.price,
-          oldPrice: x.oldPrice ?? null,
+      ? (p.packs as Record<string, unknown>[]).map((x) => ({
+          pack: x.pack as number,
+          price: x.price as number,
+          oldPrice: (x.oldPrice ?? null) as number | null,
         }))
       : [],
   });
 
-  // ✅ revoke blob preview on unmount
-  useEffect(() => {
-    return () => {
-      if (blobPreviewRef.current && blobPreviewRef.current.startsWith("blob:")) {
-        URL.revokeObjectURL(blobPreviewRef.current);
-      }
-      blobPreviewRef.current = null;
-    };
-  }, []);
-
-  // Initial fetch
-  useEffect(() => {
-    let mounted = true;
-
-    const fetchInitial = async () => {
-      try {
-        setLoading(true);
-
-        const res = await fetchWithAuth(`${DRINKS_BASE}/`);
-        if (!mounted) return;
-        if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
-        const payload = await res.json();
-
-        const rawItems = Array.isArray(payload) ? payload : payload?.drinks ?? [];
-        const normalized: Product[] = rawItems.map((item: Record<string, unknown>) => normalizeDrink(item));
-        setProducts(normalized);
-      } catch (err) {
-        console.error("fetchInitial error:", err);
-        toast.error("Could not load products. Check backend connection or login.");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    fetchInitial();
-
-    return () => {
-      mounted = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetchWithAuth(`${DRINKS_BASE}/`);
-      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
-      const payload = await res.json();
-      const rawItems = Array.isArray(payload) ? payload : payload?.drinks ?? [];
+      const res = await axiosInstance.get("/drinks/");
+      const rawItems = Array.isArray(res.data) ? res.data : (res.data?.drinks ?? []);
       const normalized: Product[] = rawItems.map((item: Record<string, unknown>) => normalizeDrink(item));
       setProducts(normalized);
     } catch (err) {
@@ -320,6 +115,22 @@ export default function Products() {
       setLoading(false);
     }
   };
+
+  // revoke blob preview on unmount
+  useEffect(() => {
+    return () => {
+      if (blobPreviewRef.current && blobPreviewRef.current.startsWith("blob:")) {
+        URL.revokeObjectURL(blobPreviewRef.current);
+      }
+      blobPreviewRef.current = null;
+    };
+  }, []);
+
+  // Fetch on mount only
+  useEffect(() => {
+    fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const resetFileInput = () => {
     if (fileInputRef.current) {
@@ -380,7 +191,7 @@ export default function Products() {
               pack: String(p.pack),
               price: String(p.price),
               oldPrice:
-                p.oldPrice !== undefined && p.oldPrice !== null && p.oldPrice !== ""
+                p.oldPrice != null
                   ? String(p.oldPrice)
                   : "",
             }))
@@ -461,26 +272,24 @@ export default function Products() {
       if (selectedFile) fd.append("image", selectedFile);
       fd.append("packs", JSON.stringify(packsToSend));
 
-      let res: Response;
+      let res;
       if (editingId) {
-        res = await fetchWithAuth(`${DRINKS_BASE}/${editingId}`, {
-          method: "PUT",
-          body: fd,
-        });
+        res = await axiosInstance.put(`/drinks/${editingId}`, fd);
       } else {
-        res = await fetchWithAuth(`${DRINKS_BASE}/add`, {
-          method: "POST",
-          body: fd,
-        });
+        res = await axiosInstance.post("/drinks/add", fd);
       }
 
-      if (!res.ok) {
-        let text = await res.text();
-        try {
-          const parsed = JSON.parse(text);
-          text = parsed?.message ?? text;
-        } catch {}
-        throw new Error(text || `Save failed: ${res.status}`);
+      const responseData = res.data;
+      const savedProduct = responseData?.drink ?? responseData?.data ?? responseData;
+
+      if (savedProduct && editingId) {
+        // Update existing product in local state
+        const normalized = normalizeDrink(savedProduct);
+        setProducts((prev) => prev.map((p) => (p.id === editingId ? normalized : p)));
+      } else if (savedProduct && !editingId) {
+        // Add new product to local state
+        const normalized = normalizeDrink(savedProduct);
+        setProducts((prev) => [...prev, normalized]);
       }
 
       toast.success("Product saved successfully");
@@ -491,8 +300,6 @@ export default function Products() {
       setSelectedFile(null);
       resetFileInput();
       existingImageUrlRef.current = null;
-
-      await fetchProducts();
     } catch (err) {
       console.error("handleSaveProduct error:", err);
       toast.error((err as Error).message || "Failed to save product. Check backend and token.");
@@ -506,8 +313,7 @@ export default function Products() {
     if (!ok) return;
 
     try {
-      const res = await fetchWithAuth(`${DRINKS_BASE}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+      await axiosInstance.delete(`/drinks/${id}`);
       setProducts((prev) => prev.filter((p) => p.id !== id));
       toast.success("Product deleted");
     } catch (err) {
@@ -523,9 +329,18 @@ export default function Products() {
     }));
   };
 
+  const filteredProducts = categoryFilter === "all"
+    ? products
+    : products.filter((p) => {
+        const matchValues = CATEGORY_MATCH[categoryFilter];
+        if (!matchValues) return false;
+        const pc = (p.category ?? "").toLowerCase();
+        return matchValues.some((v) => v === pc);
+      });
+
   return (
     <AdminLayout>
-      <div className="space-y-6 p-3 sm:p-5">
+      <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
           <h1 className="text-2xl sm:text-3xl font-semibold">Products</h1>
           <div className="flex flex-wrap gap-2 justify-end w-full sm:w-auto">
@@ -554,16 +369,47 @@ export default function Products() {
           </div>
         </div>
 
-        {loading && <div className="p-6 bg-muted/30 rounded text-center w-full">Loading products...</div>}
-        {!loading && products.length === 0 && (
+        {/* Category filter */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Filter by category</span>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((c) => (
+                <SelectItem key={c.id} value={c.slug}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground">
+            {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+
+        {loading && (
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 w-full">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="rounded-lg border bg-card shadow-sm p-3 sm:p-4">
+                <div className="aspect-square bg-muted rounded-lg mb-3 animate-pulse" />
+                <div className="h-4 bg-muted rounded animate-pulse mb-2 w-3/4 mx-auto" />
+                <div className="h-3 bg-muted rounded animate-pulse mb-2 w-1/2 mx-auto" />
+                <div className="h-8 bg-muted rounded animate-pulse mt-3 w-full" />
+              </div>
+            ))}
+          </div>
+        )}
+        {!loading && filteredProducts.length === 0 && (
           <div className="p-6 bg-muted/30 rounded text-center w-full">
-            No products found. Click Add Product to seed your catalog.
+            {categoryFilter !== "all"
+              ? `No products in this category.`
+              : "No products found. Click Add Product to seed your catalog."}
           </div>
         )}
 
-        {viewMode === "grid" && products.length > 0 && (
+        {viewMode === "grid" && filteredProducts.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 w-full">
-            {products.map((product) => {
+            {filteredProducts.map((product) => {
               const key = `${product.id}`;
               const selectedPack = selectedPackByProduct[key] ?? "";
               const selectedPackObj = product.packs?.find((p) => p.pack === selectedPack) ?? null;
@@ -571,7 +417,7 @@ export default function Products() {
               return (
                 <Card
                   key={product.id}
-                  className="hover:border-primary/40 border-2 transition-all duration-150 relative flex flex-col"
+                  className="hover:border-primary/40 border transition-all duration-150 relative flex flex-col shadow-sm"
                 >
                   <CardContent className="p-3 sm:p-4 flex flex-col h-full">
                     <div className="aspect-square bg-muted rounded-lg mb-3 overflow-hidden relative w-full">
@@ -604,22 +450,18 @@ export default function Products() {
 
                       {product.packs && product.packs.length > 0 && (
                         <div className="mt-2 w-full">
-                          <label htmlFor={`pack-select-${key}`} className="sr-only">
-                            Select pack
-                          </label>
-                          <select
-                            id={`pack-select-${key}`}
-                            value={selectedPack === "" ? "" : String(selectedPack)}
-                            onChange={(e) => onSelectPackForProduct(key, e.target.value)}
-                            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-                          >
-                            <option value="">Select pack</option>
-                            {product.packs.map((p, idx) => (
-                              <option key={idx} value={String(p.pack)}>
-                                {p.pack}-pack — ₵{p.price}
-                              </option>
-                            ))}
-                          </select>
+                          <Select value={selectedPack === "" ? "" : String(selectedPack)} onValueChange={(v) => onSelectPackForProduct(key, v)}>
+                            <SelectTrigger className="w-full h-9 text-sm">
+                              <SelectValue placeholder="Select pack" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {product.packs.map((p, idx) => (
+                                <SelectItem key={idx} value={String(p.pack)}>
+                                  {p.pack}-pack — ₵{p.price}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
 
                           {selectedPackObj && (
                             <p className="font-semibold mt-2 text-foreground">
@@ -655,11 +497,68 @@ export default function Products() {
           </div>
         )}
 
+        {viewMode === "list" && filteredProducts.length > 0 && (
+          <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-muted/50 border-b">
+                  <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Product</th>
+                  <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Category</th>
+                  <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Status</th>
+                  <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Packs</th>
+                  <th className="text-right font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProducts.map((product) => (
+                  <tr key={product.id} className="border-b last:border-b-0 hover:bg-muted/40 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-md bg-muted overflow-hidden shrink-0">
+                          {product.imageUrl ? (
+                            <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ImageIcon className="h-4 w-4" /></div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium">{product.name}</p>
+                          {product.size && <p className="text-xs text-muted-foreground">{product.size}</p>}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{product.category}</td>
+                    <td className="px-4 py-3">
+                      <Badge variant={product.status === "Active" ? "default" : "destructive"} className="text-xs">
+                        {product.status ?? "Active"}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {product.packs?.map((p, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs whitespace-nowrap">
+                            {p.pack}-pk ₵{p.price}
+                          </Badge>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(product)}><Edit2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(product.id)} className="text-red-500 hover:text-red-700"><Trash2 className="h-4 w-4" /></Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         <Dialog
           open={openModal}
           onOpenChange={(v) => {
             setOpenModal(v);
-            // ✅ when closing modal, clear file selection + blob preview safely
             if (!v) {
               clearSelectedFile();
               existingImageUrlRef.current = null;
@@ -667,177 +566,224 @@ export default function Products() {
             }
           }}
         >
-          <DialogContent className="w-full rounded-md px-6 max-w-lg overflow-y-auto" style={{ maxHeight: "90vh" }}>
+          <DialogContent className="max-w-xl overflow-y-auto bg-white" style={{ maxHeight: "90vh" }}>
             <DialogHeader>
-              <DialogTitle className="flex items-center justify-between text-base sm:text-lg font-semibold">
+              <DialogTitle className="text-lg font-semibold">
                 {editingId ? "Edit Product" : "Add Product"}
               </DialogTitle>
             </DialogHeader>
 
             <form
-              className="space-y-2"
+              className="space-y-5"
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSaveProduct();
               }}
             >
-              <div>
-                <Label htmlFor="name" className="text-sm font-medium">
-                  Name
-                </Label>
+              {/* Name */}
+              <div className="space-y-1.5">
+                <Label htmlFor="name">Product Name</Label>
                 <Input
                   id="name"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Drink name"
-                  className="mt-1 w-full"
+                  placeholder="e.g. Mango Sunrise"
                   required
                 />
               </div>
 
-              <div className="flex sm:gap-3 flex-col sm:flex-row">
-                <div className="flex-1">
-                  <Label htmlFor="size" className="text-sm font-medium">
-                    Size
-                  </Label>
+              {/* Category + Size row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={form.category}
+                    onValueChange={(v) => setForm({ ...form, category: v })}
+                  >
+                    <SelectTrigger id="category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.slice(1).map((c) => (
+                        <SelectItem key={c.id} value={c.slug}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="size">Size / Volume</Label>
                   <Input
                     id="size"
-                    placeholder="e.g. 300ml / Small"
+                    placeholder="e.g. 300ml"
                     value={form.size}
                     onChange={(e) => setForm({ ...form, size: e.target.value })}
-                    className="mt-1 w-full"
                   />
-                </div>
-
-                <div className="flex-1">
-                  <Label htmlFor="category" className="text-sm font-medium">
-                    Category
-                  </Label>
-                  <select
-                    id="category"
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                    className="mt-1 w-full rounded-md border px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  >
-                    <option value="">Select category</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.slug}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="flex-shrink-0">
+              {/* Image upload */}
+              <div className="space-y-1.5">
+                <Label>Product Image</Label>
+                <div
+                  className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-white p-6 cursor-pointer hover:bg-accent/30 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
                   {previewUrl ? (
-                    <img src={previewUrl} alt="Preview" className="w-28 h-28 object-cover rounded-md border" />
-                  ) : (
-                    <div className="w-28 h-28 rounded-md border bg-muted flex items-center justify-center text-muted-foreground">
-                      No image
+                    <div className="relative w-full max-w-[200px]">
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="w-full h-32 object-cover rounded-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); clearSelectedFile(); }}
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-xs hover:opacity-90"
+                      >
+                        &times;
+                      </button>
                     </div>
+                  ) : (
+                    <>
+                      <div className="rounded-full bg-border/50 p-3 mb-2">
+                        <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <p className="text-sm font-medium text-foreground">Click to upload</p>
+                      <p className="text-xs text-muted-foreground mt-1">JPG or PNG, max 2MB</p>
+                    </>
                   )}
-                </div>
-
-                <div className="flex-1">
-                  <Label className="text-sm font-medium">Image</Label>
                   <input
                     type="file"
                     accept="image/*"
                     ref={fileInputRef}
                     onChange={onFileChange}
-                    className="mt-1 w-full text-sm"
+                    className="hidden"
                     aria-label="Upload product image"
                   />
-                  <p className="text-xs text-muted-foreground mt-2">Recommended: JPG/PNG. Max 2MB.</p>
                 </div>
               </div>
 
-              <div>
-                <Label className="text-sm font-medium">Available Packs</Label>
-                {form.packs.map((p, idx) => (
-                  <div key={idx} className="flex gap-2 mt-1">
-                    <Input
-                      type="number"
-                      placeholder="Pack size"
-                      value={p.pack}
-                      onChange={(e) => {
-                        const newPacks = [...form.packs];
-                        newPacks[idx].pack = e.target.value;
-                        setForm({ ...form, packs: newPacks });
-                      }}
-                      className="w-1/3"
-                      step={1}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Price"
-                      value={p.price}
-                      onChange={(e) => {
-                        const newPacks = [...form.packs];
-                        newPacks[idx].price = e.target.value;
-                        setForm({ ...form, packs: newPacks });
-                      }}
-                      className="w-1/3"
-                      step={0.01}
-                    />
-
-                    <Input
-                      type="number"
-                      placeholder="Old price"
-                      value={p.oldPrice ?? ""}
-                      onChange={(e) => {
-                        const newPacks = [...form.packs];
-                        newPacks[idx].oldPrice = e.target.value;
-                        setForm({ ...form, packs: newPacks });
-                      }}
-                      className="w-1/3"
-                      step={0.01}
-                    />
-
-                    <Button
-                      variant="destructive"
-                      onClick={() =>
-                        setForm({
-                          ...form,
-                          packs: form.packs.filter((_, i) => i !== idx),
-                        })
-                      }
-                      size="icon"
-                      type="button"
-                    >
-                      &times;
-                    </Button>
-                  </div>
-                ))}
+              {/* Packs */}
+              <div className="space-y-2">
+                <Label>Pricing (Packs)</Label>
+                <div className="space-y-2">
+                  {form.packs.map((p, idx) => (
+                    <div key={idx} className="flex items-end gap-2 bg-white border rounded-lg p-3">
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-xs text-muted-foreground">Pack size</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g. 6"
+                          value={p.pack}
+                          onChange={(e) => {
+                            const newPacks = [...form.packs];
+                            newPacks[idx].pack = e.target.value;
+                            setForm({ ...form, packs: newPacks });
+                          }}
+                          step={1}
+                        />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-xs text-muted-foreground">Price (GH₵)</Label>
+                        <Input
+                          type="number"
+                          placeholder="0.00"
+                          value={p.price}
+                          onChange={(e) => {
+                            const newPacks = [...form.packs];
+                            newPacks[idx].price = e.target.value;
+                            setForm({ ...form, packs: newPacks });
+                          }}
+                          step={0.01}
+                        />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-xs text-muted-foreground">Old price (optional)</Label>
+                        <Input
+                          type="number"
+                          placeholder="0.00"
+                          value={p.oldPrice ?? ""}
+                          onChange={(e) => {
+                            const newPacks = [...form.packs];
+                            newPacks[idx].oldPrice = e.target.value;
+                            setForm({ ...form, packs: newPacks });
+                          }}
+                          step={0.01}
+                        />
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            packs: form.packs.filter((_, i) => i !== idx),
+                          })
+                        }
+                        className="text-destructive hover:text-destructive shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() =>
                     setForm({
                       ...form,
                       packs: [...form.packs, { pack: "", price: "", oldPrice: "" }],
                     })
                   }
-                  className="mt-2"
                 >
-                  + Add Pack
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Pack
                 </Button>
               </div>
 
-              <div className="mt-4 mb-4 flex sm:flex sm:justify-end gap-2 sticky bottom-0 bg-background p-2 z-10">
+              {/* Status */}
+              <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium">Status</p>
+                  <p className="text-xs text-muted-foreground">Make this product visible to customers</p>
+                </div>
+                <label className="relative inline-flex h-6 w-11 cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    className="peer sr-only"
+                    checked={form.status === "Active"}
+                    onChange={(e) => setForm({ ...form, status: e.target.checked ? "Active" : "Inactive" })}
+                  />
+                  <span className="absolute inset-0 rounded-full bg-muted-foreground/30 transition-colors peer-checked:bg-primary peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-ring" />
+                  <span className="absolute left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
+                </label>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 pt-2 border-t">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setOpenModal(false)}
-                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="w-full sm:w-auto" aria-busy={saving} disabled={saving}>
-                  {saving ? "Saving..." : editingId ? "Update Product" : "Add Product"}
+                <Button type="submit" disabled={saving}>
+                  {saving ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </span>
+                  ) : editingId ? (
+                    "Update Product"
+                  ) : (
+                    "Add Product"
+                  )}
                 </Button>
               </div>
             </form>

@@ -193,24 +193,24 @@ const baseSpeed = 60;
 
 const faqs = [
   {
-    question: "Can I get juices now or I always have to preorder.",
+    question: "Can I get juices now, or do I always have to preorder?",
     answer:
-      "⁠We juice everyday fresh and we always have juice. We understand people have perculiar need for juices. To better serve you, preordering helps so you get your most preferred juice flavors, quantities and at your preferred time. ",
+      "We make fresh juice every day and always have juice in stock. We understand people have peculiar needs when it comes to juices. To better serve you, preordering helps ensure you get your most preferred juice flavors, quantities, and at your preferred time.",
   },
   {
-    question: "How long can juices stay preserves.",
+    question: "How long do juices stay fresh?",
     answer:
-      "Fresh natural juices can do well only 3 days in the refrigerator. Fresh natural juices without preservatives are best keep frozen and can do up to 3 months frozen.",
+      "Fresh natural juices last only 3 days in the refrigerator. Fresh natural juices without preservatives are best kept frozen and can last up to 3 months frozen.",
   },
   {
     question: "How many flavors do you have?",
     answer:
-      "We have a wide range of flavors between pure juices, cleanse juices, nutty juices and smoothies to handle different dietary and health needs. Don’t see your flavor online, simply connect to design your custom flavor.",
+      "We have a wide range of flavors including pure juices, cleanse juices, nutty juices, and smoothies to handle different dietary and health needs. Don't see your flavor online? Simply reach out to create your custom flavor.",
   },
   {
-    question: "⁠Do you offer bulk juice? ",
+    question: "Do you offer bulk juice?",
     answer:
-      "Yes we do bulk and white labeling starting from 300 bottles and above. Connect for more details.",
+      "Yes, we offer bulk and white-label services starting from 300 bottles. Contact us for more details.",
   },
 ];
 

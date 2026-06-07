@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
@@ -37,10 +38,6 @@ const categories = [
   { id: "events", name: "EVENTS", slug: "events" },
 ];
 
-const CACHE_KEY = "duks_products_cache_v2";
-const CACHE_TTL_MS = 1000 * 60 * 5; // 5 minutes
-
-// fast, robust normalize with memoization
 const packsMemo = new Map<string | number | Product, PackEntry[]>();
 
 function normalizePacks(raw: unknown, fallbackPrice = 0, memoKey?: string | number | Product): PackEntry[] {
@@ -226,41 +223,43 @@ const MemoProductCard = React.memo(
   }
 );
 
+function extractProducts(data: unknown): Product[] {
+  const d = data as { drinks?: Product[] } | Product[];
+  return Array.isArray(d) ? d : Array.isArray((d as { drinks?: Product[] })?.drinks) ? (d as { drinks: Product[] }).drinks : [];
+}
+
 export default function Products(): JSX.Element {
   const { category: urlCategory } = useParams<{ category?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ URL is the source of truth (no bouncing back to all)
   const [activeCategory, setActiveCategory] = useState<string>(urlCategory ?? "all");
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const lastSuccessfulRef = useRef<Product[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState<boolean>(true);
-  const [productsError, setProductsError] = useState<string | null>(null);
+  const { data: products = [], isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const data = await getProducts();
+      return extractProducts(data);
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
 
-  // tabs wrapper (scroll container)
   const tabsWrapRef = useRef<HTMLDivElement | null>(null);
-
-  // anchor to scroll to (right under sticky tabs)
   const productsTopRef = useRef<HTMLDivElement | null>(null);
-
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   const PAGE_SIZE = 12;
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
 
-  // ✅ NEW: shuffle seed so "ALL PRODUCTS" doesn't reshuffle every render
   const shuffleSeedRef = useRef<number>(Date.now());
 
-  // ✅ NEW: stable seeded shuffle (Fisher–Yates)
   const shuffledAllProducts = useMemo(() => {
     if (!products || products.length === 0) return products;
 
-    // create deterministic pseudo-random based on seed
     let seed = shuffleSeedRef.current || 1;
     const rand = () => {
-      // LCG
       seed = (seed * 1664525 + 1013904223) >>> 0;
       return seed / 4294967296;
     };
@@ -273,17 +272,13 @@ export default function Products(): JSX.Element {
     return arr;
   }, [products]);
 
-  // --- helpers ---
   const getHeaderOffset = useCallback(() => {
     const header = document.querySelector("header, #site-header, .site-header, [role='banner']") as HTMLElement | null;
     const headerH = header ? header.getBoundingClientRect().height : 0;
-
-    // your tabs are sticky top-16; account for that too
-    const tabsStickyOffset = 64; // tailwind top-16
+    const tabsStickyOffset = 64;
     return headerH + tabsStickyOffset + 8;
   }, []);
 
-  // ✅ FIX: use computed window.scrollTo + retries to beat layout shifts
   const scrollToProductsTop = useCallback(() => {
     const el = productsTopRef.current;
     if (!el) return;
@@ -295,7 +290,6 @@ export default function Products(): JSX.Element {
       window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
     };
 
-    // run immediately + a couple times after to counter images/layout shifts
     doScroll();
     window.setTimeout(doScroll, 120);
     window.setTimeout(doScroll, 260);
@@ -311,68 +305,10 @@ export default function Products(): JSX.Element {
     btn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }, []);
 
-  // cache read
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(CACHE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as { ts: number; items: Product[] };
-        if (Array.isArray(parsed.items) && parsed.items.length > 0) {
-          setProducts(parsed.items);
-          lastSuccessfulRef.current = parsed.items;
-          const age = Date.now() - (parsed.ts || 0);
-          if (age < CACHE_TTL_MS) {
-            setLoadingProducts(false);
-            setProductsError(null);
-            return;
-          }
-        }
-      }
-    } catch {
-      // cache read failure is non-critical
-    }
-  }, []);
-
-const fetchProducts = useCallback(async () => {
-  setLoadingProducts(true);
-  setProductsError(null);
-
-  try {
-    const data = await getProducts();
-
-    const items: Product[] = Array.isArray(data.drinks)
-      ? data.drinks
-      : Array.isArray(data)
-      ? data
-      : [];
-
-    shuffleSeedRef.current = Date.now();
-    setProducts(items);
-    lastSuccessfulRef.current = items;
-
-    localStorage.setItem(
-      CACHE_KEY,
-      JSON.stringify({ ts: Date.now(), items })
-    );
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Network error while loading products";
-    setProducts(lastSuccessfulRef.current || []);
-    setProductsError(msg);
-  } finally {
-    setLoadingProducts(false);
-  }
-}, []);
-
-    useEffect(() => {
-    fetchProducts();
-    }, [fetchProducts]);
-
-  // ✅ keep activeCategory in sync with URL (single source of truth)
   useEffect(() => {
     setActiveCategory(urlCategory ?? "all");
   }, [urlCategory]);
 
-  // ✅ UPDATED: "all" uses shuffled list
   const filteredProducts = useMemo(() => {
     if (activeCategory === "all") return shuffledAllProducts;
     return products.filter((p) => p.category === activeCategory);
@@ -405,28 +341,14 @@ const fetchProducts = useCallback(async () => {
     return () => obs.disconnect();
   }, [filteredProducts.length]);
 
-  // ✅ Trigger: center tab + scroll (animation safe)
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          centerActiveTab(activeCategory);
-          scrollToProductsTop();
-        });
-      });
-    }, 350);
-
-    return () => clearTimeout(t);
-  }, [activeCategory, centerActiveTab, scrollToProductsTop]);
-
   const handleCategoryChange = useCallback(
     (categorySlug: string) => {
+      centerActiveTab(categorySlug);
       const base = "/products";
       if (categorySlug === "all") navigate(base, { replace: true });
       else navigate(`${base}/${categorySlug}`, { replace: true });
-      // do NOT setActiveCategory here; URL effect sets it (prevents bouncing)
     },
-    [navigate]
+    [navigate, centerActiveTab]
   );
 
   const handleShopClick = useCallback(() => {
@@ -447,7 +369,6 @@ const fetchProducts = useCallback(async () => {
         <Banner />
       </div>
 
-      {/* ✅ tabs wrapper ref for centering */}
       <div ref={tabsWrapRef} className="mb-8 overflow-x-auto no-scrollbar sticky top-16 z-50 lg:mx-auto">
         <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
           <TabsList className="inline-flex w-auto">
@@ -465,24 +386,17 @@ const fetchProducts = useCallback(async () => {
         </Tabs>
       </div>
 
-      {/* ✅ anchor right under the sticky tabs */}
       <div ref={productsTopRef} className="h-0" aria-hidden="true" />
 
-      {productsError && (
+      {isError && (
         <div className="container mx-auto px-4 mb-6">
           <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-center justify-between">
             <div>
               <strong className="font-semibold">Network issue:</strong>
-              <span className="ml-1">{productsError}</span>
+              <span className="ml-1">{error instanceof Error ? error.message : "Failed to load products"}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                onClick={() => {
-                fetchProducts();
-                }}
-                className="bg-red-600 text-white"
-                size="sm"
-              >
+              <Button onClick={() => refetch()} className="bg-red-600 text-white" size="sm">
                 Retry
               </Button>
             </div>
@@ -491,7 +405,7 @@ const fetchProducts = useCallback(async () => {
       )}
 
       <div className="container mx-auto px-4">
-        {loadingProducts && products.length === 0 ? (
+        {isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {Array.from({ length: PAGE_SIZE }).map((_, idx) => (
               <ProductCardSkeleton key={idx} />

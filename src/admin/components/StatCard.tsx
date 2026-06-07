@@ -20,24 +20,24 @@ export default function StatCard({
 }: StatCardProps) {
   const changeColor =
     changeType === "positive"
-      ? "text-fresh-lime"
+      ? "text-emerald-600"
       : changeType === "negative"
-      ? "text-tropical-pink"
+      ? "text-red-500"
       : "text-muted-foreground";
 
   return (
-    <Card className="hover-lift">
+    <Card className="shadow-sm">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
-          <div>
+          <div className="space-y-2">
             <p className="text-sm text-muted-foreground font-medium">{title}</p>
-            <h3 className="text-3xl font-heading font-bold mt-2">{value}</h3>
+            <h3 className="text-3xl font-heading font-bold tracking-tight">{value}</h3>
             {change && (
-              <p className={`text-sm mt-2 ${changeColor}`}>{change}</p>
+              <p className={`text-sm font-medium ${changeColor}`}>{change}</p>
             )}
           </div>
-          <div className={`p-3 bg-muted rounded-lg ${color}`}>
-            <Icon className="h-6 w-6" />
+          <div className={`p-3 rounded-xl bg-muted ${color}`}>
+            <Icon className="h-5 w-5" />
           </div>
         </div>
       </CardContent>

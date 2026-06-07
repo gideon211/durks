@@ -16,7 +16,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (user: User) => void;
+  login: (user: User, rememberMe?: boolean) => void;
   logout: () => void;
   tryRefreshToken: () => Promise<User | null>;
 }
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const [user, setUser] = useState<User | null>(() => {
     try {
-      const stored = localStorage.getItem("user");
+      const stored = localStorage.getItem("user") || sessionStorage.getItem("user");
       return stored ? JSON.parse(stored) : null;
     } catch {
       return null;
@@ -41,15 +41,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const [loading, setLoading] = useState(true);
 
-  const login = async (userData: User) => {
+  const login = async (userData: User, rememberMe = true) => {
+    const storage = rememberMe ? localStorage : sessionStorage;
     try {
       setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
+      storage.setItem("user", JSON.stringify(userData));
+      if (!rememberMe) localStorage.removeItem("user");
       await mergeGuestIntoUser(userData.id);
       await loadCartForUser(userData.id);
     } catch {
       setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
+      storage.setItem("user", JSON.stringify(userData));
+      if (!rememberMe) localStorage.removeItem("user");
       try {
         await loadCartForUser(userData.id);
       } catch {}
@@ -59,6 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
     try {
       switchToGuestCart();
     } catch {

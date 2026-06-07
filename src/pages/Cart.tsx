@@ -71,7 +71,8 @@ export default function Cart() {
     return () => {
       mounted = false;
     };
-  }, [user?.id, fetchCart]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     const initialQtys: Record<string, string> = {};
@@ -353,7 +354,7 @@ export default function Cart() {
                     </p>
                   </div>
                   <Button
-                    size="lg"
+                    size="md"
                     onClick={handleCheckout}
                     disabled={checkingOut}
                     className="w-full sm:w-auto sm:min-w-[200px]"

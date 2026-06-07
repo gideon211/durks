@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import AdminLayout from "@/admin/components/AdminLayout";
 import DataTable from "@/admin/components/DataTable";
 import { Button } from "@/components/ui/button";
@@ -14,11 +15,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, Eye, Package, X, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Search, Filter, Eye, Package, X, Loader2, Trash2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import axiosInstance from "@/api/axios";
 import { toast } from "sonner";
-import { Modal } from "@/components/Modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { Separator } from "@/components/ui/separator";
 import { Helmet } from 'react-helmet-async';
 
 type RawOrder = any;
@@ -37,20 +54,21 @@ interface TableRow {
 }
 
 export default function OrdersAdminPage() {
-  const navigate = useNavigate();
   const [orders, setOrders] = useState<RawOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const [search, setSearch] = useState("");
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState<"all" | string>("all");
   const [paymentFilter, setPaymentFilter] = useState<"all" | string>("all");
-  const [dateRange, setDateRange] = useState<"recent" | "month" | "quarter">("recent");
+  const [dateRange, setDateRange] = useState<"all" | "recent" | "month" | "quarter">("all");
 
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
   const [selectedOrder, setSelectedOrder] = useState<RawOrder | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<RawOrder | null>(null);
 
   const fetchAllOrders = useCallback(async () => {
     try {
@@ -75,8 +93,6 @@ export default function OrdersAdminPage() {
 
   useEffect(() => {
     fetchAllOrders();
-    const id = setInterval(fetchAllOrders, 15000);
-    return () => clearInterval(id);
   }, [fetchAllOrders]);
 
   const rows: TableRow[] = useMemo(
@@ -107,7 +123,7 @@ export default function OrdersAdminPage() {
         const totalAmount = o.totalAmount || 0;
         const payment = (o.paymentStatus || "pending").toLowerCase();
         const fulfillment = (o.orderStatus || "pending").toLowerCase();
-        const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "—";
+        const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString("en-GB") : "—";
         return {
           id,
           customer,
@@ -128,7 +144,8 @@ export default function OrdersAdminPage() {
     return rows.filter((r) => {
       if (search) {
         const q = search.toLowerCase();
-        if (!(r.id.toLowerCase().includes(q) || r.customer.toLowerCase().includes(q) || r.items.toLowerCase().includes(q)))
+        const rawEmail = r._raw?.customer?.email?.toLowerCase() || "";
+        if (!(r.id.toLowerCase().includes(q) || r.customer.toLowerCase().includes(q) || r.items.toLowerCase().includes(q) || rawEmail.includes(q)))
           return false;
       }
       if (statusFilter !== "all" && r.fulfillment !== statusFilter.toLowerCase()) return false;
@@ -160,7 +177,16 @@ export default function OrdersAdminPage() {
     if (!dateStr) return "—";
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString();
+    return d.toLocaleDateString("en-GB");
+  }
+
+  function formatTime(timeStr?: string | null) {
+    if (!timeStr) return "—";
+    const [h, m] = timeStr.split(":").map(Number);
+    if (isNaN(h) || isNaN(m)) return timeStr;
+    const period = h >= 12 ? "PM" : "AM";
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
   }
 
   async function handleMarkCompleted(orderId?: string) {
@@ -213,6 +239,19 @@ export default function OrdersAdminPage() {
     }
   }
 
+  async function handleDeleteOrder() {
+    if (!deleteTarget) return;
+    try {
+      await axiosInstance.delete(`/orders/admin/${deleteTarget._id}`);
+      setOrders((prev) => prev.filter((o) => o._id !== deleteTarget._id));
+      toast.success("Order deleted permanently");
+    } catch {
+      toast.error("Failed to delete order");
+    } finally {
+      setDeleteTarget(null);
+    }
+  }
+
   const columns = [
     { key: "id", label: "Order ID" },
     { key: "customer", label: "Customer" },
@@ -232,9 +271,10 @@ export default function OrdersAdminPage() {
       key: "fulfillment",
       label: "Fulfillment",
       render: (value: string) => {
-        const variant = value === "completed" ? "default" : value === "shipped" ? "secondary" : value === "processing" ? "outline" : "destructive";
+        const green = "bg-emerald-600 text-white hover:bg-emerald-600";
+        const classes = value === "completed" ? green : value === "shipped" ? "bg-blue-100 text-blue-800" : value === "processing" ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800";
         return (
-          <Badge variant={variant} className="whitespace-nowrap">
+          <Badge variant="outline" className={`whitespace-nowrap border-0 ${classes}`}>
             {value}
           </Badge>
         );
@@ -257,6 +297,9 @@ export default function OrdersAdminPage() {
             <Button variant="ghost" size="sm" onClick={() => handleCancelOrder(rowId)} disabled={updatingOrderId === rowId || !row} title="Cancel Order">
               <X className="h-4 w-4" />
             </Button>
+            <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(row?._raw ?? null)} className="text-red-500 hover:text-red-700 hover:bg-red-50" title="Delete Order">
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
         );
       },
@@ -268,15 +311,15 @@ export default function OrdersAdminPage() {
         <Helmet>
           <meta name="robots" content="noindex" />
         </Helmet>
-      <div className="space-y-6 px-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="text-2xl md:text-3xl font-heading font-bold">Orders</h1>
             <p className="text-muted-foreground text-sm md:text-base">Manage all orders and fulfillment</p>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row flex-wrap gap-3 px-8">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3">
           <div className="relative flex-1 min-w-[220px] sm:min-w-[250px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search by order ID or customer..." className="pl-10 w-full" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -309,11 +352,12 @@ export default function OrdersAdminPage() {
             </SelectContent>
           </Select>
 
-          <Select value={dateRange} onValueChange={(v) => setDateRange(v)}>
+          <Select value={dateRange} onValueChange={(v) => setDateRange(v as typeof dateRange)}>
             <SelectTrigger className="w-full sm:w-[180px] flex-1 min-w-[160px]">
               <SelectValue placeholder="Date Range" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All Orders</SelectItem>
               <SelectItem value="recent">Last 7 Days</SelectItem>
               <SelectItem value="month">Last 30 Days</SelectItem>
               <SelectItem value="quarter">Last 3 Months</SelectItem>
@@ -324,8 +368,20 @@ export default function OrdersAdminPage() {
         <div className="w-full overflow-x-auto rounded-md border bg-card">
           <div className="min-w-[900px]">
             {loading ? (
-              <div className="p-8 flex items-center justify-center">
-                <Loader2 className="animate-spin h-6 w-6" />
+              <div className="p-4 space-y-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-8 w-24" />
+                  </div>
+                ))}
               </div>
             ) : fetchError ? (
               <div className="p-6">
@@ -338,82 +394,113 @@ export default function OrdersAdminPage() {
           </div>
         </div>
 
-        <Modal
-          isOpen={isModalOpen}
-          title={`Order ${selectedOrder?.orderNumber || selectedOrder?._id || ""}`}
-          onClose={closeOrderModal}
-          footer={
-            <div className="flex gap-2 w-full">
-              <Button variant="ghost" onClick={closeOrderModal} className="flex-1">
-                Close
-              </Button>
-            </div>
-          }
-        >
-          <div className="space-y-3 py-2">
-            <div>
-              <h3 className="text-sm font-medium">Customer</h3>
-              <p className="text-sm">{selectedOrder?.customer?.fullName ?? selectedOrder?.customer?.email ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">{selectedOrder?._id}</p>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium">Contact</h3>
-              <p className="text-sm">Phone: {selectedOrder?.customer?.phone || "—"}</p>
-              <p className="text-sm">Email: {selectedOrder?.customer?.email || "—"}</p>
+        <Dialog open={isModalOpen} onOpenChange={(v) => { if (!v) closeOrderModal(); }}>
+          <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+            <div className="bg-primary px-6 py-5 text-primary-foreground">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider opacity-80">Order</p>
+                  <p className="text-lg font-semibold mt-0.5">{selectedOrder?.orderNumber || selectedOrder?._id?.slice(-8) || ""}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge variant={selectedOrder?.paymentStatus === "paid" ? "default" : "destructive"} className="bg-white/20 text-white border-0 hover:bg-white/20 capitalize">
+                    {selectedOrder?.paymentStatus || "—"}
+                  </Badge>
+                  <Badge variant="outline" className={`border-0 capitalize ${selectedOrder?.orderStatus === "completed" ? "bg-emerald-600 text-white" : selectedOrder?.orderStatus === "cancelled" ? "bg-red-600 text-white" : "bg-white/20 text-white"}`}>
+                    {selectedOrder?.orderStatus || "—"}
+                  </Badge>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <h3 className="text-sm font-medium">Address</h3>
-              <p className="text-sm">
-                {selectedOrder?.customer?.address && selectedOrder?.customer?.address !== "Not provided" ? selectedOrder.customer.address : "—"}
-                {selectedOrder?.customer?.city ? `, ${selectedOrder.customer.city}` : ""}
-                {selectedOrder?.customer?.country ? `, ${selectedOrder.customer.country}` : ""}
-              </p>
-            </div>
+            <div className="px-6 py-5 space-y-6">
+              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Customer</p>
+                  <p className="text-sm font-medium mt-1.5">{selectedOrder?.customer?.fullName ?? selectedOrder?.customer?.email ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Contact</p>
+                  <p className="text-sm mt-1.5">{selectedOrder?.customer?.phone ? `Phone: ${selectedOrder.customer.phone}` : "—"}</p>
+                  <p className="text-sm">{selectedOrder?.customer?.email || "—"}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Delivery Address</p>
+                  <p className="text-sm font-medium mt-1.5">
+                    {selectedOrder?.customer?.address && selectedOrder?.customer?.address !== "Not provided"
+                      ? selectedOrder.customer.address
+                      : "—"}
+                    {selectedOrder?.customer?.city ? `, ${selectedOrder.customer.city}` : ""}
+                    {selectedOrder?.customer?.country ? `, ${selectedOrder.customer.country}` : ""}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Delivery Date</p>
+                  <p className="text-sm font-medium mt-1.5">{formatDeliveryDate(selectedOrder?.deliveryDate)}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Delivery Time</p>
+                  <p className="text-sm font-medium mt-1.5">{formatTime(selectedOrder?.deliveryTime)}</p>
+                </div>
+              </div>
 
-            <div>
-              <h3 className="text-sm font-medium">Delivery</h3>
-              <p className="text-sm">Date: {formatDeliveryDate(selectedOrder?.deliveryDate)}</p>
-              <p className="text-sm">Time: {selectedOrder?.deliveryTime || "—"}</p>
-            </div>
+              <Separator />
 
-            <div>
-              <h3 className="text-sm font-bold">ITEMS</h3>
-              {selectedOrder?.items?.length ? (
-                <ul className="list-disc text-sm max-h-40 overflow-auto space-y-2">
-                  {selectedOrder.items.map((it: Record<string, unknown>, idx: number) => (
-                    <li key={idx} className="flex flex-col gap-1 border-2 border-gray-400 p-2">
-                      <span>
-                        <strong>Quantity:</strong> {it.quantity}
-                      </span>
-                      <span>
-                        <strong>Name:</strong> {it.name}
-                      </span>
-                      {it.pack && (
-                        <span>
-                          <strong>Pack:</strong> {it.pack}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+                  Items ({selectedOrder?.items?.length || 0})
+                </p>
+                {selectedOrder?.items?.length ? (
+                  <div className="space-y-2 max-h-44 overflow-auto">
+                    {selectedOrder.items.map((it: Record<string, unknown>, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-2.5">
+                        <div className="flex items-start gap-2 min-w-0">
+                          <span className="text-sm font-semibold text-muted-foreground shrink-0 whitespace-nowrap">Qty {it.quantity as number}</span>
+                          <span className="text-sm break-words">{it.name as string}{it.pack ? ` (${it.pack}-pack)` : ""}</span>
+                        </div>
+                        <span className="text-sm font-semibold tabular-nums shrink-0 ml-3">
+                          GH₵ {Number(it.price || 0).toFixed(2)}
                         </span>
-                      )}
-                      <span>
-                        <strong>Price:</strong> GH₵ {Number(it.price || 0).toFixed(2)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm">—</p>
-              )}
-            </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">—</p>
+                )}
+              </div>
 
-            <div>
-              <h3 className="text-sm font-medium">Totals</h3>
-              <p className="text-sm">Total: GH₵ {Number(selectedOrder?.totalAmount || 0).toFixed(2)}</p>
-              <p className="text-sm">Payment status: {selectedOrder?.paymentStatus || "—"}</p>
-              <p className="text-sm">Order status: {selectedOrder?.orderStatus || "—"}</p>
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">
+                    Payment: <span className="capitalize font-medium text-foreground">{selectedOrder?.paymentStatus || "—"}</span>
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Status: <span className="capitalize font-medium text-foreground">{selectedOrder?.orderStatus || "—"}</span>
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Total</p>
+                  <p className="text-2xl font-bold tabular-nums">GH₵ {Number(selectedOrder?.totalAmount || 0).toFixed(2)}</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </Modal>
+          </DialogContent>
+        </Dialog>
+
+        <AlertDialog open={!!deleteTarget} onOpenChange={(v) => { if (!v) setDeleteTarget(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete order?</AlertDialogTitle>
+              <AlertDialogDescription>This will permanently delete order <strong>{deleteTarget?.orderNumber || deleteTarget?._id?.slice(-8) || ""}</strong>. This action cannot be undone.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteOrder} className="bg-red-600 hover:bg-red-700">Delete Order</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );

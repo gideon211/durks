@@ -2,6 +2,13 @@ import React, { useCallback, useMemo, useRef, useState, useEffect } from "react"
 import { ShoppingCart, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCartStore } from "@/store/cartStore";
 import { toast } from "sonner";
 
@@ -283,18 +290,21 @@ const stablePacks = useMemo(() => {
 </div>
 
         <div className="flex flex-col gap-2 mt-1 w-full">
-          <select
+          <Select
             value={String(selectedPack)}
-            onChange={(e) => handlePackChange(Number(e.target.value))}
-            className="w-full border rounded px-2 py-1 text-center focus:outline-none focus:ring-1 focus:ring-primary font-bold"
-            aria-label={`Select pack for ${name}`}
+            onValueChange={(val) => handlePackChange(Number(val))}
           >
-            {stablePacks.map((p) => (
-              <option key={p.pack} value={p.pack}>
-                {p.pack}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full font-bold text-center justify-center" aria-label={`Select pack for ${name}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {stablePacks.map((p) => (
+                <SelectItem key={p.pack} value={String(p.pack)} className="justify-center">
+                  {p.pack}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <Button
             type="button"

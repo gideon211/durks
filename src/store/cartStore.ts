@@ -1,6 +1,7 @@
 // src/store/cartStore.ts
 import { create } from "zustand";
 import axiosInstance from "@/api/axios"; // shared axios instance (may include auth interceptor)
+import { toast } from "sonner";
 
 export interface Pack { pack: number; price: number }
 
@@ -185,7 +186,14 @@ export const useCartStore = create<CartState>((set, get) => ({
         if (String(existing.pack) !== String(packToSend)) {
           await get().updatePack(existing.id, packToSend);
         }
-        await get().fetchCart();
+        // reconcile locally instead of full refetch to avoid race conditions
+        set({
+          cart: get().cart.map((it) =>
+            String(it.id) === String(existing.id)
+              ? { ...it, qty: Math.max(1, Math.floor(newQty)), pack: packToSend, price: Number(computedPrice) }
+              : it
+          ),
+        });
         return;
       }
 
@@ -232,15 +240,25 @@ export const useCartStore = create<CartState>((set, get) => ({
 
       // Try hitting backend — if it fails (unauthenticated or network) fall back to pendingCart
       try {
-        await axiosInstance.post("/cart", {
+        const res = await axiosInstance.post("/cart", {
           drinkId,
           quantity,
           pack: packToSend,
           price: Number(computedPrice),
         });
 
-        // after server add, reconcile authoritative cart
-        await get().fetchCart();
+        // Replace optimistic local item with server-backed item (avoid full refetch race)
+        const serverItem = res.data?.cartItem;
+        const mapped = serverItem ? mapServerCartItem(serverItem as Record<string, unknown>) : null;
+        if (mapped) {
+          set({
+            cart: get().cart.map((it) =>
+              String(it.id) === optimisticId ? mapped : it
+            ),
+          });
+        } else {
+          await get().fetchCart();
+        }
       } catch (err: unknown) {
         console.warn("Backend addToCart failed, storing to pendingCart:", err instanceof Error ? err.message : err);
         // persist to pending list so we can merge when user logs in
@@ -257,13 +275,6 @@ export const useCartStore = create<CartState>((set, get) => ({
       }
         } catch (err: unknown) {
         console.error("addToCart failed:", err);
-
-        try {
-            await get().fetchCart();
-        } catch (fetchErr: unknown) {
-            console.warn("fetchCart after addToCart failed:", fetchErr);
-        }
-
         throw err;
         }
 
@@ -308,7 +319,12 @@ export const useCartStore = create<CartState>((set, get) => ({
       try {
         await axiosInstance.patch(`/cart/${cartItemId}/quantity`, { quantity: qty });
       } catch {
-        await axiosInstance.put(`/cart/${cartItemId}`, { quantity: qty });
+        const item = get().cart.find((i) => String(i.id) === String(cartItemId));
+        await axiosInstance.put(`/cart/${cartItemId}`, {
+          quantity: qty,
+          pack: item?.pack,
+          price: item?.price,
+        });
       }
     } catch (err) {
       console.error("updateQty failed:", err);
@@ -410,22 +426,26 @@ export const useCartStore = create<CartState>((set, get) => ({
     try {
       const guestCart = readPendingCart();
       if (!Array.isArray(guestCart) || guestCart.length === 0) {
-        // nothing to merge
         writePendingCart([]);
         return;
       }
 
-      await Promise.all(
+      const results = await Promise.allSettled(
         guestCart.map((item) => {
           const drinkId = item.drinkId ?? item.id ?? item.productId ?? null;
           const quantity = Number(item.qty ?? item.quantity ?? 1);
           const pack = item.pack ?? (Array.isArray(item.packs) && item.packs[0]?.pack) ?? 12;
           if (!drinkId) return Promise.resolve(null);
-          return axiosInstance.post("/cart", { drinkId, quantity, pack }).catch((e) => {
-            console.warn("merge guest item failed for", drinkId, e);
-          });
+          return axiosInstance.post("/cart", { drinkId, quantity, pack });
         })
       );
+
+      const failedCount = results.filter((r) => r.status === "rejected").length;
+      const succeededCount = results.filter((r) => r.status === "fulfilled" && r.value !== null).length;
+
+      if (failedCount > 0) {
+        toast.warning(`${succeededCount} item(s) merged, ${failedCount} failed — they may be unavailable`);
+      }
 
       writePendingCart([]);
       await get().fetchCart();
@@ -434,8 +454,15 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
-  switchToGuestCart: () => {
+  switchToGuestCart: async () => {
     try {
+      // Clear server cart for the logged-out user to avoid duplicates on re-login
+      try {
+        await axiosInstance.delete("/cart");
+      } catch {
+        // not authenticated or no server cart — fine
+      }
+
       const guestCart = readPendingCart();
       if (!guestCart || guestCart.length === 0) {
         set({ cart: [] });

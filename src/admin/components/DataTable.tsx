@@ -13,6 +13,7 @@ interface Column<T = Record<string, unknown>> {
   key: string;
   label: string;
   render?: (value: unknown, row: T) => ReactNode;
+  renderHeader?: () => ReactNode;
 }
 
 interface DataTableProps<T = Record<string, unknown>> {
@@ -27,12 +28,14 @@ export default function DataTable<T = Record<string, unknown>>({
   emptyMessage = "No data available",
 }: DataTableProps) {
   return (
-    <Card>
+    <Card className="shadow-sm border">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-muted/50">
             {columns.map((column) => (
-              <TableHead key={column.key}>{column.label}</TableHead>
+              <TableHead key={column.key} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {column.renderHeader ? column.renderHeader() : column.label}
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -41,14 +44,14 @@ export default function DataTable<T = Record<string, unknown>>({
             <TableRow>
               <TableCell
                 colSpan={columns.length}
-                className="text-center text-muted-foreground py-8"
+                className="text-center text-muted-foreground py-12"
               >
                 {emptyMessage}
               </TableCell>
             </TableRow>
           ) : (
             data.map((row, index) => (
-              <TableRow key={index} className="hover:bg-muted/50">
+              <TableRow key={index} className="hover:bg-muted/40 transition-colors">
                 {columns.map((column) => (
                   <TableCell key={column.key}>
                     {column.render

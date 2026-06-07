@@ -165,7 +165,7 @@ export default function Settings() {
 
         <div className="flex justify-end gap-3">
           <Button variant="outline">Cancel</Button>
-          <Button variant="bulk">Save Changes</Button>
+          <Button variant="default">Save Changes</Button>
         </div>
       </div>
     </AdminLayout>

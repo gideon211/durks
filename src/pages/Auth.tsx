@@ -1,6 +1,6 @@
-// src/pages/Auth.tsx
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -17,40 +17,27 @@ export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
   const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
-  // track active tab so we can animate titles/subtitles
   const [activeTab, setActiveTab] = useState<"signin" | "signup">(
     (location.state as { tab?: string })?.tab === "signup" ? "signup" : "signin",
   );
 
-  // prefill email on the sign-in form after successful signup
   const [prefillEmail, setPrefillEmail] = useState<string>(
     (location.state as { prefillEmail?: string })?.prefillEmail || "",
   );
 
-  // If the route state requested a specific tab (navigated from elsewhere), honour it once.
   useEffect(() => {
     const s = (location.state as { tab?: string; prefillEmail?: string }) || {};
     if (s.tab === "signup" || s.tab === "signin") setActiveTab(s.tab);
     if (s.prefillEmail) setPrefillEmail(s.prefillEmail);
-    // we intentionally do not clear location.state here; it's fine to let it be
   }, [location.state]);
 
-  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    const form = e.currentTarget;
-    const email = (form.elements.namedItem("signin-email") as HTMLInputElement)
-      .value;
-    const password = (
-      form.elements.namedItem("signin-password") as HTMLInputElement
-    ).value;
-
-    try {
-      const data = await signInUser({ email, password });
+  const signInMutation = useMutation({
+    mutationFn: ({ email, password }: { email: string; password: string; rememberMe: boolean }) => signInUser({ email, password }),
+    onSuccess: (data, variables) => {
       login({
         id: data.user?.id || "",
         username: data.user?.username || "",
@@ -60,50 +47,47 @@ export default function Auth() {
         role: data.role,
         token: data.token,
         refreshToken: data.refreshToken,
-      });
+      }, variables.rememberMe);
       toast.success("Welcome back!");
       navigate("/");
-    } catch (err: unknown) {
+    },
+    onError: (err: unknown) => {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
       toast.error(e.response?.data?.message || "Failed to sign in");
-    } finally {
-      setIsLoading(false);
-    }
+    },
+  });
+
+  const signUpMutation = useMutation({
+    mutationFn: ({ fullName, email, password, company }: { fullName: string; email: string; password: string; company: string }) =>
+      signUpUser({ fullName, email, password, company }),
+    onSuccess: (_data, variables) => {
+      toast.success("Account created! Please sign in to continue.");
+      setPrefillEmail(variables.email);
+      setActiveTab("signin");
+    },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(e.response?.data?.message || "Failed to create account");
+    },
+  });
+
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const email = (form.elements.namedItem("signin-email") as HTMLInputElement).value;
+    const password = (form.elements.namedItem("signin-password") as HTMLInputElement).value;
+    signInMutation.mutate({ email, password, rememberMe });
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
     const form = e.currentTarget;
-    const fullName = (
-      form.elements.namedItem("signup-name") as HTMLInputElement
-    ).value;
-    const email = (form.elements.namedItem("signup-email") as HTMLInputElement)
-      .value;
-    const password = (
-      form.elements.namedItem("signup-password") as HTMLInputElement
-    ).value;
-    const company =
-      (form.elements.namedItem("signup-company") as HTMLInputElement)?.value ||
-      "";
-
-    try {
-      const data = await signUpUser({ fullName, email, password, company });
-
-      // DO NOT auto-login. Instead:
-      toast.success("Account created! Please sign in to continue.");
-
-      // prefill the signin email and switch to the sign-in tab
-      setPrefillEmail(email);
-      setActiveTab("signin");
-
-      form.reset();
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } }; message?: string };
-      toast.error(e.response?.data?.message || "Failed to create account");
-    } finally {
-      setIsLoading(false);
-    }
+    const fullName = (form.elements.namedItem("signup-name") as HTMLInputElement).value;
+    const email = (form.elements.namedItem("signup-email") as HTMLInputElement).value;
+    const password = (form.elements.namedItem("signup-password") as HTMLInputElement).value;
+    const company = (form.elements.namedItem("signup-company") as HTMLInputElement)?.value || "";
+    signUpMutation.mutate({ fullName, email, password, company });
+    form.reset();
   };
 
   const containerVariants = {
@@ -128,10 +112,6 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-transparent via-transparent to-transparent">
-      {/* header optionally */}
-      {/* <Header /> */}
-
-      {/* Decorative background shapes */}
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
@@ -157,7 +137,6 @@ export default function Auth() {
       >
         <div className="w-full max-w-3xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            {/* Left: animated heading + microcopy */}
             <div className="flex flex-col gap-2">
               <motion.a
                 href="/"
@@ -290,7 +269,6 @@ export default function Auth() {
                 )}
               </AnimatePresence>
 
-              {/* subtle CTA / trustline */}
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -301,7 +279,6 @@ export default function Auth() {
               </motion.div>
             </div>
 
-            {/* Right: card with tabs & forms */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -329,7 +306,6 @@ export default function Auth() {
                 </TabsList>
 
                 <TabsContent value="signin">
-                  {/* Show a small success hint if we've arrived here after signup */}
                   {prefillEmail && activeTab === "signin" && (
                     <div className="mb-3 text-sm text-emerald-600">
                       Account created — please sign in using the email below.
@@ -373,7 +349,7 @@ export default function Auth() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <Checkbox id="remember" />
+                        <Checkbox id="remember" checked={rememberMe} onCheckedChange={(v) => setRememberMe(v === true)} />
                         <label
                           htmlFor="remember"
                           className="text-sm text-muted-foreground cursor-pointer"
@@ -381,8 +357,6 @@ export default function Auth() {
                           Remember me
                         </label>
                       </div>
-
-                      {/*<a className="text-sm text-primary hover:underline" href="/forgot-password">Forgot?</a>*/}
                     </div>
 
                     <div className="space-y-3">
@@ -393,9 +367,9 @@ export default function Auth() {
                         <Button
                           type="submit"
                           className="w-full p-6"
-                          disabled={isLoading}
+                          disabled={signInMutation.isPending}
                         >
-                          {isLoading ? "Logging in..." : "Log In"}
+                          {signInMutation.isPending ? "Logging in..." : "Log In"}
                         </Button>
                       </motion.div>
                     </div>
@@ -464,19 +438,11 @@ export default function Auth() {
                         <Button
                           type="submit"
                           className="w-full"
-                          disabled={isLoading}
+                          disabled={signUpMutation.isPending}
                         >
-                          {isLoading ? "Creating account..." : "Create Account"}
+                          {signUpMutation.isPending ? "Creating account..." : "Create Account"}
                         </Button>
                       </motion.div>
-
-                      {/*<div className="text-center text-xs text-muted-foreground">
-                        By creating an account you agree to our{" "}
-                        <a className="text-primary underline" href="/terms">
-                          Terms
-                        </a>
-                        .
-                      </div>*/}
 
                       <div className="mt-1 text-center">
                         <motion.span

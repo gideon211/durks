@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig(({ mode }) => ({
@@ -10,17 +9,14 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       "/api": {
-        target: "https://updated-duks-backend-1-0.onrender.com",
+        target: "http://localhost:5000",
         changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
   },
 
   plugins: [
     react(),
-    mode === "development" && componentTagger(),
 
     // PWA PLUGIN ADDED HERE
     VitePWA({

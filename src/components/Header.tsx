@@ -29,6 +29,33 @@ import { useCartStore } from "@/store/cartStore";
 import { useAuth } from "@/context/Authcontext";
 import Logo from "@/assets/logo.svg";
 
+const NavItem = ({
+  icon,
+  label,
+  to,
+  onClick,
+  color,
+  bgColor,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  to: string;
+  onClick: () => void;
+  color: string;
+  bgColor: string;
+}) => (
+  <Link
+    to={to}
+    onClick={onClick}
+    className="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-foreground/80 transition-all duration-200 hover:bg-muted/60 active:scale-[0.98]"
+  >
+    <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${bgColor} ${color} transition-transform duration-200 group-hover:scale-110`}>
+      {icon}
+    </span>
+    {label}
+  </Link>
+);
+
 const Header = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -98,7 +125,7 @@ const Header = () => {
       className={[
         "fixed top-0 z-50 w-full transition-all duration-500",
         scrolled
-          ? "bg-background/70 backdrop-blur-xl shadow-sm"
+          ? "bg-white shadow-sm"
           : "bg-transparent",
       ].join(" ")}
     >
@@ -183,7 +210,7 @@ const Header = () => {
 
                 {user.role === "admin" && (
                   <DropdownMenuItem
-                    onClick={() => navigate("/admin")}
+                    onClick={() => navigate("/admin/dashboard")}
                     className="cursor-pointer hover:bg-muted/70 transition-colors"
                   >
                     <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -229,145 +256,114 @@ const Header = () => {
 
             <SheetContent
               side="right"
-              className="w-[70vw] sm:w-[60vw] max-w-sm bg-card border-l border-border px-5 py-6 "
+              className="w-[80vw] sm:w-[60vw] max-w-sm bg-card border-l-0 px-0 py-0"
             >
-              <div className="flex flex-col gap-6 mt-4">
-                {/* Top area */}
-<div className="flex items-center justify-between">
-  <div className="flex flex-col">
-    <div className="font-heading text-xl font-semibold tracking-tight">Menu</div>
-    <div className="text-xs text-muted-foreground">Browse & manage your account</div>
-  </div>
-</div>
+              {/* Brand header */}
+              <div className="bg-gradient-to-br from-primary/20 via-primary/5 to-background px-6 pt-8 pb-6">
+                <div className="flex items-center justify-between mb-1">
+                  <img src={Logo} alt="Duks Juice" className="w-20 h-auto object-contain" />
+                </div>
+                <p className="text-xs text-muted-foreground/80 mt-1">Fresh. Natural. Delicious.</p>
+              </div>
 
-<div className="h-px w-full bg-border/70" />
-
-                {/* User info */}
-                {user ? (
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-base uppercase ring-1 ring-primary/20">
+              {/* User info */}
+              {user ? (
+                <div className="mx-4 mt-4 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/10 px-4 py-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm uppercase shadow-sm">
                     {userInitial}
-                    </div>
-                    <div className="flex flex-col gap-1 overflow-hidden">
-                      <div className="font-semibold truncate">{user.username}</div>
-                      <div className="text-xs text-muted-foreground truncate">{user.email}</div>
-                    </div>
                   </div>
-                ) : (
+                  <div className="flex flex-col gap-0 min-w-0">
+                    <div className="font-semibold text-sm truncate">{user.username}</div>
+                    <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mx-4 mt-4">
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant="default"
+                    size="md"
                     onClick={() => {
                       setIsMenuOpen(false);
                       navigate("/auth");
                     }}
+                    className="w-full rounded-full gap-2"
                   >
-                    <User className="h-4 w-4 mr-2" />
-                    Log In
+                    <User className="h-4 w-4" />
+                    Log In / Sign Up
                   </Button>
-                )}
+                </div>
+              )}
 
+              {/* Nav links */}
+              <nav className="flex-1 mx-4 mt-5 space-y-1" aria-label="Mobile navigation">
+                <NavItem
+                  icon={<Home className="h-4 w-4" />}
+                  label="Home"
+                  to="/"
+                  onClick={() => setIsMenuOpen(false)}
+                  color="text-fresh-lime"
+                  bgColor="bg-fresh-lime/10"
+                />
+                <NavItem
+                  icon={<ShoppingBag className="h-4 w-4" />}
+                  label="Shop"
+                  to="/products"
+                  onClick={() => setIsMenuOpen(false)}
+                  color="text-primary"
+                  bgColor="bg-primary/10"
+                />
+                <NavItem
+                  icon={<Phone className="h-4 w-4" />}
+                  label="Contact"
+                  to="/contact"
+                  onClick={() => setIsMenuOpen(false)}
+                  color="text-mango-orange"
+                  bgColor="bg-mango-orange/10"
+                />
 
-                {/* Mobile nav links */}
-                <nav className="flex flex-col gap-2" aria-label="Mobile navigation">
-
-                {/* Home */}
-                <Link
-                    to="/"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={[mobileLinkClass, "flex items-center gap-3"].join(" ")}
-                >
-                    <Home className="h-4 w-4 text-muted-foreground" />
-                    Home
-                </Link>
-
-                {/* Shop */}
-                <Link
-                    to="/products"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={[mobileLinkClass, "flex items-center gap-3"].join(" ")}
-                >
-                    <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-                    Shop
-                </Link>
-
-                {/* My Orders */}
                 {user && (
-                    <button
-                    onClick={() => {
-                        setIsMenuOpen(false);
-                        navigate("/orders");
-                    }}
-                    className={[
-                        mobileLinkClass,
-                        "text-left flex items-center gap-3",
-                    ].join(" ")}
-                    >
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                    My Orders
-                    </button>
+                  <NavItem
+                    icon={<Package className="h-4 w-4" />}
+                    label="My Orders"
+                    to="/orders"
+                    onClick={() => setIsMenuOpen(false)}
+                    color="text-ocean-teal"
+                    bgColor="bg-ocean-teal/10"
+                  />
                 )}
 
-
-                {/* Training Program */}
-                {/* <Link
-                to="/training"
-                onClick={() => setIsMenuOpen(false)}
-                className={[mobileLinkClass, "flex items-center gap-3"].join(" ")}
-                >
-                <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                Training Program
-                </Link> */}
-
-                {/* Contact */}
-                <Link
-                    to="/contact"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={[mobileLinkClass, "flex items-center gap-3"].join(" ")}
-                >
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    Contact
-                </Link>
-
-                {/* Admin */}
                 {user?.role === "admin" && (
-                    <Button
-                    
-                    onClick={() => {
-                        navigate("/admin");
-                        setIsMenuOpen(false);
-                    }}
-                    className="w-full mt-2 py-6 flex items-center gap-2"
-                    >
-                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-                    Admin Dashboard
-                    </Button>
+                  <NavItem
+                    icon={<LayoutDashboard className="h-4 w-4" />}
+                    label="Admin Dashboard"
+                    to="/admin/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
+                    color="text-tropical-pink"
+                    bgColor="bg-tropical-pink/10"
+                  />
                 )}
+              </nav>
 
-                {/* Logout */}
-                {user && (
-                    <button
+              {/* Spacer + Logout */}
+              <div className="mt-auto px-4 pb-8 pt-4 border-t border-border/60 mx-4">
+                {user ? (
+                  <button
                     onClick={handleLogout}
                     disabled={isLoggingOut}
-                    className={[
-                        "w-full text-left px-4 py-3 flex items-center gap-3 rounded-lg",
-                        "hover:bg-muted/70 transition-colors",
-                        "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                        "text-red-600",
-                    ].join(" ")}
-                    >
+                    className="w-full flex items-center justify-center gap-2 rounded-full border border-destructive/20 bg-destructive/5 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                  >
                     {isLoggingOut ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                        <LogOut className="h-4 w-4" />
+                      <LogOut className="h-4 w-4" />
                     )}
-                    <span className="text-sm">
-                        {isLoggingOut ? "Signing out..." : "Sign Out"}
-                    </span>
-                    </button>
+                    {isLoggingOut ? "Signing out..." : "Sign Out"}
+                  </button>
+                ) : (
+                  <p className="text-center text-xs text-muted-foreground">
+                    Fresh juice, delivered to your door
+                  </p>
                 )}
-
-                </nav>
               </div>
             </SheetContent>
           </Sheet>

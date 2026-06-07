@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Package, Loader2 } from "lucide-react";
@@ -24,72 +25,78 @@ interface Order {
   totalAmount: number;
   orderStatus: string;
   paymentStatus: string;
-  address:string;
-  city:string;
+  address: string;
+  city: string;
   createdAt: string;
   deliveryDate?: string | null;
   deliveryTime?: string | null;
 }
 
+function parseOrders(raw: unknown): Order[] {
+  const data = raw as { orders?: Record<string, unknown>[] };
+  return (data.orders || []).map((o: Record<string, unknown>) => ({
+    id: o._id as string,
+    items: Array.isArray(o.items)
+      ? (o.items as Record<string, unknown>[]).map((it: Record<string, unknown>) => ({
+          image: (it.image ?? it.imageUrl ?? null) as string | null,
+          name: (it.name ?? "Item") as string,
+          quantity: Number(it.quantity ?? it.qty ?? 1),
+          price: Number(it.price ?? 0),
+          pack: it.pack as string | undefined,
+          drinkId: it.drinkId ? String(it.drinkId) : undefined,
+        }))
+      : [],
+    totalAmount: Number(o.totalAmount ?? 0),
+    orderStatus: (o.orderStatus ?? "confirmed") as string,
+    paymentStatus: (o.paymentStatus ?? "pending") as string,
+    createdAt: (o.createdAt ?? new Date().toISOString()) as string,
+    deliveryDate: (o.deliveryDate ?? null) as string | null | undefined,
+    deliveryTime: (o.deliveryTime ?? null) as string | null | undefined,
+    address: ((o.customer as Record<string, unknown>)?.address ?? "No address provided") as string,
+    city: ((o.customer as Record<string, unknown>)?.city ?? "No city provided") as string,
+  }));
+}
+
 export default function Orders() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
 
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ["my-orders"],
+    queryFn: async () => {
+      const { data } = await axiosInstance.get("/orders/my-orders");
+      const parsed = parseOrders(data);
+      return parsed.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    },
+    enabled: !!user?.token && !authLoading,
+    retry: false,
+  });
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user?.token) return;
+  const cancelMutation = useMutation({
+    mutationFn: (orderId: string) => axiosInstance.put(`/orders/${orderId}/cancel`),
+    onMutate: async (orderId) => {
+      await queryClient.cancelQueries({ queryKey: ["my-orders"] });
+      const prev = queryClient.getQueryData<Order[]>(["my-orders"]);
+      queryClient.setQueryData<Order[]>(["my-orders"], (old) =>
+        old?.map((o) =>
+          o.id === orderId ? { ...o, orderStatus: "cancelled", paymentStatus: "refunded" } : o
+        )
+      );
+      return { prev };
+    },
+    onError: (_err, _orderId, context) => {
+      queryClient.setQueryData(["my-orders"], context?.prev);
+      toast.error("Failed to cancel order");
+    },
+    onSuccess: () => toast.success("Order cancelled"),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["my-orders"] }),
+  });
 
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const { data } = await axiosInstance.get("/orders/my-orders");
-
-        const parsed: Order[] = (data.orders || []).map((o: Record<string, unknown>) => ({
-          id: o._id as string,
-          items: Array.isArray(o.items)
-            ? (o.items as Record<string, unknown>[]).map((it: Record<string, unknown>) => ({
-                image: (it.image ?? it.imageUrl ?? null) as string | null,
-                name: (it.name ?? "Item") as string,
-                quantity: Number(it.quantity ?? it.qty ?? 1),
-                price: Number(it.price ?? 0),
-                pack: it.pack as string | undefined,
-                drinkId: it.drinkId ? String(it.drinkId) : undefined,
-              }))
-            : [],
-          totalAmount: Number(o.totalAmount ?? 0),
-          orderStatus: (o.orderStatus ?? "confirmed") as string,
-          paymentStatus: (o.paymentStatus ?? "pending") as string,
-          createdAt: (o.createdAt ?? new Date().toISOString()) as string,
-          deliveryDate: (o.deliveryDate ?? null) as string | null | undefined,
-          deliveryTime: (o.deliveryTime ?? null) as string | null | undefined,
-          address: ((o.customer as Record<string, unknown>)?.address ?? "No address provided") as string,
-          city: ((o.customer as Record<string, unknown>)?.city ?? "No city provided") as string,
-        }));
-
-        setOrders(
-          parsed.sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          )
-        );
-      } catch (err: unknown) {
-        const e = err as { response?: { status?: number } };
-        if (e?.response?.status === 401) {
-          toast.error("You are not authorized. Please sign in again.");
-          navigate("/auth");
-        } else {
-          toast.error("Failed to fetch your orders");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrders();
-  }, [authLoading, user?.token, navigate]);
+  const handleCancelOrder = (orderId: string) => {
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+    cancelMutation.mutate(orderId);
+  };
 
   const statusClass = (status: string) => {
     switch (status) {
@@ -104,26 +111,7 @@ export default function Orders() {
     }
   };
 
-  const handleCancelOrder = async (orderId: string) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
-
-    try {
-      setCancellingOrderId(orderId);
-      await axiosInstance.put(`/orders/${orderId}/cancel`);
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id === orderId ? { ...o, orderStatus: "cancelled", paymentStatus: "refunded" } : o
-        )
-      );
-      toast.success("Order cancelled");
-    } catch {
-      toast.error("Failed to cancel order");
-    } finally {
-      setCancellingOrderId(null);
-    }
-  };
-
-  const isBusy = authLoading || loading;
+  const isBusy = authLoading || isLoading;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -151,7 +139,6 @@ export default function Orders() {
                     </div>
                     <div className="w-1/3 text-right">
                       <div className="h-6 bg-slate-200 rounded inline-block ml-auto w-20" />
-                      <div className="h-8 bg-slate-200 rounded mt-3 w-full" />
                     </div>
                   </div>
                   <div className="mt-4 space-y-2">
@@ -195,47 +182,59 @@ export default function Orders() {
                     <p className="text-sm text-muted-foreground">{new Date(order.createdAt).toLocaleString()}</p>
 
                     {order.deliveryDate && (
-                      <p className="text-xs text-muted-foreground mt-1">Delivery: {new Date(order.deliveryDate).toLocaleDateString()}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Delivery: {new Date(order.deliveryDate).toLocaleDateString()}
+                      </p>
                     )}
 
-                    <p className="text-xs mt-1 font-medium">{order.items.length} item{order.items.length !== 1 ? "s" : ""}</p>
-                    <p className="text-xs"> Drop location: {order.address} - {order.city}</p>
-                    
+                    <p className="text-xs mt-1 font-medium">
+                      {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+                    </p>
+                    <p className="text-xs">
+                      Drop location: {order.address} - {order.city}
+                    </p>
                   </div>
 
                   <div className="text-right">
                     <p className={statusClass(order.orderStatus)}>{order.orderStatus.toUpperCase()}</p>
                     <p className="font-medium text-sm mt-2">₵{Number(order.totalAmount ?? 0).toFixed(2)}</p>
+                    {(order.orderStatus === "confirmed" || order.orderStatus === "pending") && (
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        className="mt-2 text-destructive border-destructive/40 hover:bg-destructive/10"
+                        onClick={() => handleCancelOrder(order.id)}
+                        disabled={cancelMutation.isPending}
+                      >
+                        {cancelMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Cancel"}
+                      </Button>
+                    )}
                   </div>
                 </div>
 
-                <div className={cn("mt-4")}> 
+                <div className={cn("mt-4")}>
                   <div className="space-y-3">
                     {order.items.map((item, index) => (
-                        <div
+                      <div
                         key={item.drinkId ?? `${order.id}-item-${index}`}
                         className="bg-gray-100 p-3 rounded-lg flex items-start gap-3"
-                        >
+                      >
                         <img
-                            src={item.image ?? "/placeholder.png"}
-                            alt={item.name}
-                            className="w-14 h-14 rounded object-cover"
+                          src={item.image ?? "/placeholder.png"}
+                          alt={item.name}
+                          className="w-14 h-14 rounded object-cover"
                         />
 
                         <div className="flex-1 flex flex-col">
-                            <p className="font-medium text-sm leading-tight">{item.name}</p>
+                          <p className="font-medium text-sm leading-tight">{item.name}</p>
 
-                            <ul className="text-xs text-gray-700 space-y-1 mt-1">
+                          <ul className="text-xs text-gray-700 space-y-1 mt-1">
                             {item.pack && <li>Pack: {item.pack}</li>}
                             <li>Quantity: {item.quantity}</li>
                             <li>Price: ₵{Number(item.price ?? 0).toFixed(2)}</li>
-                            </ul>
+                          </ul>
                         </div>
-                        </div>
-
-
-
-
+                      </div>
                     ))}
                   </div>
                 </div>
