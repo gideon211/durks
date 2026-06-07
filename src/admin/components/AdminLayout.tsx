@@ -12,13 +12,13 @@ import {
   History,
   Menu,
   X,
-  Bell,
   LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/context/Authcontext";
+import NotificationDropdown from "./NotificationDropdown";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -128,9 +128,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
 
           <div className="flex items-center gap-3 ml-auto">
-            <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5" />
-            </Button>
+            <NotificationDropdown />
 
             <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8">

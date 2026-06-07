@@ -184,7 +184,12 @@ export default function Checkout(): JSX.Element {
   ) => {
     const { name, value } = e.target;
     if (!name) return;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "phone") {
+      const digits = value.replace(/\D/g, "");
+      setFormData((prev) => ({ ...prev, phone: digits }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const generateOrderId = () =>
@@ -279,7 +284,7 @@ export default function Checkout(): JSX.Element {
           customer: {
             fullName: trimmedName,
             email: trimmedEmail,
-            phone: String(formData.phone || ""),
+            phone: "+233" + String(formData.phone || ""),
             address: trimmedAddress,
             city: trimmedCity,
             country: formData.country || "Ghana",
@@ -329,7 +334,7 @@ export default function Checkout(): JSX.Element {
       const customerObj = {
         fullName: trimmedName,
         email: trimmedEmail || user.email,
-        phone: String(formData.phone || ""),
+        phone: "+233" + String(formData.phone || ""),
         address: trimmedAddress,
         city: trimmedCity,
         country: formData.country || "Ghana",
@@ -460,15 +465,20 @@ export default function Checkout(): JSX.Element {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      required
-                      disabled={isProcessing}
-                      className="focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
-                    />
+                    <div className="flex rounded-none border border-input bg-background focus-within:ring-0">
+                      <span className="flex items-center pl-3 text-sm text-muted-foreground select-none border-r border-input pr-2">
+                        +233
+                      </span>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        required
+                        disabled={isProcessing}
+                        className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none shadow-none"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="city">City / Town</Label>
