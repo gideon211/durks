@@ -90,7 +90,7 @@ const DesktopCarousel: React.FC = () => {
       </AnimatePresence>
 
       {/* Keep your desktop overlay (optional) */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent" />
 
       {/* Use the same dot behavior as mobile (but positioned like your desktop) */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-10">
