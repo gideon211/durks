@@ -171,7 +171,7 @@ export default function Cart() {
     );
   }
 
-  const totalItems = cartItems.reduce((sum, item) => sum + (item.qty || 0), 0);
+  const totalItems = cartItems.length;
 
   return (
     <>
