@@ -276,28 +276,14 @@ export default function Products(): JSX.Element {
     return arr;
   }, [products]);
 
-  const getHeaderOffset = useCallback(() => {
-    const header = document.querySelector("header, #site-header, .site-header, [role='banner']") as HTMLElement | null;
-    const headerH = header ? header.getBoundingClientRect().height : 0;
-    const tabsStickyOffset = 64;
-    return headerH + tabsStickyOffset + 8;
-  }, []);
-
   const scrollToProductsTop = useCallback(() => {
     const el = productsTopRef.current;
     if (!el) return;
-
-    const doScroll = () => {
-      const offset = getHeaderOffset();
-      const rect = el.getBoundingClientRect();
-      const top = window.scrollY + rect.top - offset;
-      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
-    };
-
-    doScroll();
-    window.setTimeout(doScroll, 120);
-    window.setTimeout(doScroll, 260);
-  }, [getHeaderOffset]);
+    const offset = 80;
+    const rect = el.getBoundingClientRect();
+    const top = window.scrollY + rect.top - offset;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }, []);
 
   const centerActiveTab = useCallback((slug: string) => {
     const wrap = tabsWrapRef.current;
@@ -362,20 +348,13 @@ export default function Products(): JSX.Element {
   const handleCategoryChange = useCallback(
     (categorySlug: string) => {
       centerActiveTab(categorySlug);
+      scrollToProductsTop();
       const base = "/products";
       if (categorySlug === "all") router.replace(base);
       else router.replace(`${base}/${categorySlug}`);
     },
-    [router, centerActiveTab]
+    [router, centerActiveTab, scrollToProductsTop]
   );
-
-  const handleShopClick = useCallback(() => {
-    if (pathname.startsWith("/products")) {
-      router.replace("/products");
-      return;
-    }
-    router.push("/products");
-  }, [pathname, router]);
 
   const getKeyForProduct = (product: Product) => product._id ?? product.id ?? product.name;
 
@@ -431,7 +410,10 @@ export default function Products(): JSX.Element {
           </div>
         ) : visibleProducts.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">No products found in this category.</p>
+            <p className="text-muted-foreground text-lg mb-4">No products found in this category.</p>
+            <Button onClick={handleShopClick} variant="outline">
+              View All Products
+            </Button>
           </div>
         ) : (
           <>
