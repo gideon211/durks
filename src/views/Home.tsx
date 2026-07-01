@@ -252,7 +252,13 @@ export default function Home() {
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tight mb-4">
                 Why Choose Duks
               </h2>
-              <p className="text-base md:text-lg text-gray-500 max-w-lg mx-auto">
+              <img
+                src="/images/whychooseus.jpeg"
+                loading="lazy"
+                alt="Why choose Duks Juice"
+                className="w-full max-w-[240px] sm:max-w-xs md:max-w-sm mx-auto h-auto object-contain rounded-xl py-3 sm:py-4"
+              />
+              <p className="text-base md:text-lg text-gray-500 max-w-lg mx-auto mt-2">
                 Every bottle is a commitment to your health and our planet
               </p>
             </motion.div>
