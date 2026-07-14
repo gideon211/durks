@@ -38,6 +38,10 @@ interface Calendar24Props {
   time?: string;
   onDateChange?: (date: Date) => void;
   onTimeChange?: (time: string) => void;
+  errorDate?: string;
+  errorTime?: string;
+  touchedDate?: boolean;
+  touchedTime?: boolean;
 }
 
 function Calendar24({
@@ -45,6 +49,10 @@ function Calendar24({
   time: propTime,
   onDateChange,
   onTimeChange,
+  errorDate,
+  errorTime,
+  touchedDate,
+  touchedTime,
 }: Calendar24Props) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(propDate);
@@ -55,7 +63,7 @@ function Calendar24({
 
   return (
     <div className="flex gap-4 mt-4">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3" data-error={errorDate && touchedDate ? "true" : undefined}>
         <Label htmlFor="date-picker" className="px-1">
           Date
         </Label>
@@ -64,7 +72,7 @@ function Calendar24({
             <Button
               variant="outline"
               id="date-picker"
-              className="w-32 justify-between font-normal h-12"
+              className={`w-32 justify-between font-normal h-12 ${touchedDate && errorDate ? "border-red-400" : ""}`}
             >
               {date ? date.toLocaleDateString() : "Select date"}
               <ChevronDownIcon />
@@ -83,9 +91,10 @@ function Calendar24({
             />
           </PopoverContent>
         </Popover>
+        <FieldError error={errorDate} touched={touchedDate} />
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3" data-error={errorTime && touchedTime ? "true" : undefined}>
         <Label htmlFor="time-picker" className="px-1">
           Time
         </Label>
@@ -98,10 +107,21 @@ function Calendar24({
             setTime(e.target.value);
             onTimeChange?.(e.target.value);
           }}
-          className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
+          className={`bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none ${touchedTime && errorTime ? "border-red-400" : ""}`}
         />
+        <FieldError error={errorTime} touched={touchedTime} />
       </div>
     </div>
+  );
+}
+
+function FieldError({ error, touched }: { error?: string; touched?: boolean }) {
+  if (!error || !touched) return null;
+  return (
+    <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1">
+      <span className="inline-block w-1 h-1 rounded-full bg-red-500 shrink-0" />
+      {error}
+    </p>
   );
 }
 
@@ -148,6 +168,21 @@ function CheckoutStepper({ currentStep }: { currentStep: number }) {
   );
 }
 
+type FormErrors = Partial<Record<keyof typeof INITIAL_FORM, string>>;
+
+const INITIAL_FORM = {
+  fullName: "",
+  email: "",
+  phone: "",
+  address: "",
+  city: "",
+  country: "Ghana",
+  orderType: "delivery",
+  paymentMethod: "card",
+  deliveryDate: undefined as Date | undefined,
+  deliveryTime: "",
+};
+
 export default function Checkout(): JSX.Element {
   const { user } = useAuth();
   const router = useRouter();
@@ -162,18 +197,45 @@ export default function Checkout(): JSX.Element {
   const [isRedirectModalOpen, setIsRedirectModalOpen] = useState(false);
   const [showAllItems, setShowAllItems] = useState(false);
 
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    country: "Ghana",
-    orderType: "delivery",
-    paymentMethod: "card",
-    deliveryDate: undefined as Date | undefined,
-    deliveryTime: "",
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [touched, setTouched] = useState<Partial<Record<keyof typeof INITIAL_FORM, boolean>>>({});
+
+  const validate = useMemo(() => {
+    return (data: typeof INITIAL_FORM): FormErrors => {
+      const errs: FormErrors = {};
+      const name = String(data.fullName || "").trim();
+      const email = String(data.email || "").trim();
+      const phone = String(data.phone || "").trim();
+      const address = String(data.address || "").trim();
+      const city = String(data.city || "").trim();
+
+      if (!name) errs.fullName = "Full name is required";
+      if (!email) errs.email = "Email is required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Enter a valid email address";
+      if (!phone) errs.phone = "Phone number is required";
+      else if (!/^\d{9,10}$/.test(phone)) errs.phone = "Enter a valid phone number (9-10 digits)";
+      if (!address) errs.address = "Delivery address is required";
+      if (!city) errs.city = "City / Town is required";
+      if (data.orderType === "delivery") {
+        if (!data.deliveryDate) errs.deliveryDate = "Please select a delivery date";
+        if (!data.deliveryTime) errs.deliveryTime = "Please select a delivery time";
+      }
+      return errs;
+    };
+  }, []);
+
+  const clearError = (name: string) => {
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[name as keyof FormErrors];
+      return next;
+    });
+  };
+
+  const markTouched = (name: string) => {
+    setTouched((prev) => ({ ...prev, [name]: true }));
+  };
 
   useEffect(() => {
     if (cart.length === 0) router.push("/cart");
@@ -187,12 +249,22 @@ export default function Checkout(): JSX.Element {
   ) => {
     const { name, value } = e.target;
     if (!name) return;
+    clearError(name);
     if (name === "phone") {
       const digits = value.replace(/\D/g, "");
       setFormData((prev) => ({ ...prev, phone: digits }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name } = e.target;
+    if (!name) return;
+    markTouched(name);
+    setErrors(validate(formData));
   };
 
   const generateOrderId = () =>
@@ -226,26 +298,24 @@ export default function Checkout(): JSX.Element {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const trimmedCity = String(formData.city || "").trim();
-    const trimmedName = String(formData.fullName || "").trim();
-    const trimmedEmail = String(formData.email || "").trim();
-    const trimmedAddress = String(formData.address || "").trim();
+    const validationErrors = validate(formData);
+    setErrors(validationErrors);
+    setTouched({
+      fullName: true, email: true, phone: true,
+      address: true, city: true,
+      deliveryDate: true, deliveryTime: true,
+    });
 
-    if (!trimmedName || !trimmedEmail || !trimmedAddress || !trimmedCity) {
-      toast.error("Please fill all required fields");
+    if (Object.keys(validationErrors).length > 0) {
+      const firstError = document.querySelector("[data-error]");
+      firstError?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
-    if (formData.orderType === "delivery") {
-      if (!formData.deliveryDate) {
-        toast.error("Please select a delivery date");
-        return;
-      }
-      if (!formData.deliveryTime) {
-        toast.error("Please select a delivery time");
-        return;
-      }
-    }
+    const trimmedName = String(formData.fullName || "").trim();
+    const trimmedEmail = String(formData.email || "").trim();
+    const trimmedAddress = String(formData.address || "").trim();
+    const trimmedCity = String(formData.city || "").trim();
 
     try {
       setIsProcessing(true);
@@ -586,19 +656,21 @@ export default function Checkout(): JSX.Element {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2" data-error={errors.fullName ? "true" : undefined}>
                     <Label htmlFor="fullName">Full Name</Label>
                     <Input
                       id="fullName"
                       name="fullName"
                       value={formData.fullName}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       required
                       disabled={isProcessing}
-                      className="focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
+                      className={`focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none ${touched.fullName && errors.fullName ? "border-red-400" : ""}`}
                     />
+                    <FieldError error={errors.fullName} touched={touched.fullName} />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2" data-error={errors.email ? "true" : undefined}>
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
@@ -606,14 +678,16 @@ export default function Checkout(): JSX.Element {
                       type="email"
                       value={formData.email}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       required
                       disabled={isProcessing}
-                      className="focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
+                      className={`focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none ${touched.email && errors.email ? "border-red-400" : ""}`}
                     />
+                    <FieldError error={errors.email} touched={touched.email} />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2" data-error={errors.phone ? "true" : undefined}>
                     <Label htmlFor="phone">Phone</Label>
-                    <div className="flex rounded-none border border-input bg-background focus-within:ring-0">
+                    <div className={`flex rounded-none border ${touched.phone && errors.phone ? "border-red-400" : "border-input"} bg-background focus-within:ring-0`}>
                       <span className="flex items-center pl-3 text-sm text-muted-foreground select-none border-r border-input pr-2">
                         +233
                       </span>
@@ -622,28 +696,32 @@ export default function Checkout(): JSX.Element {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         required
                         disabled={isProcessing}
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none shadow-none"
                       />
                     </div>
+                    <FieldError error={errors.phone} touched={touched.phone} />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2" data-error={errors.city ? "true" : undefined}>
                     <Label htmlFor="city">City / Town</Label>
                     <Input
                       id="city"
                       name="city"
                       value={formData.city}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       placeholder="Accra"
                       required
                       disabled={isProcessing}
-                      className="focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
+                      className={`focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none ${touched.city && errors.city ? "border-red-400" : ""}`}
                     />
+                    <FieldError error={errors.city} touched={touched.city} />
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2" data-error={errors.address ? "true" : undefined}>
                   <Label htmlFor="address">Delivery Address</Label>
                   <Input
                     id="address"
@@ -651,10 +729,12 @@ export default function Checkout(): JSX.Element {
                     placeholder="Street, landmark, digital address"
                     value={formData.address}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     required
                     disabled={isProcessing}
-                    className="focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
+                    className={`focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none ${touched.address && errors.address ? "border-red-400" : ""}`}
                   />
+                  <FieldError error={errors.address} touched={touched.address} />
                 </div>
               </CardContent>
             </Card>
@@ -673,12 +753,20 @@ export default function Checkout(): JSX.Element {
                 <Calendar24
                   date={formData.deliveryDate}
                   time={formData.deliveryTime}
-                  onDateChange={(date) =>
-                    setFormData((p) => ({ ...p, deliveryDate: date }))
-                  }
-                  onTimeChange={(time) =>
-                    setFormData((p) => ({ ...p, deliveryTime: time }))
-                  }
+                  onDateChange={(date) => {
+                    setFormData((p) => ({ ...p, deliveryDate: date }));
+                    clearError("deliveryDate");
+                    markTouched("deliveryDate");
+                  }}
+                  onTimeChange={(time) => {
+                    setFormData((p) => ({ ...p, deliveryTime: time }));
+                    clearError("deliveryTime");
+                    markTouched("deliveryTime");
+                  }}
+                  errorDate={errors.deliveryDate}
+                  errorTime={errors.deliveryTime}
+                  touchedDate={touched.deliveryDate}
+                  touchedTime={touched.deliveryTime}
                 />
               </CardContent>
             </Card>
