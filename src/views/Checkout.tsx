@@ -83,6 +83,7 @@ function Calendar24({
               mode="single"
               selected={date}
               captionLayout="dropdown"
+              disabled={{ before: new Date(new Date().setHours(0, 0, 0, 0)) }}
               onSelect={(selectedDate) => {
                 setDate(selectedDate);
                 onDateChange?.(selectedDate);
