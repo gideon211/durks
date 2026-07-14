@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import AdminLayout from "@/admin/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ShimmerBar } from "@/components/ui/shimmer-bar";
 import {
   BarChart,
   Bar,
@@ -81,8 +81,8 @@ export default function Analytics() {
             <CardContent className="p-4 sm:p-6">
               {loading ? (
                 <>
-                  <Skeleton className="h-3 w-24 mb-2" />
-                  <Skeleton className="h-6 w-28" />
+                  <ShimmerBar className="h-3 w-24 mb-2" />
+                  <ShimmerBar className="h-6 w-28" />
                 </>
               ) : (
                 <>
@@ -96,8 +96,8 @@ export default function Analytics() {
             <CardContent className="p-4 sm:p-6">
               {loading ? (
                 <>
-                  <Skeleton className="h-3 w-24 mb-2" />
-                  <Skeleton className="h-6 w-20" />
+                  <ShimmerBar className="h-3 w-24 mb-2" />
+                  <ShimmerBar className="h-6 w-20" />
                 </>
               ) : (
                 <>
@@ -111,8 +111,8 @@ export default function Analytics() {
             <CardContent className="p-4 sm:p-6">
               {loading ? (
                 <>
-                  <Skeleton className="h-3 w-24 mb-2" />
-                  <Skeleton className="h-6 w-20" />
+                  <ShimmerBar className="h-3 w-24 mb-2" />
+                  <ShimmerBar className="h-6 w-20" />
                 </>
               ) : (
                 <>
@@ -126,8 +126,8 @@ export default function Analytics() {
             <CardContent className="p-4 sm:p-6">
               {loading ? (
                 <>
-                  <Skeleton className="h-3 w-24 mb-2" />
-                  <Skeleton className="h-6 w-20" />
+                  <ShimmerBar className="h-3 w-24 mb-2" />
+                  <ShimmerBar className="h-6 w-20" />
                 </>
               ) : (
                 <>
@@ -145,7 +145,7 @@ export default function Analytics() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Skeleton className="h-[300px] w-full rounded-lg" />
+              <ShimmerBar className="h-[300px] w-full rounded-lg" />
             ) : (
               <div style={{ width: "100%", height: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -170,7 +170,7 @@ export default function Analytics() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <Skeleton className="h-[260px] w-full rounded-lg" />
+                <ShimmerBar className="h-[260px] w-full rounded-lg" />
               ) : (
                 <div style={{ width: "100%", height: 260 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -197,13 +197,13 @@ export default function Analytics() {
                   {Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className="flex items-center justify-between p-3">
                       <div className="flex items-center gap-3">
-                        <Skeleton className="w-8 h-8 rounded-full" />
+                        <ShimmerBar className="w-8 h-8 rounded-full" />
                         <div>
-                          <Skeleton className="h-4 w-28 mb-1" />
-                          <Skeleton className="h-3 w-16" />
+                          <ShimmerBar className="h-4 w-28 mb-1" />
+                          <ShimmerBar className="h-3 w-16" />
                         </div>
                       </div>
-                      <Skeleton className="h-4 w-20" />
+                      <ShimmerBar className="h-4 w-20" />
                     </div>
                   ))}
                 </div>

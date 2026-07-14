@@ -4,6 +4,8 @@ import AdminLayout from "@/admin/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Grid3x3, List, Edit2, Trash2, ImageIcon, Loader2 } from "lucide-react";
+import { ShimmerBar } from "@/components/ui/shimmer-bar";
+import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -313,10 +315,10 @@ export default function Products() {
         {loading && (
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="rounded-2xl bg-white border border-border/50 p-4">
-                <div className="aspect-square bg-muted rounded-xl mb-4 animate-pulse" />
-                <div className="h-4 bg-muted rounded-lg animate-pulse mb-2 w-3/4" />
-                <div className="h-3 bg-muted rounded-lg animate-pulse w-1/2" />
+              <div key={i} className="bg-muted/10 rounded-xl p-4">
+                <ShimmerBar className="aspect-square rounded-xl mb-4" />
+                <ShimmerBar className="h-4 rounded-lg mb-2 w-3/4" />
+                <ShimmerBar className="h-3 rounded-lg w-1/2" />
               </div>
             ))}
           </div>
@@ -414,8 +416,9 @@ export default function Products() {
 
         {/* List view */}
         {viewMode === "list" && filteredProducts.length > 0 && (
-          <div className="rounded-2xl bg-white border border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="rounded-2xl bg-white border border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[500px] md:min-w-0">
               <thead>
                 <tr className="border-b border-border/40 bg-muted/30">
                   <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3">Product</th>
@@ -467,11 +470,12 @@ export default function Products() {
                         <Button variant="ghost" size="sm" onClick={() => handleDelete(product.id)} className="h-8 w-8 p-0 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" /></Button>
                       </div>
                     </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </tr>
+              ))}
+                </tbody>
+              </table>
+            </div>
+            </div>
         )}
 
         {/* Add/Edit Modal */}

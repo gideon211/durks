@@ -5,7 +5,7 @@ import AdminLayout from "@/admin/components/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ShimmerBar } from "@/components/ui/shimmer-bar";
 import {
   Select,
   SelectContent,
@@ -259,13 +259,11 @@ export default function ActivityLog() {
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i} className="shadow-sm">
-                <CardContent className="p-5">
-                  <Skeleton className="h-4 w-24 mb-3" />
-                  <Skeleton className="h-8 w-16 mb-2" />
-                  <Skeleton className="h-3 w-20" />
-                </CardContent>
-              </Card>
+              <div key={i} className="bg-muted/10 rounded-xl p-4 md:p-5">
+                <ShimmerBar className="h-4 w-3/4 mb-3" />
+                <ShimmerBar className="h-8 w-1/2 mb-2" />
+                <ShimmerBar className="h-3 w-2/3" />
+              </div>
             ))}
           </div>
         )}
@@ -331,14 +329,14 @@ export default function ActivityLog() {
         </Card>
 
         {loading ? (
-          <div className="rounded-lg border bg-card shadow-sm p-4 space-y-4">
+          <div className="bg-muted/10 rounded-xl p-4 space-y-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <Skeleton className="h-8 w-8 rounded-full" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-36" />
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-48 flex-1" />
+              <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <ShimmerBar className="h-8 w-8 rounded-full shrink-0" />
+                <ShimmerBar className="h-4 w-full sm:w-20" />
+                <ShimmerBar className="h-4 w-full sm:w-36" />
+                <ShimmerBar className="h-4 w-full sm:w-24" />
+                <ShimmerBar className="h-4 w-full sm:w-48" />
               </div>
             ))}
           </div>

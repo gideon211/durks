@@ -30,7 +30,8 @@ export default function DataTable<T = Record<string, unknown>>({
 }: DataTableProps<T>) {
   return (
     <div className="rounded-2xl bg-white border border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-      <Table>
+      <div className="overflow-x-auto">
+      <Table className="min-w-[600px] md:min-w-0">
         <TableHeader>
           <TableRow className="border-b border-border/40 bg-muted/30">
             {columns.map((column) => (
@@ -68,6 +69,7 @@ export default function DataTable<T = Record<string, unknown>>({
           )}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

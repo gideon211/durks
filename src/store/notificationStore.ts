@@ -16,6 +16,8 @@ interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
   loading: boolean;
+  connect: (token: string) => void;
+  disconnect: () => void;
   fetchNotifications: () => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
@@ -25,6 +27,9 @@ export const useNotificationStore = create<NotificationState>((set) => ({
   notifications: [],
   unreadCount: 0,
   loading: false,
+
+  connect: () => {},
+  disconnect: () => {},
 
   fetchNotifications: async () => {
     set({ loading: true });

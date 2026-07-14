@@ -6,7 +6,7 @@ import StatCard from "@/admin/components/StatCard";
 import DataTable from "@/admin/components/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ShimmerBar } from "@/components/ui/shimmer-bar";
 import {
   ShoppingCart,
   Clock,
@@ -155,17 +155,17 @@ export default function Dashboard() {
         </div>
 
         {/* Stat cards */}
-        {loading ? (
-          <div className="grid grid-cols-2 gap-4 lg:gap-5 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-2xl bg-white border border-border/50 p-6">
-                <Skeleton className="h-3 w-20 mb-3" />
-                <Skeleton className="h-8 w-24 mb-3" />
-                <Skeleton className="h-3 w-16" />
-              </div>
-            ))}
-          </div>
-        ) : (
+          {loading ? (
+            <div className="grid grid-cols-2 gap-4 lg:gap-5 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-muted/10 rounded-xl p-5 md:p-6">
+                  <ShimmerBar className="h-3 w-3/4 mb-3" />
+                  <ShimmerBar className="h-8 w-1/2 mb-3" />
+                  <ShimmerBar className="h-3 w-2/3" />
+                </div>
+              ))}
+            </div>
+          ) : (
           <div className="grid grid-cols-2 gap-4 lg:gap-5 lg:grid-cols-4">
             <StatCard title="Total Orders" value={stats.totalOrders} change={`+${stats.recentOrders} this week`} changeType="positive" icon={ShoppingCart} color="text-blue-500" />
             <StatCard title="Pending" value={stats.pendingOrders} change="Awaiting fulfillment" changeType="neutral" icon={Clock} color="text-amber-500" />
@@ -190,7 +190,7 @@ export default function Dashboard() {
               </div>
             </div>
             {loading ? (
-              <Skeleton className="h-[220px] w-full rounded-xl" />
+              <ShimmerBar className="h-[220px] w-full rounded-xl" />
             ) : (
               <div className="h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -221,7 +221,7 @@ export default function Dashboard() {
               </div>
             </div>
             {loading ? (
-              <Skeleton className="h-[220px] w-full rounded-xl" />
+              <ShimmerBar className="h-[220px] w-full rounded-xl" />
             ) : (
               <div className="h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -248,11 +248,11 @@ export default function Dashboard() {
             )}
             {/* Legend */}
             {!loading && categoryData.length > 0 && (
-              <div className="flex flex-wrap gap-3 mt-2">
+              <div className="flex flex-wrap gap-x-2.5 gap-y-1.5 mt-3 overflow-hidden">
                 {categoryData.slice(0, 5).map((cat, i) => (
                   <div key={cat.name} className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
-                    <span className="text-[11px] text-muted-foreground">{cat.name}</span>
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                    <span className="text-[11px] text-muted-foreground truncate max-w-24">{cat.name}</span>
                   </div>
                 ))}
               </div>
@@ -273,15 +273,15 @@ export default function Dashboard() {
             </Button>
           </div>
           {loading ? (
-            <div className="rounded-2xl bg-white border border-border/50 p-6 space-y-4">
+            <div className="bg-muted/10 rounded-xl p-4 space-y-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                  <Skeleton className="h-6 w-16 rounded-full" />
+                <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <ShimmerBar className="h-4 w-full sm:w-20" />
+                  <ShimmerBar className="h-4 w-full sm:w-28" />
+                  <ShimmerBar className="h-4 w-full sm:w-32" />
+                  <ShimmerBar className="h-4 w-full sm:w-16" />
+                  <ShimmerBar className="h-6 w-full sm:w-16 rounded-full" />
+                  <ShimmerBar className="h-6 w-full sm:w-16 rounded-full" />
                 </div>
               ))}
             </div>

@@ -6,7 +6,7 @@ import AdminLayout from "@/admin/components/AdminLayout";
 import DataTable from "@/admin/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ShimmerBar } from "@/components/ui/shimmer-bar";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -102,10 +102,10 @@ export default function Customers() {
     {
       key: "actions", label: "Actions",
       render: (_: unknown, row: Customer) => (
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/orders?search=${encodeURIComponent(row.email)}`)}><Eye className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm" onClick={() => window.open(`mailto:${row.email}`)}><Mail className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(row)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/orders?search=${encodeURIComponent(row.email)}`)} className="h-8 w-8 p-0 rounded-lg"><Eye className="h-3.5 w-3.5" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => window.open(`mailto:${row.email}`)} className="h-8 w-8 p-0 rounded-lg"><Mail className="h-3.5 w-3.5" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(row)} className="h-8 w-8 p-0 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" /></Button>
         </div>
       ),
     },
@@ -136,17 +136,17 @@ export default function Customers() {
         )}
 
         {loading ? (
-          <div className="rounded-lg border bg-card shadow-sm p-4 space-y-4">
+          <div className="bg-muted/10 rounded-xl p-4 space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <Skeleton className="h-4 w-4 rounded" />
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-12" />
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-8 w-16" />
+              <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <ShimmerBar className="h-4 w-4 rounded shrink-0" />
+                <ShimmerBar className="h-4 w-full sm:w-28" />
+                <ShimmerBar className="h-4 w-full sm:w-40" />
+                <ShimmerBar className="h-4 w-full sm:w-32" />
+                <ShimmerBar className="h-4 w-full sm:w-20" />
+                <ShimmerBar className="h-4 w-full sm:w-12" />
+                <ShimmerBar className="h-4 w-full sm:w-24" />
+                <ShimmerBar className="h-8 w-full sm:w-16" />
               </div>
             ))}
           </div>

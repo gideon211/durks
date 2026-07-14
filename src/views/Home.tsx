@@ -239,7 +239,7 @@ export default function Home() {
         </div>
 
         {/* ─── Why Choose Duks ─── */}
-        <section className="py-20 md:py-28">
+        <section className="py-20 md:py-28 bg-[#f8fafc]">
           <div className="container mx-auto px-4 sm:px-6">
             <motion.div
               className="text-center mb-12 md:mb-16"
@@ -269,27 +269,18 @@ export default function Home() {
                   icon: Leaf,
                   title: "Pure & Clean",
                   text: "No added sugar, preservatives, or artificial colors. Juices are bottled as juiced — nothing hidden.",
-                  accent: "from-green-500 to-emerald-500",
-                  bg: "bg-green-50",
-                  border: "border-green-200/70",
                   iconColor: "text-green-600",
                 },
                 {
                   icon: Sparkles,
                   title: "Maximum Nutrition",
                   text: "Cold-press technology preserves maximum vitamins, minerals, and enzymes in every bottle.",
-                  accent: "from-amber-400 to-orange-500",
-                  bg: "bg-amber-50",
-                  border: "border-amber-200/70",
                   iconColor: "text-amber-600",
                 },
                 {
                   icon: Heart,
                   title: "Expertly Blended",
                   text: "Our master blenders create flavor combinations that excite your taste buds while nourishing your body.",
-                  accent: "from-rose-400 to-pink-500",
-                  bg: "bg-rose-50",
-                  border: "border-rose-200/70",
                   iconColor: "text-rose-600",
                 },
               ].map((item, index) => (
@@ -299,20 +290,14 @@ export default function Home() {
                   whileInView="visible"
                   viewport={sectionViewport}
                   variants={fadeUp(15 + index * 80)}
-                  className="group relative"
+                  className="group"
                 >
-                  {/* Double-bezel: outer shell with colored border */}
-                  <div className={`rounded-[1.5rem] bg-gray-50/80 border ${item.border} p-1.5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:shadow-lg`}>
-                    {/* Inner core */}
-                    <div className="rounded-[1.125rem] bg-white p-6 sm:p-7 h-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
-                      <div className={`w-12 h-12 rounded-2xl ${item.bg} flex items-center justify-center mb-5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:rotate-3`}>
-                        <item.icon className={`w-5 h-5 ${item.iconColor}`} />
-                      </div>
-                      <h3 className="text-lg font-bold tracking-tight mb-2.5 text-gray-900">{item.title}</h3>
-                      <p className="text-sm text-gray-500 leading-relaxed">{item.text}</p>
-                      {/* Accent line */}
-                      <div className={`mt-5 h-0.5 w-8 rounded-full bg-gradient-to-r ${item.accent} transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-16`} />
+                  <div className="h-full rounded-xl border border-gray-100 bg-white p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+                    <div className="mb-5">
+                      <item.icon className={`w-6 h-6 ${item.iconColor}`} />
                     </div>
+                    <h3 className="text-base font-semibold tracking-tight mb-2 text-gray-900">{item.title}</h3>
+                    <p className="text-sm text-gray-500 leading-relaxed">{item.text}</p>
                   </div>
                 </motion.div>
               ))}

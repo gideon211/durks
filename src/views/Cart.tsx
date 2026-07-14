@@ -207,7 +207,10 @@ export default function Cart() {
                     animate={{ opacity: 1, y: 0 }}
                     className="rounded-xl border border-border/50 bg-card shadow-sm px-4 py-3 flex items-center gap-4"
                   >
-                    <div className="w-24 self-stretch overflow-hidden flex-shrink-0 bg-muted">
+                    <div
+                      onClick={() => router.push(`/products?product=${encodeURIComponent(item.name ?? "")}`)}
+                      className="w-24 self-stretch overflow-hidden flex-shrink-0 bg-muted cursor-pointer"
+                    >
                       <img
                         loading="lazy"
                         src={item.image || ""}
@@ -223,7 +226,10 @@ export default function Cart() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <h3 className="font-heading font-semibold text-sm truncate">
+                          <h3
+                            onClick={() => router.push(`/products?product=${encodeURIComponent(item.name ?? "")}`)}
+                            className="font-heading font-semibold text-sm truncate cursor-pointer hover:text-primary transition-colors"
+                          >
                             {item.name}
                           </h3>
                           <p className="text-xs text-muted-foreground mt-0.5">

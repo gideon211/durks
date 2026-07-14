@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Filter, Eye, Package, X, Loader2, Trash2 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ShimmerBar } from "@/components/ui/shimmer-bar";
 import axiosInstance from "@/api/axios";
 import { toast } from "sonner";
 import {
@@ -383,17 +383,17 @@ export default function OrdersAdminPage() {
 
         {/* Table */}
         {loading ? (
-          <div className="rounded-2xl bg-white border border-border/50 p-6 space-y-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-4 w-12" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-6 w-16 rounded-full" />
-                <Skeleton className="h-6 w-16 rounded-full" />
-                <Skeleton className="h-4 w-20" />
+            <div className="bg-muted/10 rounded-xl p-4 space-y-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <ShimmerBar className="h-4 w-full sm:w-20" />
+                <ShimmerBar className="h-4 w-full sm:w-28" />
+                <ShimmerBar className="h-4 w-full sm:w-40" />
+                <ShimmerBar className="h-4 w-full sm:w-12" />
+                <ShimmerBar className="h-4 w-full sm:w-20" />
+                <ShimmerBar className="h-6 w-full sm:w-16 rounded-full" />
+                <ShimmerBar className="h-6 w-full sm:w-16 rounded-full" />
+                <ShimmerBar className="h-4 w-full sm:w-20" />
               </div>
             ))}
           </div>
@@ -427,7 +427,7 @@ export default function OrdersAdminPage() {
             </div>
 
             <div className="px-6 py-5 space-y-5">
-              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Customer</p>
                   <p className="text-sm font-medium mt-1">{selectedOrder?.customer?.fullName ?? selectedOrder?.customer?.email ?? "\u2014"}</p>

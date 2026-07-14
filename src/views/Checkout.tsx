@@ -427,9 +427,94 @@ export default function Checkout(): JSX.Element {
         <CheckoutStepper currentStep={1} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="flex justify-center lg:items-start lg:order-2">
+            <Card className="w-full max-w-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <ShoppingBag className="h-5 w-5 text-primary" />
+                  Order Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  {validCartItems.slice(0, 3).map((item, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => router.push(`/products?product=${encodeURIComponent(item.name)}`)}
+                      className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 rounded-lg transition-colors p-1 -mx-1"
+                    >
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        <img
+                          src={item.image || ""}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate">
+                          {item.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Qty: {item.quantity} × ₵{item.price.toFixed(2)}
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold">
+                        ₵{item.total.toFixed(2)}
+                      </p>
+                    </div>
+                  ))}
+                  {validCartItems.length > 3 && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      +{validCartItems.length - 3} more{" "}
+                      {validCartItems.length - 3 === 1 ? "item" : "items"}
+                    </p>
+                  )}
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="font-semibold">
+                      ₵{itemsTotal.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Shipping</span>
+                    <span className="font-medium text-xs text-accent">
+                      Calculated at delivery
+                    </span>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="flex justify-between">
+                  <span className="font-heading font-bold text-base">
+                    Total
+                  </span>
+                  <span className="font-heading font-bold text-base">
+                    ₵{finalTotal.toFixed(2)}
+                  </span>
+                </div>
+
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-xs text-muted-foreground flex items-center gap-2">
+                    <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                    Delivering to{" "}
+                    <span className="font-semibold text-foreground">
+                      {formData.city || "your area"}
+                    </span>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           <form
             onSubmit={handleSubmit}
-            className="lg:col-span-2 space-y-6"
+            className="lg:col-span-2 space-y-6 lg:order-1"
           >
             <Card>
               <CardHeader>
@@ -537,8 +622,6 @@ export default function Checkout(): JSX.Element {
               </CardContent>
             </Card>
 
-
-
             <Button
               type="submit"
               size="lg"
@@ -555,90 +638,6 @@ export default function Checkout(): JSX.Element {
               )}
             </Button>
           </form>
-
-          <div className="flex justify-center lg:items-start">
-            <Card className="w-full max-w-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <ShoppingBag className="h-5 w-5 text-primary" />
-                  Order Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {validCartItems.slice(0, 3).map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-3"
-                    >
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                        <img
-                          src={item.image || ""}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">
-                          {item.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Qty: {item.quantity} × ₵{item.price.toFixed(2)}
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold">
-                        ₵{item.total.toFixed(2)}
-                      </p>
-                    </div>
-                  ))}
-                  {validCartItems.length > 3 && (
-                    <p className="text-xs text-muted-foreground text-center">
-                      +{validCartItems.length - 3} more{" "}
-                      {validCartItems.length - 3 === 1 ? "item" : "items"}
-                    </p>
-                  )}
-                </div>
-
-                <Separator />
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-semibold">
-                      ₵{itemsTotal.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Shipping</span>
-                    <span className="font-medium text-xs text-accent">
-                      Calculated at delivery
-                    </span>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="flex justify-between">
-                  <span className="font-heading font-bold text-base">
-                    Total
-                  </span>
-                  <span className="font-heading font-bold text-base">
-                    ₵{finalTotal.toFixed(2)}
-                  </span>
-                </div>
-
-                <div className="rounded-lg bg-muted p-3">
-                  <p className="text-xs text-muted-foreground flex items-center gap-2">
-                    <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                    Delivering to{" "}
-                    <span className="font-semibold text-foreground">
-                      {formData.city || "your area"}
-                    </span>
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </main>
 

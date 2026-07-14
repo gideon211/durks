@@ -58,8 +58,8 @@ function HeroSection() {
                 variants={headlineVariants}
                 className="text-5xl md:text-6xl lg:text-7xl font-heading font-extrabold leading-[1.05] text-white tracking-tight"
               >
-                Fresh Juice,{" "}
-                <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-lime-300 bg-clip-text text-transparent">
+                Fresh Juice<br className="sm:hidden" />{" "}
+                <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-lime-300 bg-clip-text text-transparent sm:whitespace-nowrap">
                   Pure Wellness
                 </span>
               </motion.h1>
@@ -120,8 +120,8 @@ function HeroSection() {
             variants={headlineVariants}
             className="text-3xl sm:text-4xl font-heading font-extrabold tracking-tight leading-[1.1] text-white"
           >
-            Fresh Juice,{" "}
-            <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-lime-300 bg-clip-text text-transparent">
+            Fresh Juice<br />{" "}
+            <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-lime-300 bg-clip-text text-transparent whitespace-nowrap">
               Pure Wellness
             </span>
           </motion.h1>

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ShimmerBar } from "@/components/ui/shimmer-bar";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -108,18 +108,18 @@ export default function Users() {
         {loading ? (
           <>
             <div className="grid grid-cols-2 gap-4">
-              <Card><CardContent className="p-6"><Skeleton className="h-4 w-24 mb-2" /><Skeleton className="h-8 w-16" /></CardContent></Card>
-              <Card><CardContent className="p-6"><Skeleton className="h-4 w-24 mb-2" /><Skeleton className="h-8 w-16" /></CardContent></Card>
+              <div className="bg-muted/10 rounded-xl p-5 md:p-6"><ShimmerBar className="h-4 w-24 mb-2" /><ShimmerBar className="h-8 w-16" /></div>
+              <div className="bg-muted/10 rounded-xl p-5 md:p-6"><ShimmerBar className="h-4 w-24 mb-2" /><ShimmerBar className="h-8 w-16" /></div>
             </div>
-            <div className="rounded-lg border bg-card shadow-sm p-4 space-y-4">
+            <div className="bg-muted/10 rounded-xl p-4 space-y-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="h-4 w-4 rounded" />
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-6 w-20 rounded-full" />
-                  <Skeleton className="h-4 w-24" />
+                <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <ShimmerBar className="h-4 w-4 rounded shrink-0" />
+                  <ShimmerBar className="h-4 w-full sm:w-32" />
+                  <ShimmerBar className="h-6 w-full sm:w-16 rounded-full" />
+                  <ShimmerBar className="h-4 w-full sm:w-40" />
+                  <ShimmerBar className="h-6 w-full sm:w-20 rounded-full" />
+                  <ShimmerBar className="h-4 w-full sm:w-24" />
                 </div>
               ))}
             </div>
@@ -128,25 +128,25 @@ export default function Users() {
           <>
             <div className="grid grid-cols-2 gap-4">
               <Card className="shadow-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground font-medium">Total Users</p>
-                      <h3 className="text-3xl font-heading font-bold tracking-tight">{totalUsers}</h3>
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1.5 md:space-y-2">
+                      <p className="text-xs md:text-sm text-muted-foreground font-medium">Total Users</p>
+                      <h3 className="text-2xl md:text-3xl font-heading font-bold tracking-tight">{totalUsers}</h3>
                     </div>
-                    <div className="p-3 rounded-xl bg-muted text-primary"><UsersIcon className="h-5 w-5" /></div>
+                    <div className="p-2.5 md:p-3 rounded-xl bg-muted text-primary shrink-0"><UsersIcon className="h-4 w-4 md:h-5 md:w-5" /></div>
                   </div>
                 </CardContent>
               </Card>
               <Card className="shadow-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground font-medium">New This Month</p>
-                      <h3 className="text-3xl font-heading font-bold tracking-tight">{newThisMonth}</h3>
-                      <p className="text-sm text-muted-foreground">{monthName}</p>
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1.5 md:space-y-2">
+                      <p className="text-xs md:text-sm text-muted-foreground font-medium">New This Month</p>
+                      <h3 className="text-2xl md:text-3xl font-heading font-bold tracking-tight">{newThisMonth}</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground">{monthName}</p>
                     </div>
-                    <div className="p-3 rounded-xl bg-muted text-emerald-500"><UserPlus className="h-5 w-5" /></div>
+                    <div className="p-2.5 md:p-3 rounded-xl bg-muted text-emerald-500 shrink-0"><UserPlus className="h-4 w-4 md:h-5 md:w-5" /></div>
                   </div>
                 </CardContent>
               </Card>
