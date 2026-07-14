@@ -17,7 +17,7 @@ import {
   CheckCircle,
   Loader2,
   ChevronDownIcon,
-
+  ChevronUpIcon,
   ShoppingBag,
   MapPin,
   Clock,
@@ -160,6 +160,7 @@ export default function Checkout(): JSX.Element {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRedirectModalOpen, setIsRedirectModalOpen] = useState(false);
+  const [showAllItems, setShowAllItems] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -464,10 +465,52 @@ export default function Checkout(): JSX.Element {
                     </div>
                   ))}
                   {validCartItems.length > 3 && (
-                    <p className="text-xs text-muted-foreground text-center">
-                      +{validCartItems.length - 3} more{" "}
-                      {validCartItems.length - 3 === 1 ? "item" : "items"}
-                    </p>
+                    <>
+                      {showAllItems && validCartItems.slice(3).map((item, idx) => (
+                        <div
+                          key={idx + 3}
+                          onClick={() => router.push(`/products?product=${encodeURIComponent(item.name)}`)}
+                          className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 rounded-lg transition-colors p-1 -mx-1"
+                        >
+                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                            <img
+                              src={item.image || ""}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold truncate">
+                              {item.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Qty: {item.quantity} × ₵{item.price.toFixed(2)}
+                            </p>
+                          </div>
+                          <p className="text-sm font-semibold">
+                            ₵{item.total.toFixed(2)}
+                          </p>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setShowAllItems(!showAllItems)}
+                        className="w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                      >
+                        {showAllItems ? (
+                          <>
+                            Show less
+                            <ChevronUpIcon className="h-3.5 w-3.5" />
+                          </>
+                        ) : (
+                          <>
+                            +{validCartItems.length - 3} more{" "}
+                            {validCartItems.length - 3 === 1 ? "item" : "items"}
+                            <ChevronDownIcon className="h-3.5 w-3.5" />
+                          </>
+                        )}
+                      </button>
+                    </>
                   )}
                 </div>
 

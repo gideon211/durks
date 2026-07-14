@@ -416,7 +416,7 @@ export default function Products() {
 
         {/* List view */}
         {viewMode === "list" && filteredProducts.length > 0 && (
-          <div className="rounded-2xl bg-white border border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="rounded-2xl bg-white border border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden min-w-0">
             <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[500px] md:min-w-0">
               <thead>

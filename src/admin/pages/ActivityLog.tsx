@@ -342,7 +342,7 @@ export default function ActivityLog() {
           </div>
         ) : (
           <>
-            <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
+            <div className="rounded-lg border bg-card shadow-sm overflow-hidden min-w-0">
               <div className="w-full overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

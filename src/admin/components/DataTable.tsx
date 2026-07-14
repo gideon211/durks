@@ -29,7 +29,7 @@ export default function DataTable<T = Record<string, unknown>>({
   emptyMessage = "No data available",
 }: DataTableProps<T>) {
   return (
-    <div className="rounded-2xl bg-white border border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+    <div className="rounded-2xl bg-white border border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden min-w-0">
       <div className="overflow-x-auto">
       <Table className="min-w-[600px] md:min-w-0">
         <TableHeader>
