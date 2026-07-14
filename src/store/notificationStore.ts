@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { io, Socket } from "socket.io-client";
 import axiosInstance from "@/api/axios";
 
 export interface Notification {
@@ -17,66 +16,15 @@ interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
   loading: boolean;
-  socket: Socket | null;
-  connected: boolean;
-  connect: (token: string) => void;
-  disconnect: () => void;
   fetchNotifications: () => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
 }
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-
-export const useNotificationStore = create<NotificationState>((set, get) => ({
+export const useNotificationStore = create<NotificationState>((set) => ({
   notifications: [],
   unreadCount: 0,
   loading: false,
-  socket: null,
-  connected: false,
-
-  connect: (token: string) => {
-    const existing = get().socket;
-    if (existing?.connected) return;
-
-    const socket = io(SOCKET_URL, {
-      auth: { token },
-      transports: ["websocket", "polling"],
-    });
-
-    socket.on("connect", () => {
-      set({ connected: true });
-    });
-
-    socket.on("disconnect", () => {
-      set({ connected: false });
-    });
-
-    socket.on("notification", (notification: Notification) => {
-      set((state) => ({
-        notifications: [notification, ...state.notifications],
-        unreadCount: state.unreadCount + 1,
-      }));
-    });
-
-    socket.on("unread_count", (count: number) => {
-      set({ unreadCount: count });
-    });
-
-    socket.on("connect_error", (err) => {
-      console.warn("Socket connection error:", err.message);
-    });
-
-    set({ socket });
-  },
-
-  disconnect: () => {
-    const { socket } = get();
-    if (socket) {
-      socket.disconnect();
-      set({ socket: null, connected: false });
-    }
-  },
 
   fetchNotifications: async () => {
     set({ loading: true });
