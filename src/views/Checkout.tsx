@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/api/axios";
 import Header from "@/components/Header";
@@ -466,36 +466,54 @@ export default function Checkout(): JSX.Element {
                   ))}
                   {validCartItems.length > 3 && (
                     <>
-                      {showAllItems && validCartItems.slice(3).map((item, idx) => (
-                        <div
-                          key={idx + 3}
-                          onClick={() => router.push(`/products?product=${encodeURIComponent(item.name)}`)}
-                          className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 rounded-lg transition-colors p-1 -mx-1"
-                        >
-                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                            <img
-                              src={item.image || ""}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold truncate">
-                              {item.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Qty: {item.quantity} × ₵{item.price.toFixed(2)}
-                            </p>
-                          </div>
-                          <p className="text-sm font-semibold">
-                            ₵{item.total.toFixed(2)}
-                          </p>
-                        </div>
-                      ))}
+                      <AnimatePresence initial={false}>
+                        {showAllItems && (
+                          <motion.div
+                            key="expanded-items"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+                            className="overflow-hidden"
+                          >
+                            <div className="space-y-3 pt-1">
+                              {validCartItems.slice(3).map((item, idx) => (
+                                <motion.div
+                                  key={idx + 3}
+                                  initial={{ opacity: 0, y: -8 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.3, delay: idx * 0.05, ease: [0.32, 0.72, 0, 1] }}
+                                  onClick={() => router.push(`/products?product=${encodeURIComponent(item.name)}`)}
+                                  className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 rounded-lg transition-colors p-1 -mx-1"
+                                >
+                                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                                    <img
+                                      src={item.image || ""}
+                                      alt={item.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold truncate">
+                                      {item.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Qty: {item.quantity} × ₵{item.price.toFixed(2)}
+                                    </p>
+                                  </div>
+                                  <p className="text-sm font-semibold">
+                                    ₵{item.total.toFixed(2)}
+                                  </p>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                       <button
                         type="button"
                         onClick={() => setShowAllItems(!showAllItems)}
-                        className="w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                        className="w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors py-1.5"
                       >
                         {showAllItems ? (
                           <>
