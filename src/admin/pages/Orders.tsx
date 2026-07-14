@@ -472,7 +472,7 @@ export default function OrdersAdminPage() {
                           <span className="text-sm">{it.name as string}{it.pack ? ` (${it.pack}-pack)` : ""}</span>
                         </div>
                         <span className="text-sm font-semibold tabular-nums shrink-0 ml-3">
-                          GH\u20B5 {Number(it.price || 0).toFixed(2)}
+                          GH₵ {Number(it.price || 0).toFixed(2)}
                         </span>
                       </div>
                     ))}
@@ -495,7 +495,7 @@ export default function OrdersAdminPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Total</p>
-                  <p className="text-2xl font-extrabold tabular-nums">GH\u20B5 {Number(selectedOrder?.totalAmount || 0).toFixed(2)}</p>
+                  <p className="text-2xl font-extrabold tabular-nums">GH₵ {Number(selectedOrder?.totalAmount || 0).toFixed(2)}</p>
                 </div>
               </div>
             </div>
