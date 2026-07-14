@@ -162,7 +162,8 @@ export default function Users() {
               </div>
             )}
 
-            <div className="w-full overflow-x-auto rounded-lg border bg-card shadow-sm">
+            <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
+              <div className="w-full overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-muted/50 border-b">
@@ -207,6 +208,7 @@ export default function Users() {
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
           </>
         )}

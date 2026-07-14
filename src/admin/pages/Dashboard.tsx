@@ -158,7 +158,7 @@ export default function Dashboard() {
           {loading ? (
             <div className="grid grid-cols-2 gap-4 lg:gap-5 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-muted/10 rounded-xl p-5 md:p-6">
+                <div key={i} className="bg-muted/10 rounded-xl p-4 md:p-6">
                   <ShimmerBar className="h-3 w-3/4 mb-3" />
                   <ShimmerBar className="h-8 w-1/2 mb-3" />
                   <ShimmerBar className="h-3 w-2/3" />
@@ -177,7 +177,7 @@ export default function Dashboard() {
         {/* Charts — asymmetrical bento */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           {/* Revenue chart — spans 2 cols */}
-          <div className="lg:col-span-2 rounded-2xl bg-white border border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-5 sm:p-6">
+          <div className="lg:col-span-2 rounded-2xl bg-white border border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 sm:p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-blue-50">
@@ -210,7 +210,7 @@ export default function Dashboard() {
           </div>
 
           {/* Category pie chart */}
-          <div className="rounded-2xl bg-white border border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-5 sm:p-6">
+          <div className="rounded-2xl bg-white border border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 sm:p-6">
             <div className="flex items-center gap-2.5 mb-6">
               <div className="p-2 rounded-xl bg-emerald-50">
                 <Package className="h-4 w-4 text-emerald-500" />
