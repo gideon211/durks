@@ -356,6 +356,10 @@ export default function Products(): JSX.Element {
     [router, centerActiveTab, scrollToProductsTop]
   );
 
+  const handleShopClick = useCallback(() => {
+    router.replace("/products");
+  }, [router]);
+
   const getKeyForProduct = (product: Product) => product._id ?? product.id ?? product.name;
 
   return (
