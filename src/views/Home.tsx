@@ -22,7 +22,6 @@ import {
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
-import AnimatedSwapText from "@/components/AnimatedSwapText";
 import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -79,7 +78,7 @@ const tiktokLinks = [
 
 const fadeUp = (y = 30) => ({
   hidden: { opacity: 0, y },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const } },
 });
 
 export default function Home() {
@@ -338,6 +337,7 @@ export default function Home() {
                   whileHover={{ scale: 1.25, rotate: 8 }}
                   transition={{ type: "spring", stiffness: 300, damping: 10 }}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/images/tiktok.svg" loading="lazy" alt="tiktok" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover cursor-pointer" />
                 </motion.a>
                 <motion.a
@@ -347,6 +347,7 @@ export default function Home() {
                   whileHover={{ scale: 1.25, rotate: 8 }}
                   transition={{ type: "spring", stiffness: 300, damping: 10 }}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/images/instagram.svg" loading="lazy" alt="instagram" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 object-cover cursor-pointer" />
                 </motion.a>
                 <motion.a
@@ -356,6 +357,7 @@ export default function Home() {
                   whileHover={{ scale: 1.25, rotate: 8 }}
                   transition={{ type: "spring", stiffness: 300, damping: 10 }}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/images/facebook.svg" loading="lazy" alt="facebook" className="w-10 h-10 md:w-12 md:h-12 lg:w-12 lg:h-12 cursor-pointer object-cover" />
                 </motion.a>
               </div>
