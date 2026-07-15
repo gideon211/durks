@@ -19,21 +19,42 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://duksjuice.com"),
   title: "Duks Juice | Fresh Natural Juices",
   description: "Premium, carefully crafted juice blends for families, businesses, events, and wholesale orders.",
   keywords: ["juice", "fresh juice", "natural juice", "smoothies", "wellness shots", "Duks Juice"],
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
+  alternates: {
+    canonical: "/",
+    languages: {
+      "en-GH": "https://duksjuice.com",
+      "x-default": "https://duksjuice.com",
+    },
+  },
   openGraph: {
     title: "Duks Juice | Fresh Natural Juices",
     description: "Premium, carefully crafted juice blends for families, businesses, events, and wholesale orders.",
-    url: "https://www.duksjuice.com",
+    url: "https://duksjuice.com",
     siteName: "Duks Juice",
-    locale: "en_US",
+    locale: "en_GH",
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Duks Juice | Fresh Natural Juices",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Duks Juice | Fresh Natural Juices",
     description: "Premium, carefully crafted juice blends for families, businesses, events, and wholesale orders.",
+    images: ["/og-image.png"],
   },
 };
 
@@ -44,9 +65,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${sora.variable} ${poppins.variable}`}>
-      <head>
-        <link rel="canonical" href={BASE} />
-      </head>
       <body>
         <JsonLd
           data={{

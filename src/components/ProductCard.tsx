@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import Image from "next/image";
 import { ShoppingCart, Loader2, CheckCircle2, Share2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -205,8 +206,25 @@ const stablePacks = useMemo(() => {
 
   const cardId = `product-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
 
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name,
+    ...(description ? { description } : {}),
+    ...(image ? { image } : {}),
+    offers: {
+      "@type": "Offer",
+      price: stablePacks[0]?.price || price || 0,
+      priceCurrency: "GHS",
+      availability: "https://schema.org/InStock",
+      url: `/products${category ? `/${category}` : ""}?product=${encodeURIComponent(name)}`,
+    },
+  };
+
   return (
-    <div id={cardId} className="group bg-card rounded-xl border-2 border-green-200 overflow-hidden hover:border-green-300 hover:shadow-xl transition-all duration-150 flex flex-col h-full">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
+      <div id={cardId} className="group bg-card rounded-xl border-2 border-green-200 overflow-hidden hover:border-green-300 hover:shadow-xl transition-all duration-150 flex flex-col h-full">
       <div className="relative aspect-square overflow-hidden bg-muted block">
         <button
           onClick={(e) => { e.preventDefault(); handleShare(); }}
@@ -216,20 +234,12 @@ const stablePacks = useMemo(() => {
           <Share2 className="h-4 w-4 text-white" />
         </button>
         {image ? (
-          <img
+          <Image
             src={image}
             alt={name}
-            loading="lazy"
-            decoding="async"
-            fetchPriority="low"
-            className="w-full h-full object-cover"
-            width={600}
-            height={600}
-            onError={(e) => {
-              const t = e.currentTarget as HTMLImageElement;
-              t.src =
-                "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2373747a' font-size='20'>Image not available</text></svg>";
-            }}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 50vw, 300px"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -293,7 +303,7 @@ const stablePacks = useMemo(() => {
           )}
         </div>
 
-<div className="flex flex-col items-center justify-center gap-">
+        <div className="flex flex-col items-center justify-center gap-">
 
 
   <span className="font-heading font-semibold text-sm text-foreground">
@@ -353,6 +363,7 @@ const stablePacks = useMemo(() => {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import AnimatedSwapText from "@/components/AnimatedSwapText";
 
@@ -104,10 +105,12 @@ export default function FathersDayPopup() {
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
-                <img
+                <Image
                   src="/fathersday.jpeg"
                   alt="Father's Day"
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, 32rem"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                 <motion.button

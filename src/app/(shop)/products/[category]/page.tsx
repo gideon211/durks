@@ -29,10 +29,24 @@ export async function generateMetadata({
   return {
     title: `${name} | Duks Juice`,
     description: `Shop ${name} from Duks Juice. Fresh, natural, delivered daily in Accra.`,
+    alternates: {
+      canonical: `/products/${category}`,
+    },
     openGraph: {
       title: `${name} | Duks Juice`,
       description: `Shop ${name} from Duks Juice. Fresh, natural, delivered daily.`,
       url: `https://duksjuice.com/products/${category}`,
+      images: [
+        {
+          url: "/og-image.png",
+          width: 1200,
+          height: 630,
+          alt: `${name} | Duks Juice`,
+        },
+      ],
+    },
+    twitter: {
+      images: ["/og-image.png"],
     },
   };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -141,22 +142,26 @@ export default function Auth() {
         <div className="w-full max-w-3xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div className="flex flex-col gap-2">
-              <motion.a
+              <Link
                 href="/"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
                 className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-300 group mb-3"
               >
-                <motion.div
-                  initial={{ x: 0 }}
-                  whileHover={{ x: -3 }}
-                  transition={{ type: "spring", stiffness: 400 }}
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="inline-flex items-center gap-2"
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                </motion.div>
-                <span className="font-medium">Back to home</span>
-              </motion.a>
+                  <motion.span
+                    initial={{ x: 0 }}
+                    whileHover={{ x: -3 }}
+                    transition={{ type: "spring", stiffness: 400 }}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </motion.span>
+                  Back to Home
+                </motion.span>
+              </Link>
               <AnimatePresence mode="wait">
                 {activeTab === "signin" ? (
                   <motion.div

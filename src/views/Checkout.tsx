@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 import { toast } from "sonner";
+import Image from "next/image";
 import { useCartStore, CartItem } from "@/store/cartStore";
 import {
   CheckCircle,
@@ -515,11 +516,13 @@ export default function Checkout(): JSX.Element {
                       onClick={() => router.push(`/products?product=${encodeURIComponent(item.name)}`)}
                       className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 rounded-lg transition-colors p-1 -mx-1"
                     >
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                        <img
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0 relative">
+                        <Image
                           src={item.image || ""}
                           alt={item.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="48px"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -557,11 +560,13 @@ export default function Checkout(): JSX.Element {
                                   onClick={() => router.push(`/products?product=${encodeURIComponent(item.name)}`)}
                                   className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 rounded-lg transition-colors p-1 -mx-1"
                                 >
-                                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                                    <img
+                                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0 relative">
+                                    <Image
                                       src={item.image || ""}
                                       alt={item.name}
-                                      className="w-full h-full object-cover"
+                                      fill
+                                      className="object-cover"
+                                      sizes="48px"
                                     />
                                   </div>
                                   <div className="flex-1 min-w-0">

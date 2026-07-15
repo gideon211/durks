@@ -7,7 +7,7 @@ const categories = [
   "cleanse",
   "shots",
   "smoothies",
-  "flavors",
+  "flavor",
   "cut-fruits",
   "gift-packs",
   "bundle",

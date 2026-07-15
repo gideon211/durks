@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectCoverflow, Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -34,10 +35,15 @@ export default function Carousel() {
               key={i}
               className="w-[85%] sm:w-[80%] md:w-[60%] h-full flex items-center justify-center"
             >
-              <img
-                src={src}
-                className="w-full h-full object-cover rounded-xl"
-              />
+              <div className="relative w-full h-full">
+                <Image
+                  src={src}
+                  alt=""
+                  fill
+                  className="object-cover rounded-xl"
+                  sizes="(max-width: 768px) 85vw, 60vw"
+                />
+              </div>
             </SwiperSlide>
           ))}
         </Swiper>
@@ -46,10 +52,13 @@ export default function Carousel() {
       {/* Desktop Flex Row */}
       <div className="hidden lg:flex gap-4 h-[36rem]">
         {images.map((src, i) => (
-          <div key={i} className="flex-1 h-full overflow-hidden rounded-xl">
-            <img
+          <div key={i} className="flex-1 h-full overflow-hidden rounded-xl relative">
+            <Image
               src={src}
-              className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+              alt=""
+              fill
+              className="object-cover transition-transform duration-500 hover:scale-105"
+              sizes="50vw"
             />
           </div>
         ))}

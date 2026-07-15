@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Image from "next/image";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Package, Loader2 } from "lucide-react";
@@ -221,10 +222,12 @@ export default function Orders() {
                         key={item.drinkId ?? `${order.id}-item-${index}`}
                         className="bg-gray-100 p-3 rounded-lg flex items-start gap-3"
                       >
-                        <img
+                        <Image
                           src={item.image ?? "/placeholder.svg"}
                           alt={item.name}
-                          className="w-14 h-14 rounded object-cover"
+                          width={56}
+                          height={56}
+                          className="rounded object-cover"
                         />
 
                         <div className="flex-1 flex flex-col">

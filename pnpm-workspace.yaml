@@ -1,0 +1,5 @@
+onlyBuiltDependencies:
+  - mongodb-memory-server
+  - sharp
+  - typeit
+  - unrs-resolver

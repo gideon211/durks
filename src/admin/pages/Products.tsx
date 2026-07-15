@@ -4,6 +4,7 @@ import AdminLayout from "@/admin/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Grid3x3, List, Edit2, Trash2, ImageIcon, Loader2 } from "lucide-react";
+import Image from "next/image";
 import { ShimmerBar } from "@/components/ui/shimmer-bar";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
@@ -356,7 +357,7 @@ export default function Products() {
                   {/* Image */}
                   <div className="relative aspect-square bg-muted overflow-hidden">
                     {product.imageUrl ? (
-                      <img src={product.imageUrl} alt={product.name ?? "Product"} className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105" />
+                      <Image src={product.imageUrl} alt={product.name ?? "Product"} fill className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105" sizes="(max-width: 768px) 50vw, 300px" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                         <ImageIcon className="h-8 w-8" />
@@ -433,9 +434,9 @@ export default function Products() {
                   <tr key={product.id} className="border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-muted overflow-hidden shrink-0">
+                        <div className="h-10 w-10 rounded-xl bg-muted overflow-hidden shrink-0 relative">
                           {product.imageUrl ? (
-                            <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                            <Image src={product.imageUrl} alt={product.name} fill className="object-cover" sizes="40px" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ImageIcon className="h-4 w-4" /></div>
                           )}
@@ -504,8 +505,8 @@ export default function Products() {
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {previewUrl ? (
-                      <div className="relative">
-                        <img src={previewUrl} alt="Preview" className="w-full aspect-square object-cover" />
+                      <div className="relative aspect-square">
+                        <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
                         <button
                           type="button"

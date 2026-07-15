@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Share2,
   Leaf,
@@ -175,11 +176,12 @@ export default function Home() {
                     className="group block relative rounded-[1.5rem] overflow-hidden aspect-[3/4] cursor-pointer"
                   >
                     {/* Full-bleed image — the hero */}
-                    <img
+                    <Image
                       src={category.images ? category.images[0] : category.image}
-                      loading="lazy"
                       alt={category.name}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
+                      fill
+                      className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
+                      sizes="300px"
                     />
 
                     {/* Gradient — bottom 60% fade for text readability */}
@@ -252,11 +254,13 @@ export default function Home() {
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tight mb-4">
                 Why Choose Duks
               </h2>
-              <img
+              <Image
                 src="/images/whychooseus.jpeg"
-                loading="lazy"
                 alt="Why choose Duks Juice"
+                width={400}
+                height={400}
                 className="w-full max-w-[240px] sm:max-w-xs md:max-w-sm mx-auto h-auto object-contain rounded-xl py-3 sm:py-4"
+                sizes="(max-width: 640px) 240px, (max-width: 768px) 320px, 384px"
               />
               <p className="text-base md:text-lg text-gray-500 max-w-lg mx-auto mt-2">
                 Every bottle is a commitment to your health and our planet
@@ -366,11 +370,12 @@ export default function Home() {
                   rel="noopener noreferrer"
                   className="group relative aspect-square overflow-hidden rounded-sm"
                 >
-                  <img
+                  <Image
                     src={item.image}
-                    loading="lazy"
                     alt={`TikTok post ${index + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                    sizes="(max-width: 768px) 50vw, 25vw"
                   />
                   <div className="absolute inset-0 bg-primary/80 flex items-center justify-center transition-transform duration-300 translate-y-full group-hover:translate-y-0">
                     <span className="text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 font-heading">

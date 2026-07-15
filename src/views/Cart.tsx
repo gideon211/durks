@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Trash2, ShoppingBag, Loader2, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
+import Image from "next/image";
 import { useCartStore, CartItem } from "@/store/cartStore";
 import { useAuth } from "@/context/Authcontext";
 import { Modal } from "@/components/Modal";
@@ -209,17 +210,14 @@ export default function Cart() {
                   >
                     <div
                       onClick={() => router.push(`/products?product=${encodeURIComponent(item.name ?? "")}`)}
-                      className="w-24 self-stretch overflow-hidden flex-shrink-0 bg-muted cursor-pointer"
+                      className="w-24 self-stretch overflow-hidden flex-shrink-0 bg-muted cursor-pointer relative"
                     >
-                      <img
-                        loading="lazy"
+                      <Image
                         src={item.image || ""}
                         alt={item.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src =
-                            "/placeholder.svg";
-                        }}
+                        fill
+                        className="object-cover"
+                        sizes="96px"
                       />
                     </div>
 
