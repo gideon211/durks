@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Sora, Poppins } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/Providers";
+import JsonLd from "@/components/JsonLd";
+
+const BASE = "https://duksjuice.com";
 
 const sora = Sora({
   variable: "--font-heading",
@@ -27,6 +30,11 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Duks Juice | Fresh Natural Juices",
+    description: "Premium, carefully crafted juice blends for families, businesses, events, and wholesale orders.",
+  },
 };
 
 export default function RootLayout({
@@ -36,7 +44,84 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${sora.variable} ${poppins.variable}`}>
+      <head>
+        <link rel="canonical" href={BASE} />
+      </head>
       <body>
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "Duks Juice",
+            url: BASE,
+            logo: `${BASE}/images/logo.svg`,
+            description:
+              "Premium cold-pressed juices, smoothies, wellness shots, and gift packs in Ghana. Fresh daily, no additives.",
+            telephone: ["+233202427880", "+233240076685"],
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "Madina Estate",
+              addressLocality: "Accra",
+              addressCountry: "GH",
+            },
+            sameAs: [
+              "https://www.facebook.com/duks_juice",
+              "https://www.instagram.com/duks_juice",
+              "https://www.tiktok.com/@duks_juice",
+            ],
+          }}
+        />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Duks Juice",
+            url: BASE,
+            description:
+              "Premium cold-pressed juices, smoothies, wellness shots, and gift packs.",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: {
+                "@type": "EntryPoint",
+                urlTemplate: `${BASE}/products?search={search_term_string}`,
+              },
+              "query-input": "required name=search_term_string",
+            },
+          }}
+        />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "FoodEstablishment",
+            name: "Duks Juice",
+            image: `${BASE}/images/logo.svg`,
+            url: BASE,
+            servesCuisine: "Juice, Smoothies, Wellness, Fresh Fruits",
+            description:
+              "Premium cold-pressed juices, smoothies, wellness shots, and gift packs. Fresh daily, no additives. Order online for delivery in Accra.",
+            telephone: ["+233202427880", "+233240076685"],
+            areaServed: {
+              "@type": "City",
+              name: "Accra",
+              sameAs: "https://en.wikipedia.org/wiki/Accra",
+              addressCountry: "GH",
+            },
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "Madina Estate",
+              addressLocality: "Accra",
+              addressCountry: "GH",
+            },
+            openingHoursSpecification: [
+              { "@type": "OpeningHoursSpecification", dayOfWeek: "Monday", opens: "08:00", closes: "18:00" },
+              { "@type": "OpeningHoursSpecification", dayOfWeek: "Tuesday", opens: "08:00", closes: "18:00" },
+              { "@type": "OpeningHoursSpecification", dayOfWeek: "Wednesday", opens: "08:00", closes: "18:00" },
+              { "@type": "OpeningHoursSpecification", dayOfWeek: "Thursday", opens: "08:00", closes: "18:00" },
+              { "@type": "OpeningHoursSpecification", dayOfWeek: "Friday", opens: "08:00", closes: "18:00" },
+              { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "16:00" },
+            ],
+          }}
+        />
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -1,5 +1,8 @@
 import { Metadata } from "next";
 import Products from "@/views/Products";
+import JsonLd from "@/components/JsonLd";
+
+const BASE = "https://duksjuice.com";
 
 const categoryNames: Record<string, string> = {
   "pure-juice": "Pure Juices",
@@ -34,6 +37,30 @@ export async function generateMetadata({
   };
 }
 
-export default function CategoryPage() {
-  return <Products />;
+export default async function CategoryPage({
+  params,
+}: {
+  params: Promise<{ category: string }>;
+}) {
+  const { category } = await params;
+  const name =
+    categoryNames[category] ||
+    category.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  return (
+    <>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: BASE },
+            { "@type": "ListItem", position: 2, name: "Products", item: `${BASE}/products` },
+            { "@type": "ListItem", position: 3, name, item: `${BASE}/products/${category}` },
+          ],
+        }}
+      />
+      <Products />
+    </>
+  );
 }
