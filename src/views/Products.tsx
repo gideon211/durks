@@ -287,21 +287,20 @@ export default function Products(): JSX.Element {
     window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
   }, []);
 
-  const centerActiveTab = useCallback((slug: string) => {
+  const centerActiveTab = useCallback((slug: string, smooth = true) => {
     const wrap = tabsWrapRef.current;
     if (!wrap) return;
 
     const btn = wrap.querySelector<HTMLElement>(`[data-tab-slug="${slug}"]`);
     if (!btn) return;
 
-    const targetScroll = btn.offsetLeft - (wrap.clientWidth / 2) + (btn.offsetWidth / 2);
-    wrap.scrollTo({ left: Math.max(0, targetScroll), behavior: "smooth" });
+    btn.scrollIntoView({ behavior: smooth ? "smooth" : "instant", inline: "center", block: "nearest" });
   }, []);
 
   useEffect(() => {
     const slug = urlCategory ?? "all";
     setActiveCategory(slug);
-    centerActiveTab(slug);
+    centerActiveTab(slug, false);
   }, [urlCategory, centerActiveTab]);
 
   const filteredProducts = useMemo(() => {
@@ -352,12 +351,13 @@ export default function Products(): JSX.Element {
 
   const handleCategoryChange = useCallback(
     (categorySlug: string) => {
+      centerActiveTab(categorySlug, true);
       scrollToProductsTop();
       const base = "/products";
-      if (categorySlug === "all") router.replace(base);
-      else router.replace(`${base}/${categorySlug}`);
+      const url = categorySlug === "all" ? base : `${base}/${categorySlug}`;
+      router.replace(url, { scroll: false });
     },
-    [router, scrollToProductsTop]
+    [router, centerActiveTab, scrollToProductsTop]
   );
 
   const handleShopClick = useCallback(() => {
