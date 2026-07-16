@@ -292,12 +292,15 @@ export default function Products(): JSX.Element {
     const btn = wrap.querySelector<HTMLElement>(`[data-tab-slug="${slug}"]`);
     if (!btn) return;
 
-    btn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    const targetScroll = btn.offsetLeft - (wrap.clientWidth / 2) + (btn.offsetWidth / 2);
+    wrap.scrollTo({ left: Math.max(0, targetScroll), behavior: "smooth" });
   }, []);
 
   useEffect(() => {
-    setActiveCategory(urlCategory ?? "all");
-  }, [urlCategory]);
+    const slug = urlCategory ?? "all";
+    setActiveCategory(slug);
+    centerActiveTab(slug);
+  }, [urlCategory, centerActiveTab]);
 
   const filteredProducts = useMemo(() => {
     if (activeCategory === "all") return shuffledAllProducts;
