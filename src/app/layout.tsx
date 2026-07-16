@@ -140,6 +140,22 @@ export default function RootLayout({
             ],
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(regs) {
+                  regs.forEach(function(reg) { reg.unregister(); });
+                });
+                if (caches) {
+                  caches.keys().then(function(keys) {
+                    keys.forEach(function(k) { caches.delete(k); });
+                  });
+                }
+              }
+            `,
+          }}
+        />
         <Providers>{children}</Providers>
       </body>
     </html>
