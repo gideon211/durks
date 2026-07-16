@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 const DesktopCarousel: React.FC = () => {
   const desktopImages = useMemo<string[]>(() => {
@@ -58,20 +59,27 @@ const DesktopCarousel: React.FC = () => {
   return (
     <div className="relative w-full min-h-screen overflow-hidden bg-gray-900">
       <AnimatePresence initial={false}>
-        <motion.img
+        <motion.div
           key={currentIndex}
-          src={desktopImages[currentIndex]}
-          alt={`Carousel slide ${currentIndex + 1}`}
           variants={fadeVariants}
           initial="enter"
           animate="center"
           exit="exit"
-            transition={{
+          transition={{
             opacity: { duration: 1.6, ease: "easeInOut" },
             scale: { duration: 2.2, ease: "easeOut" },
-            }}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+          }}
+          className="absolute inset-0 w-full h-full"
+        >
+          <Image
+            src={desktopImages[currentIndex]}
+            alt={`Carousel slide ${currentIndex + 1}`}
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
+          />
+        </motion.div>
       </AnimatePresence>
 
       {/* Keep your desktop overlay (optional) */}
