@@ -3,12 +3,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useParams, usePathname, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import Header from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Banner from "../components/CallToOrderBanner";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import { getProducts } from "@/api/products";
 
@@ -367,13 +364,7 @@ export default function Products(): JSX.Element {
   const getKeyForProduct = (product: Product) => product._id ?? product.id ?? product.name;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-
-      <div className="mt-20 lg:mt-32">
-        <Banner />
-      </div>
-
+    <>
       <div ref={tabsWrapRef} className="mb-8 overflow-x-auto no-scrollbar sticky top-16 z-50 lg:mx-auto">
         <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
           <TabsList className="inline-flex w-auto">
@@ -474,8 +465,6 @@ export default function Products(): JSX.Element {
           </>
         )}
       </div>
-
-      <Footer />
-    </div>
+    </>
   );
 }
