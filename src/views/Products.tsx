@@ -279,7 +279,9 @@ export default function Products(): JSX.Element {
   const scrollToProductsTop = useCallback(() => {
     const el = productsTopRef.current;
     if (!el) return;
-    const offset = 80;
+    const banner = document.querySelector('[class*="bg-amber-5"]') as HTMLElement | null;
+    const bannerHeight = banner?.offsetHeight ?? 0;
+    const offset = 64 + bannerHeight + 20;
     const rect = el.getBoundingClientRect();
     const top = window.scrollY + rect.top - offset;
     window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
@@ -350,13 +352,12 @@ export default function Products(): JSX.Element {
 
   const handleCategoryChange = useCallback(
     (categorySlug: string) => {
-      centerActiveTab(categorySlug);
       scrollToProductsTop();
       const base = "/products";
       if (categorySlug === "all") router.replace(base);
       else router.replace(`${base}/${categorySlug}`);
     },
-    [router, centerActiveTab, scrollToProductsTop]
+    [router, scrollToProductsTop]
   );
 
   const handleShopClick = useCallback(() => {
