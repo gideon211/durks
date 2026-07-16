@@ -26,7 +26,6 @@ declare module "lucide-react" {
   export const Heart: Icon;
   export const Users: Icon;
   export const Phone: Icon;
-  export const Instagram: Icon;
   export const MapPin: Icon;
   export const ArrowUpRight: Icon;
   export const ChevronDown: Icon;
@@ -39,6 +38,7 @@ declare module "lucide-react" {
   export const GripVertical: Icon;
   export const PanelLeft: Icon;
   export const Dot: Icon;
+  export const Leaf: Icon;
   export const Sparkles: Icon;
   export const Download: Icon;
   export const ExternalLink: Icon;
