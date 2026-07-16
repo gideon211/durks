@@ -29,6 +29,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/((?!_next/static|images/|favicon\\.ico).*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate",
+          },
+        ],
+      },
+      {
         source: "/images/(.*)",
         headers: [
           {
