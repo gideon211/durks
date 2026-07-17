@@ -365,9 +365,9 @@ export default function Products(): JSX.Element {
 
   return (
     <>
-      <div ref={tabsWrapRef} className="mb-8 overflow-x-auto no-scrollbar sticky top-16 z-50 lg:mx-auto">
+      <div ref={tabsWrapRef} className="mb-8 overflow-x-auto no-scrollbar sticky top-[62px] md:top-20 z-50 lg:mx-auto">
         <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
-          <TabsList className="inline-flex w-auto">
+           <TabsList className="flex w-full lg:w-auto lg:justify-center">
             {categories.map((cat) => (
               <TabsTrigger
                 key={cat.id}
