@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Drink from "@/models/drinks";
-import { verifyAuth, type AuthUser } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { uploadImage } from "@/lib/cloudinary";
 import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
@@ -62,16 +62,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  let authUser: AuthUser | null = null;
+  const auth = requireAdmin(req);
+  if (!auth.ok) return auth.res;
+  const authUser = auth.user;
   try {
-    try {
-      authUser = verifyAuth(req);
-    } catch {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-    }
-    if (!authUser || !authUser.isAdmin) {
-      return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
-    }
 
     await connectDB();
     const { id } = await params;
@@ -153,16 +147,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  let authUser: AuthUser | null = null;
+  const auth = requireAdmin(req);
+  if (!auth.ok) return auth.res;
+  const authUser = auth.user;
   try {
-    try {
-      authUser = verifyAuth(req);
-    } catch {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-    }
-    if (!authUser || !authUser.isAdmin) {
-      return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
-    }
 
     await connectDB();
     const { id } = await params;

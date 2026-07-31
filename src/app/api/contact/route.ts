@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email";
 import { createNotification } from "@/lib/notifier";
+import { getClientIp, logActivity, logError } from "@/lib/activityLogger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,9 +43,21 @@ export async function POST(req: NextRequest) {
       metadata: { name, email, subject },
     });
 
+    await logActivity({
+      user: null,
+      email,
+      action: "contact_submitted",
+      details: `Contact form: "${subject}" from ${name} (${email})`,
+      metadata: { name, email, company: company || null, subject },
+      ip: getClientIp(req),
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
     return NextResponse.json({ success: true, message: "Message sent successfully." });
   } catch (err) {
     console.error("Contact form error:", err);
+    await logError({ req, error: err, status: 500 });
     return NextResponse.json({ success: false, message: "Failed to send message. Please try again later." }, { status: 500 });
   }
 }

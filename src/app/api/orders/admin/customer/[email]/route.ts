@@ -2,20 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/user";
 import Order from "@/models/order";
-import { verifyAuth, type AuthUser } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ email: string }> }) {
-  let authUser: AuthUser | null = null;
+  const auth = requireAdmin(req);
+  if (!auth.ok) return auth.res;
+  const authUser = auth.user;
   try {
-    try {
-      authUser = verifyAuth(req);
-    } catch {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-    }
-    if (!authUser || !authUser.isAdmin) {
-      return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
-    }
     const { email } = await params;
     const decodedEmail = decodeURIComponent(email);
     await connectDB();

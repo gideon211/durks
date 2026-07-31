@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -53,4 +53,27 @@ export function verifyRefreshToken(refreshToken: string): {
     email?: string;
     username?: string;
   };
+}
+
+export type RequireAdminResult =
+  | { ok: true; user: AuthUser }
+  | { ok: false; res: NextResponse };
+
+export function requireAdmin(req: NextRequest): RequireAdminResult {
+  let authUser: AuthUser;
+  try {
+    authUser = verifyAuth(req);
+  } catch {
+    return {
+      ok: false,
+      res: NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 }),
+    };
+  }
+  if (!authUser.isAdmin) {
+    return {
+      ok: false,
+      res: NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 }),
+    };
+  }
+  return { ok: true, user: authUser };
 }

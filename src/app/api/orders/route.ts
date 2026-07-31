@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Order from "@/models/order";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, type AuthUser } from "@/lib/auth";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,7 +19,14 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  let authUser: AuthUser | null = null;
   try {
+    try {
+      authUser = verifyAuth(req);
+    } catch {
+      // Guest checkout allowed — actor attribution falls back to stored email.
+    }
+
     await connectDB();
     const body = await req.json();
     const { customer, items, totalAmount, paystackReference, deliveryDate, deliveryTime } = body;
@@ -27,7 +35,7 @@ export async function POST(req: NextRequest) {
     if (!paystackReference) {
       const reference = "COD-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
       const order = await Order.create({
-        userId: body.userId || null,
+        userId: authUser?.id ?? body.userId ?? null,
         customer,
         items,
         totalAmount,
@@ -39,12 +47,23 @@ export async function POST(req: NextRequest) {
         orderStatus: "confirmed",
       });
 
+      await logActivity({
+        ...buildActor(req, authUser),
+        email: authUser?.email ?? customer?.email ?? null,
+        action: "order_created",
+        details: `COD order created by ${customer?.email || "guest"} — GH₵ ${totalAmount}`,
+        metadata: { orderId: order._id.toString(), reference, totalAmount, totalItems: order.totalItems, orderStatus: "confirmed", paymentStatus: "pending" },
+        route: req.nextUrl?.pathname ?? null,
+        method: req.method ?? null,
+      });
+
       return NextResponse.json({ success: true, order }, { status: 201 });
     }
 
     return NextResponse.json({ success: false, message: "Use payments/initialize for card payments" }, { status: 400 });
   } catch (error: unknown) {
     console.error("Create order error:", error);
+    await logError({ req, error, status: 500, actor: authUser });
     return NextResponse.json({ success: false, message: "Failed to create order" }, { status: 500 });
   }
 }

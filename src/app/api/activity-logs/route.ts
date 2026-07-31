@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import ActivityLog from "@/models/ActivityLog";
-import { verifyAuth } from "@/lib/auth";
-import { buildActor, logActivity, logError } from "@/lib/activityLogger";
+import { requireAdmin } from "@/lib/auth";
+import { buildActor, logActivity, logError, resolveActors } from "@/lib/activityLogger";
 
 export async function GET(req: NextRequest) {
-  try {
-    const authUser = verifyAuth(req);
-    if (!authUser.isAdmin) {
-      return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
-    }
+  const auth = requireAdmin(req);
+  if (!auth.ok) return auth.res;
+  const authUser = auth.user;
 
+  try {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
     const action = searchParams.get("action");
     const from = searchParams.get("from");
     const to = searchParams.get("to");
-    const page = parseInt(searchParams.get("page") || "1");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 200);
 
     await connectDB();
@@ -38,15 +37,12 @@ export async function GET(req: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const [logs, total] = await Promise.all([
-      ActivityLog.find(filter)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate("user", "username email")
-        .lean(),
+    const [rawLogs, total] = await Promise.all([
+      ActivityLog.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
       ActivityLog.countDocuments(filter),
     ]);
+
+    const logs = await resolveActors(rawLogs);
 
     await logActivity({
       ...buildActor(req, authUser),
@@ -65,7 +61,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error("getActivityLogs error:", error);
-    await logError({ req, error, status: 500 });
+    await logError({ req, error, status: 500, actor: authUser });
     return NextResponse.json({ success: false, message: "Failed to fetch activity logs" }, { status: 500 });
   }
 }

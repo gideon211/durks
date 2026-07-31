@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
 import connectDB from "@/lib/mongodb";
 import Cart from "@/models/cart";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, type AuthUser } from "@/lib/auth";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 export async function POST(req: NextRequest) {
+  let authUser: AuthUser | null = null;
   try {
-    const authUser = verifyAuth(req);
+    authUser = verifyAuth(req);
     await connectDB();
 
     const {
@@ -93,7 +95,7 @@ export async function POST(req: NextRequest) {
         email: customer.email,
         amount,
         currency: "GHS",
-        callback_url: `${process.env.FRONTEND_URL}/orders`,
+        callback_url: `${process.env.FRONTEND_URL || "https://www.duksjuice.com"}/orders`,
         metadata,
       },
       {
@@ -104,6 +106,15 @@ export async function POST(req: NextRequest) {
       }
     );
 
+    await logActivity({
+      ...buildActor(req, authUser),
+      action: "checkout_started",
+      details: `Checkout started by ${customer.email} — GH₵ ${total.toFixed(2)} (${items.length} items)`,
+      metadata: { reference: response.data.data.reference, amount: total, itemCount: items.length, deliveryDate, deliveryTime },
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
     return NextResponse.json({
       success: true,
       authorization_url: response.data.data.authorization_url,
@@ -111,6 +122,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error("Payment initialization error:", error);
+    await logError({ req, error, status: 500, actor: authUser });
     return NextResponse.json({
       success: false,
       message: "Payment initialization failed. Please try again.",

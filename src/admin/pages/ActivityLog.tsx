@@ -30,6 +30,8 @@ import {
   Trash2,
   PackagePlus,
   Download,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 import axiosInstance from "@/api/axios";
 
@@ -98,7 +100,12 @@ const ACTION_LABELS: Record<string, { label: string; icon: string }> = {
   mark_notification_read: { label: "Notification Read", icon: "eye" },
   mark_all_notifications_read: { label: "All Notifications Read", icon: "eye" },
   delete_notification: { label: "Notification Deleted", icon: "trash-2" },
-  api_error: { label: "API Error", icon: "eye" },
+  checkout_started: { label: "Checkout Started", icon: "shopping-cart" },
+  order_created: { label: "Order Created", icon: "shopping-cart" },
+  contact_submitted: { label: "Contact Form", icon: "mail" },
+  admin_export_activity: { label: "Activity Exported", icon: "download" },
+  admin_verify_activity: { label: "Integrity Verified", icon: "shield-check" },
+  api_error: { label: "API Error", icon: "shield-alert" },
 };
 
 const ACTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -108,7 +115,11 @@ const ACTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
   "shopping-bag": ShoppingBag,
   "trash-2": Trash2,
   eye: Eye,
+  mail: Mail,
+  download: Download,
   "package-plus": PackagePlus,
+  "shield-check": ShieldCheck,
+  "shield-alert": ShieldAlert,
 };
 
 const ACTION_COLORS: Record<string, string> = {
@@ -120,6 +131,12 @@ const ACTION_COLORS: Record<string, string> = {
   view_cart: "bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300",
   update_cart_quantity: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300",
   update_cart_pack: "bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300",
+  checkout_started: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
+  order_created: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+  contact_submitted: "bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300",
+  admin_export_activity: "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300",
+  admin_verify_activity: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+  api_error: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   admin_view_activity: "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300",
 };
 
@@ -182,11 +199,25 @@ export default function ActivityLog() {
   const [loading, setLoading] = useState(true);
   const [searchEmail, setSearchEmail] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
-  const [fromDate, setFromDate] = useState("");
+  const [fromDate, setFromDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  });
   const [toDate, setToDate] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [actions, setActions] = useState<string[]>([]);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<{
+    valid: boolean;
+    checked: number;
+    brokenAt?: string;
+    error?: string;
+  } | null>(null);
 
   const fetchActions = async () => {
     try {
@@ -241,6 +272,18 @@ export default function ActivityLog() {
     }
   };
 
+  const handleVerify = async () => {
+    setVerifying(true);
+    try {
+      const { data } = await axiosInstance.get("/activity-logs/verify");
+      setVerifyResult(data);
+    } catch {
+      setVerifyResult({ valid: false, checked: 0, error: "Verify request failed" });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const fetchStats = async () => {
     try {
       const { data } = await axiosInstance.get("/activity-logs/stats");
@@ -275,11 +318,40 @@ export default function ActivityLog() {
             <h1 className="text-2xl sm:text-3xl font-heading font-bold">Activity Log</h1>
             <p className="text-muted-foreground mt-1">Audit trail — who did what and when (customers & admins)</p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleVerify} disabled={verifying}>
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              {verifying ? "Verifying..." : "Verify Integrity"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
+
+        {verifyResult && (
+          <div
+            className={`flex items-start gap-2 px-4 py-3 rounded-lg border text-sm ${
+              verifyResult.valid
+                ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-300"
+                : "bg-red-50 border-red-200 text-red-800 dark:bg-red-950 dark:border-red-800 dark:text-red-300"
+            }`}
+          >
+            {verifyResult.valid ? (
+              <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0" />
+            ) : (
+              <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
+            )}
+            <span>
+              {verifyResult.valid
+                ? `Audit chain intact — ${verifyResult.checked.toLocaleString()} entries verified`
+                : `Integrity check failed after ${verifyResult.checked.toLocaleString()} entries${
+                    verifyResult.brokenAt ? ` (at ${verifyResult.brokenAt})` : ""
+                  }${verifyResult.error ? `: ${verifyResult.error}` : ""}`}
+            </span>
+          </div>
+        )}
 
         {/* Stats Cards */}
         {stats ? (
@@ -426,6 +498,7 @@ export default function ActivityLog() {
                     <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Actor</th>
                     <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Role</th>
                     <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Action</th>
+                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Endpoint</th>
                     <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Details</th>
                     <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">IP</th>
                   </tr>
@@ -433,7 +506,7 @@ export default function ActivityLog() {
                 <tbody>
                   {logs.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center text-muted-foreground py-12">No activity found</td>
+                      <td colSpan={7} className="text-center text-muted-foreground py-12">No activity found</td>
                     </tr>
                   ) : (
                     logs.map((entry) => {
@@ -468,6 +541,9 @@ export default function ActivityLog() {
                               <Icon className="h-3.5 w-3.5" />
                               {meta.label}
                             </span>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap font-mono text-xs">
+                            {entry.method && entry.route ? `${entry.method} ${entry.route}` : "—"}
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">{entry.details || "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">{entry.ip || "—"}</td>
