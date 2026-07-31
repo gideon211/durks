@@ -8,6 +8,7 @@ import { refreshToken as apiRefreshToken } from "@/api/authApi";
 interface User {
   id: string;
   username: string;
+  fullName?: string;
   email: string;
   isAdmin: boolean;
   role: "admin" | "user";

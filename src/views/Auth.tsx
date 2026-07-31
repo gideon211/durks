@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
-import Header from "@/components/Header";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,23 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAuth } from "@/context/Authcontext";
 import { signInUser, signUpUser } from "@/api/authApi";
-import { ChevronLeft, Eye, EyeOff } from "lucide-react";
+import {
+  ChevronLeft,
+  Eye,
+  EyeOff,
+  Leaf,
+  Truck,
+  Heart,
+  LockKeyhole,
+  Sparkles,
+} from "lucide-react";
+
+const YELLOW_DOT = "bg-[hsl(48_100%_50%)]";
+
+const INPUT_FOCUS =
+  "focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-foreground/[0.12] focus-visible:ring-offset-0";
+const NEUTRAL_FOCUS =
+  "focus-visible:ring-foreground/20 focus-visible:ring-offset-0";
 
 export default function Auth() {
   const router = useRouter();
@@ -94,18 +110,18 @@ export default function Auth() {
     form.reset();
   };
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0, y: 18 },
-    enter: { opacity: 1, y: 0, transition: { stiffness: 100, damping: 12 } },
+    enter: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
     exit: { opacity: 0, y: 10, transition: { duration: 0.18 } },
   };
 
-  const titleVariants = {
+  const titleVariants: Variants = {
     hidden: { opacity: 0, y: -8 },
     show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
   };
 
-  const subtitleVariants = {
+  const subtitleVariants: Variants = {
     hidden: { opacity: 0, x: -6 },
     show: { opacity: 1, x: 0, transition: { duration: 0.45 } },
   };
@@ -114,362 +130,376 @@ export default function Auth() {
     window.scrollTo({ top: 0 });
   }, []);
 
+  const panelChips = [
+    { icon: Leaf, label: "No added sugar" },
+    { icon: Truck, label: "Accra-wide delivery" },
+    { icon: Heart, label: "Family recipes" },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-transparent via-transparent to-transparent">
+    <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-white text-foreground lg:h-auto lg:min-h-[100dvh] lg:flex-row">
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
-      >
-        <motion.div
-          animate={{ rotate: [0, 6, -6, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[-20%] left-[-10%] w-[36rem] h-[36rem] rounded-full bg-gradient-to-tr from-primary/10 to-pink-50 blur-3xl opacity-60"
-        />
-        <motion.div
-          animate={{ y: [0, -12, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-[-8%] right-[-12%] w-[28rem] h-[28rem] rounded-full bg-gradient-to-bl from-emerald-50 to-primary/5 blur-3xl opacity-60"
-        />
-      </div>
+        className="auth-grain pointer-events-none fixed inset-0 z-0 opacity-[0.07]"
+      />
 
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="enter"
-        exit="exit"
-        className="flex-1 flex items-center justify-center px-4 py-12"
-      >
-        <div className="w-full max-w-3xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="flex flex-col gap-2">
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-300 group mb-3"
+      {/* Left panel — desktop only */}
+      <aside className="relative hidden shrink-0 overflow-hidden bg-neutral-900 lg:block lg:w-[46%]">
+        <Image
+          src="/images/auth-panel.jpg"
+          alt="A fresh Duks Juice drink, cold-pressed and ready to enjoy"
+          fill
+          priority
+          sizes="(min-width: 1024px) 46vw"
+          className="object-cover"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/5"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent"
+        />
+
+        <div className="absolute inset-x-0 bottom-0 p-8 lg:p-10">
+          <div className="mb-4 flex items-center gap-2">
+            <span className={`${YELLOW_DOT} h-2 w-2 rounded-full`} />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/80">
+              Fresh. Pressed. Daily.
+            </span>
+          </div>
+          <h2 className="max-w-sm font-heading text-3xl font-bold leading-tight tracking-tight text-white text-balance xl:text-4xl">
+            Real fruit, pressed fresh every morning.
+          </h2>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/70">
+            Fresh natural juices made daily in Accra from real fruit, with no
+            added sugar or preservatives. Ideal for families, events and
+            wholesale orders.
+          </p>
+          <div className="mt-7 flex flex-wrap items-center gap-2">
+            {panelChips.map(({ icon: Icon, label }) => (
+              <span
+                key={label}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur-sm"
               >
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                  className="inline-flex items-center gap-2"
-                >
-                  <motion.span
-                    initial={{ x: 0 }}
-                    whileHover={{ x: -3 }}
-                    transition={{ type: "spring", stiffness: 400 }}
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </motion.span>
-                  Back to Home
-                </motion.span>
-              </Link>
-              <AnimatePresence mode="wait">
-                {activeTab === "signin" ? (
-                  <motion.div
-                    key="signin-head"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.35 }}
-                    className="space-y-3"
-                  >
-                    <motion.h1
-                      variants={titleVariants}
-                      initial="hidden"
-                      animate="show"
-                      className="text-3xl md:text-4xl font-heading font-bold mt-[-1rem]"
-                    >
-                      Welcome back.
-                    </motion.h1>
+                <Icon className="h-3.5 w-3.5 text-[hsl(48_100%_70%)]" />
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </aside>
 
-                    <motion.p
-                      variants={subtitleVariants}
-                      initial="hidden"
-                      animate="show"
-                      className="text-sm text-muted-foreground max-w-md"
-                    >
-                      Sign in to resume where you left off — your cart, order
-                      history are waiting. Quick tip: Use the email you signed
-                      up with.
-                    </motion.p>
+      {/* Right panel */}
+      <main className="relative z-10 flex flex-1 flex-col overflow-y-auto px-5 py-4 sm:px-10 sm:py-6 lg:px-14 lg:py-8">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(55%_45%_at_50%_18%,rgba(255,196,0,0.08),transparent_70%)]"
+        />
 
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.5 }}
-                      className="mt-4 w-full max-w-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                          >
-                            <path
-                              d="M12 2v6"
-                              stroke="#0f172a"
-                              strokeWidth="1.2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <path
-                              d="M8 10h8"
-                              stroke="#0f172a"
-                              strokeWidth="1.2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <path
-                              d="M6 14h12"
-                              stroke="#0f172a"
-                              strokeWidth="1.2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <path
-                              d="M9 18h6"
-                              stroke="#0f172a"
-                              strokeWidth="1.2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="font-semibold">Signed-in perks</div>
-                          <div className="text-xs text-muted-foreground">
-                            Quick checkout • Order tracking • Saved carts
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="signup-head"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.35 }}
-                    className="space-y-3"
-                  >
-                    <motion.h1
-                      variants={titleVariants}
-                      initial="hidden"
-                      animate="show"
-                      className="text-3xl md:text-4xl font-heading font-extrabold"
-                    >
-                      Create your account.
-                    </motion.h1>
+        <div className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="group inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-300 hover:text-foreground"
+          >
+            <ChevronLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
+            Back to Home
+          </Link>
+          <div className="flex items-center justify-end lg:hidden">
+            <img
+              src="/images/logo.svg"
+              alt="Duks Juice"
+              className="h-8 w-auto object-contain"
+            />
+          </div>
+        </div>
 
-                    <motion.p
-                      variants={subtitleVariants}
-                      initial="hidden"
-                      animate="show"
-                      className="text-sm text-muted-foreground max-w-md"
-                    >
-                      Join us and enjoy personalised deals, order history, and
-                      easy bulk purchases. It only takes a minute — and you'll
-                      get special offers for first orders.
-                    </motion.p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
+        <div className="m-auto flex w-full max-w-md flex-col py-6 sm:py-10">
+          <AnimatePresence mode="wait">
+            {activeTab === "signin" ? (
               <motion.div
-                initial={{ opacity: 0, y: 6 }}
+                key="signin-head"
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className=" text-xs text-muted-foreground"
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.35 }}
+                className="mb-5 sm:mb-7"
               >
-                Secure checkout • 30-day returns
+                <div className="mb-3 flex items-center gap-2">
+                  <span className={`${YELLOW_DOT} h-1.5 w-1.5 rounded-full`} />
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Member access
+                  </span>
+                </div>
+                <motion.h1
+                  variants={titleVariants}
+                  initial="hidden"
+                  animate="show"
+                  className="font-heading text-3xl font-bold tracking-tight text-balance sm:text-4xl"
+                >
+                  Welcome back.
+                </motion.h1>
+                <motion.p
+                  variants={subtitleVariants}
+                  initial="hidden"
+                  animate="show"
+                  className="mt-2.5 text-[15px] leading-relaxed text-muted-foreground"
+                >
+                  Sign in to pick up where you left off — your cart, orders, and
+                  saved items are waiting.
+                </motion.p>
               </motion.div>
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45 }}
-              className="bg-card border-2 border-border rounded-2xl shadow-xl p-6"
-            >
-              <Tabs
-                value={activeTab}
-                onValueChange={(v) => setActiveTab(v as "signin" | "signup")}
-                className="w-full"
+            ) : (
+              <motion.div
+                key="signup-head"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.35 }}
+                className="mb-5 sm:mb-7"
               >
-                <TabsList className="grid w-full grid-cols-2 mb-6 bg-transparent rounded-md p-1">
-                  <TabsTrigger
-                    value="signin"
-                    className={`font-semibold ${activeTab === "signin" ? "bg-primary rounded-md border" : ""}`}
-                  >
-                    LOG IN
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="signup"
-                    className={`font-semibold ${activeTab === "signup" ? "bg-primary/5 rounded-md border" : ""}`}
-                  >
-                    SIGN UP
-                  </TabsTrigger>
-                </TabsList>
+                <div className="mb-3 flex items-center gap-2">
+                  <span className={`${YELLOW_DOT} h-1.5 w-1.5 rounded-full`} />
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Join Duks Juice
+                  </span>
+                </div>
+                <motion.h1
+                  variants={titleVariants}
+                  initial="hidden"
+                  animate="show"
+                  className="font-heading text-3xl font-bold tracking-tight text-balance sm:text-4xl"
+                >
+                  Create your account.
+                </motion.h1>
+                <motion.p
+                  variants={subtitleVariants}
+                  initial="hidden"
+                  animate="show"
+                  className="mt-2.5 text-[15px] leading-relaxed text-muted-foreground"
+                >
+                  Join for personalised deals, faster checkout, and easy bulk
+                  purchases.
+                </motion.p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-                <TabsContent value="signin">
-                  {prefillEmail && activeTab === "signin" && (
-                    <div className="mb-3 text-sm text-emerald-600">
-                      Account created — please sign in using the email below.
-                    </div>
-                  )}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="enter"
+            className="rounded-2xl border border-foreground/[0.07] bg-white/80 p-5 shadow-[0_24px_70px_-32px_rgba(15,23,42,0.28)] backdrop-blur-sm sm:p-8"
+          >
+            <Tabs
+              value={activeTab}
+              onValueChange={(v) => setActiveTab(v as "signin" | "signup")}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2 gap-1 rounded-xl bg-foreground/[0.045] p-1">
+                <TabsTrigger
+                  value="signin"
+                  className={`rounded-lg py-2 text-sm font-semibold sm:py-2.5 ${NEUTRAL_FOCUS}`}
+                >
+                  Sign in
+                </TabsTrigger>
+                <TabsTrigger
+                  value="signup"
+                  className={`rounded-lg py-2 text-sm font-semibold sm:py-2.5 ${NEUTRAL_FOCUS}`}
+                >
+                  Create account
+                </TabsTrigger>
+              </TabsList>
 
-                  <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-email">Email</Label>
-                      <Input
-                        id="signin-email"
-                        name="signin-email"
-                        type="email"
-                        required
-                        defaultValue={prefillEmail}
-                      />
-                    </div>
+              <TabsContent value="signin">
+                {prefillEmail && activeTab === "signin" && (
+                  <div className="mb-5 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-sm text-emerald-700">
+                    <Sparkles className="h-4 w-4 shrink-0" />
+                    Account created — please sign in using the email below.
+                  </div>
+                )}
 
-                    <div className="space-y-2 relative">
-                      <Label htmlFor="signin-password">Password</Label>
+                <form onSubmit={handleSignIn} className="mt-3 space-y-4 sm:space-y-5">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="signin-email"
+                      className="text-[13px] font-medium text-foreground/80"
+                    >
+                      Email
+                    </Label>
+                    <Input
+                      id="signin-email"
+                      name="signin-email"
+                      type="email"
+                      required
+                      placeholder="you@example.com"
+                      defaultValue={prefillEmail}
+                      className={`h-11 rounded-lg bg-white px-3.5 ${INPUT_FOCUS}`}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="signin-password"
+                      className="text-[13px] font-medium text-foreground/80"
+                    >
+                      Password
+                    </Label>
+                    <div className="relative">
                       <Input
                         id="signin-password"
                         name="signin-password"
                         type={showSignInPassword ? "text" : "password"}
                         required
+                        placeholder="••••••••"
+                        className={`h-11 rounded-lg bg-white px-3.5 pr-11 ${INPUT_FOCUS}`}
                       />
                       <button
                         type="button"
-                        onClick={() =>
-                          setShowSignInPassword(!showSignInPassword)
-                        }
-                        className="absolute right-3 top-9 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowSignInPassword(!showSignInPassword)}
+                        aria-label={showSignInPassword ? "Hide password" : "Show password"}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                       >
-                        {showSignInPassword ? (
-                          <Eye size={18} />
-                        ) : (
-                          <EyeOff size={18} />
-                        )}
+                        {showSignInPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                       </button>
                     </div>
+                  </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="remember" checked={rememberMe} onCheckedChange={(v) => setRememberMe(v === true)} />
-                        <label
-                          htmlFor="remember"
-                          className="text-sm text-muted-foreground cursor-pointer"
-                        >
-                          Remember me
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Button
-                          type="submit"
-                          className="w-full p-6"
-                          disabled={signInMutation.isPending}
-                        >
-                          {signInMutation.isPending ? "Logging in..." : "Log In"}
-                        </Button>
-                      </motion.div>
-                    </div>
-                  </form>
-                </TabsContent>
-
-                <TabsContent value="signup">
-                  <form onSubmit={handleSignUp} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-name">Full Name</Label>
-                      <Input
-                        id="signup-name"
-                        name="signup-name"
-                        type="text"
-                        required
+                  <div className="flex items-center justify-between">
+                    <label
+                      htmlFor="remember"
+                      className="flex cursor-pointer select-none items-center gap-2.5"
+                    >
+                      <Checkbox
+                        id="remember"
+                        checked={rememberMe}
+                        onCheckedChange={(v) => setRememberMe(v === true)}
+                        className={`border-foreground/25 data-[state=checked]:border-foreground data-[state=checked]:bg-foreground ${NEUTRAL_FOCUS}`}
                       />
-                    </div>
+                      <span className="text-sm text-muted-foreground">Remember me</span>
+                    </label>
+                  </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <Input
-                        id="signup-email"
-                        name="signup-email"
-                        type="email"
-                        required
-                      />
-                    </div>
+                  <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <Button
+                      type="submit"
+                      className="h-12 w-full rounded-xl bg-foreground font-semibold text-background hover:bg-foreground/90"
+                      disabled={signInMutation.isPending}
+                    >
+                      {signInMutation.isPending ? "Signing in…" : "Sign in"}
+                    </Button>
+                  </motion.div>
+                </form>
+              </TabsContent>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-company">Company (Optional)</Label>
-                      <Input
-                        id="signup-company"
-                        name="signup-company"
-                        type="text"
-                      />
-                    </div>
+              <TabsContent value="signup">
+                <form onSubmit={handleSignUp} className="mt-3 space-y-4 sm:space-y-5">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="signup-name"
+                      className="text-[13px] font-medium text-foreground/80"
+                    >
+                      Full Name
+                    </Label>
+                    <Input
+                      id="signup-name"
+                      name="signup-name"
+                      type="text"
+                      required
+                      placeholder="Ama Osei"
+                      className={`h-11 rounded-lg bg-white px-3.5 ${INPUT_FOCUS}`}
+                    />
+                  </div>
 
-                    <div className="space-y-2 relative">
-                      <Label htmlFor="signup-password">Password</Label>
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="signup-email"
+                      className="text-[13px] font-medium text-foreground/80"
+                    >
+                      Email
+                    </Label>
+                    <Input
+                      id="signup-email"
+                      name="signup-email"
+                      type="email"
+                      required
+                      placeholder="you@example.com"
+                      className={`h-11 rounded-lg bg-white px-3.5 ${INPUT_FOCUS}`}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="signup-company"
+                      className="text-[13px] font-medium text-foreground/80"
+                    >
+                      Company{" "}
+                      <span className="font-normal text-muted-foreground">(Optional)</span>
+                    </Label>
+                    <Input
+                      id="signup-company"
+                      name="signup-company"
+                      type="text"
+                      placeholder="Your business or organisation"
+                      className={`h-11 rounded-lg bg-white px-3.5 ${INPUT_FOCUS}`}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="signup-password"
+                      className="text-[13px] font-medium text-foreground/80"
+                    >
+                      Password
+                    </Label>
+                    <div className="relative">
                       <Input
                         id="signup-password"
                         name="signup-password"
                         type={showSignUpPassword ? "text" : "password"}
                         required
+                        placeholder="••••••••"
+                        className={`h-11 rounded-lg bg-white px-3.5 pr-11 ${INPUT_FOCUS}`}
                       />
                       <button
                         type="button"
-                        onClick={() =>
-                          setShowSignUpPassword(!showSignUpPassword)
-                        }
-                        className="absolute right-3 top-9 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                        aria-label={showSignUpPassword ? "Hide password" : "Show password"}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                       >
-                        {showSignUpPassword ? (
-                          <Eye size={18} />
-                        ) : (
-                          <EyeOff size={18} />
-                        )}
+                        {showSignUpPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                       </button>
                     </div>
+                  </div>
 
-                    <div className="space-y-3">
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Button
-                          type="submit"
-                          className="w-full"
-                          disabled={signUpMutation.isPending}
-                        >
-                          {signUpMutation.isPending ? "Creating account..." : "Create Account"}
-                        </Button>
-                      </motion.div>
+                  <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <Button
+                      type="submit"
+                      className="h-12 w-full rounded-xl bg-foreground font-semibold text-background hover:bg-foreground/90"
+                      disabled={signUpMutation.isPending}
+                    >
+                      {signUpMutation.isPending ? "Creating account…" : "Create account"}
+                    </Button>
+                  </motion.div>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </motion.div>
 
-                      <div className="mt-1 text-center">
-                        <motion.span
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.15 }}
-                          className="inline-block bg-emerald-50 px-3 py-1 rounded-full text-xs font-medium"
-                        >
-                          New users: Get 10% off your first order
-                        </motion.span>
-                      </div>
-                    </div>
-                  </form>
-                </TabsContent>
-              </Tabs>
-            </motion.div>
+          <div className="mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground sm:mt-6">
+            <LockKeyhole className="h-3.5 w-3.5" />
+            Secure checkout
+            <span className="text-foreground/20">•</span>
+            30-day returns
           </div>
         </div>
-      </motion.div>
+
+        <div className="flex items-center justify-between text-xs text-muted-foreground/70">
+          <span>© {new Date().getFullYear()} Duks Juice</span>
+          <span>Madina, Accra</span>
+        </div>
+      </main>
     </div>
   );
 }
