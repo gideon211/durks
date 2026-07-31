@@ -3,7 +3,7 @@ import connectDB from "@/lib/mongodb";
 import Cart from "@/models/cart";
 import Drink from "@/models/drinks";
 import { verifyAuth } from "@/lib/auth";
-import { logActivity } from "@/lib/activityLogger";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,17 +25,10 @@ export async function GET(req: NextRequest) {
       image: (item.drinkId as unknown as { imageUrl: string }).imageUrl || "",
     }));
 
-    logActivity({
-      user: authUser.id,
-      email: null,
-      action: "view_cart",
-      details: `Viewed cart (${result.length} items)`,
-      isAdmin: authUser.isAdmin,
-    });
-
     return NextResponse.json({ cartItems: result });
   } catch (err) {
     console.error("Get cart items error:", err);
+    await logError({ req, error: err, status: 500 });
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
@@ -68,18 +61,19 @@ export async function POST(req: NextRequest) {
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    logActivity({
-      user: authUser.id,
-      email: null,
+    await logActivity({
+      ...buildActor(req, authUser),
       action: "add_to_cart",
       details: `Added ${drink.name} (pack ${pack}) × ${quantity} to cart`,
       metadata: { drinkId, pack, quantity, cartItemId: cartItem._id },
-      isAdmin: authUser.isAdmin,
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
     });
 
     return NextResponse.json({ message: "Added to cart", cartItem }, { status: 201 });
   } catch (err) {
     console.error("Add to cart error:", err);
+    await logError({ req, error: err, status: 500 });
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
@@ -89,11 +83,21 @@ export async function DELETE(req: NextRequest) {
     const authUser = verifyAuth(req);
     await connectDB();
 
-    await Cart.deleteMany({ userId: authUser.id });
+    const result = await Cart.deleteMany({ userId: authUser.id });
+
+    await logActivity({
+      ...buildActor(req, authUser),
+      action: "clear_cart",
+      details: `Cleared cart (${result.deletedCount} items)`,
+      metadata: { removed: result.deletedCount },
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
 
     return NextResponse.json({ message: "Cart cleared" });
   } catch (err) {
     console.error("Clear cart error:", err);
+    await logError({ req, error: err, status: 500 });
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

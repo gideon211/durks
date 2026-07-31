@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Quote from "@/models/quote";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, type AuthUser } from "@/lib/auth";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 export async function GET() {
   try {
@@ -27,38 +28,79 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  let authUser: AuthUser | null = null;
   try {
-    const authUser = verifyAuth(req);
-    if (!authUser.isAdmin) {
+    try {
+      authUser = verifyAuth(req);
+    } catch {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+    if (!authUser || !authUser.isAdmin) {
       return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
     }
 
     const { id, status } = await req.json();
     await connectDB();
+
+    const before = await Quote.findById(id).lean();
+    if (!before) {
+      return NextResponse.json({ success: false, message: "Quote not found" }, { status: 404 });
+    }
+
     const quote = await Quote.findByIdAndUpdate(id, { status }, { new: true });
     if (!quote) {
       return NextResponse.json({ success: false, message: "Quote not found" }, { status: 404 });
     }
+
+    await logActivity({
+      ...buildActor(req, authUser),
+      action: "update_quote_status",
+      details: `Quote ${id} status: ${(before as { status?: string }).status} → ${status}`,
+      metadata: { quoteId: id, from: (before as { status?: string }).status, to: status },
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
     return NextResponse.json({ success: true, quote });
   } catch (error: unknown) {
     console.error("Error updating quote:", error);
+    await logError({ req, error, status: 500, actor: authUser });
     return NextResponse.json({ success: false, message: "Failed to update quote" }, { status: 500 });
   }
 }
 
 export async function DELETE(req: NextRequest) {
+  let authUser: AuthUser | null = null;
   try {
-    const authUser = verifyAuth(req);
-    if (!authUser.isAdmin) {
+    try {
+      authUser = verifyAuth(req);
+    } catch {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+    if (!authUser || !authUser.isAdmin) {
       return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
     }
 
     const { id } = await req.json();
     await connectDB();
-    await Quote.findByIdAndDelete(id);
+    const quote = await Quote.findByIdAndDelete(id);
+    if (!quote) {
+      return NextResponse.json({ success: false, message: "Quote not found" }, { status: 404 });
+    }
+
+    await logActivity({
+      ...buildActor(req, authUser),
+      action: "delete_quote",
+      details: `Deleted quote ${id}`,
+      metadata: { quoteId: id, email: quote.email },
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
     return NextResponse.json({ success: true, message: "Quote deleted" });
   } catch (error: unknown) {
     console.error("Error deleting quote:", error);
+    await logError({ req, error, status: 500, actor: authUser });
     return NextResponse.json({ success: false, message: "Failed to delete quote" }, { status: 500 });
   }
 }

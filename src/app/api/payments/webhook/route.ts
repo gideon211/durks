@@ -90,12 +90,15 @@ export async function POST(req: NextRequest) {
       return new NextResponse("Order already processed", { status: 200 });
     }
 
-    logActivity({
+    await logActivity({
       user: userId || null,
       email: customer.email,
       action: "order_placed",
       details: `Order placed — GH₵ ${totalAmount.toFixed(2)}`,
       metadata: { orderId: order._id, totalAmount, reference },
+      ip: req.headers.get("x-forwarded-for") || req.ip || null,
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
     });
 
     // Send emails (async)

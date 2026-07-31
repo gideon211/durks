@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/user";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, type AuthUser } from "@/lib/auth";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,9 +21,14 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  let authUser: AuthUser | null = null;
   try {
-    const authUser = verifyAuth(req);
-    if (!authUser.isAdmin) {
+    try {
+      authUser = verifyAuth(req);
+    } catch {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+    if (!authUser || !authUser.isAdmin) {
       return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
     }
 
@@ -33,9 +39,20 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
     const result = await User.deleteMany({ _id: { $in: ids } });
+
+    await logActivity({
+      ...buildActor(req, authUser),
+      action: "batch_delete_users",
+      details: `Batch-deleted ${result.deletedCount} users`,
+      metadata: { count: result.deletedCount, ids },
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
     return NextResponse.json({ success: true, deleted: result.deletedCount });
   } catch (err) {
     console.error("batchDeleteUsers error:", err);
+    await logError({ req, error: err, status: 500, actor: authUser });
     return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });
   }
 }

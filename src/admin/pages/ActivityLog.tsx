@@ -29,6 +29,7 @@ import {
   ShoppingBag,
   Trash2,
   PackagePlus,
+  Download,
 } from "lucide-react";
 import axiosInstance from "@/api/axios";
 
@@ -39,6 +40,10 @@ interface ActivityEntry {
   action: string;
   details: string;
   createdAt: string;
+  ip: string | null;
+  isAdmin: boolean;
+  route: string | null;
+  method: string | null;
 }
 
 interface ActivityStats {
@@ -64,10 +69,36 @@ const ACTION_LABELS: Record<string, { label: string; icon: string }> = {
   order_placed: { label: "Order Placed", icon: "shopping-cart" },
   add_to_cart: { label: "Added to Cart", icon: "shopping-bag" },
   remove_from_cart: { label: "Removed from Cart", icon: "trash-2" },
-  view_cart: { label: "Viewed Cart", icon: "eye" },
+  clear_cart: { label: "Cart Cleared", icon: "trash-2" },
+  update_cart: { label: "Cart Updated", icon: "package-plus" },
   update_cart_quantity: { label: "Updated Quantity", icon: "package-plus" },
   update_cart_pack: { label: "Changed Pack Size", icon: "package-plus" },
   admin_view_activity: { label: "Admin Viewed Activity", icon: "eye" },
+  create_drink: { label: "Drink Created", icon: "package-plus" },
+  update_drink: { label: "Drink Updated", icon: "package-plus" },
+  delete_drink: { label: "Drink Deleted", icon: "trash-2" },
+  update_order_status: { label: "Order Status Changed", icon: "package-plus" },
+  cancel_order: { label: "Order Cancelled", icon: "trash-2" },
+  delete_order: { label: "Order Deleted", icon: "trash-2" },
+  batch_delete_orders: { label: "Orders Batch Deleted", icon: "trash-2" },
+  delete_customer: { label: "Customer Deleted", icon: "trash-2" },
+  batch_delete_customers: { label: "Customers Batch Deleted", icon: "trash-2" },
+  delete_user: { label: "User Deleted", icon: "trash-2" },
+  batch_delete_users: { label: "Users Batch Deleted", icon: "trash-2" },
+  create_inventory: { label: "Inventory Created", icon: "package-plus" },
+  update_inventory: { label: "Inventory Updated", icon: "package-plus" },
+  delete_inventory: { label: "Inventory Deleted", icon: "trash-2" },
+  update_quote_status: { label: "Quote Status Changed", icon: "package-plus" },
+  delete_quote: { label: "Quote Deleted", icon: "trash-2" },
+  update_preorder_status: { label: "Preorder Status Changed", icon: "package-plus" },
+  delete_preorder: { label: "Preorder Deleted", icon: "trash-2" },
+  create_training: { label: "Training Created", icon: "package-plus" },
+  update_training: { label: "Training Updated", icon: "package-plus" },
+  delete_training: { label: "Training Deleted", icon: "trash-2" },
+  mark_notification_read: { label: "Notification Read", icon: "eye" },
+  mark_all_notifications_read: { label: "All Notifications Read", icon: "eye" },
+  delete_notification: { label: "Notification Deleted", icon: "trash-2" },
+  api_error: { label: "API Error", icon: "eye" },
 };
 
 const ACTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -151,6 +182,8 @@ export default function ActivityLog() {
   const [loading, setLoading] = useState(true);
   const [searchEmail, setSearchEmail] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [actions, setActions] = useState<string[]>([]);
@@ -170,6 +203,8 @@ export default function ActivityLog() {
       const params: Record<string, string> = { page: String(p), limit: "50" };
       if (searchEmail) params.email = searchEmail;
       if (actionFilter !== "all") params.action = actionFilter;
+      if (fromDate) params.from = fromDate;
+      if (toDate) params.to = toDate;
 
       const { data } = await axiosInstance.get("/activity-logs", { params });
       if (data.success) {
@@ -181,6 +216,28 @@ export default function ActivityLog() {
       // ignore
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const params: Record<string, string> = {};
+      if (searchEmail) params.email = searchEmail;
+      if (actionFilter !== "all") params.action = actionFilter;
+      if (fromDate) params.from = fromDate;
+      if (toDate) params.to = toDate;
+
+      const { data } = await axiosInstance.get("/activity-logs/export", { params, responseType: "blob" });
+      const url = window.URL.createObjectURL(data as Blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `activity-log-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      // ignore
     }
   };
 
@@ -201,7 +258,7 @@ export default function ActivityLog() {
   useEffect(() => {
     fetchLogs(1);
     setPage(1);
-  }, [searchEmail, actionFilter]);
+  }, [searchEmail, actionFilter, fromDate, toDate]);
 
   function handleRefresh() {
     fetchStats();
@@ -216,7 +273,7 @@ export default function ActivityLog() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-heading font-bold">Activity Log</h1>
-            <p className="text-muted-foreground mt-1">Track customer lifetime activity on the website</p>
+            <p className="text-muted-foreground mt-1">Audit trail — who did what and when (customers & admins)</p>
           </div>
           <Button variant="outline" size="sm" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -320,9 +377,27 @@ export default function ActivityLog() {
                   ))}
                 </SelectContent>
               </Select>
+              <Input
+                type="date"
+                aria-label="From date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="w-full sm:w-40"
+              />
+              <Input
+                type="date"
+                aria-label="To date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="w-full sm:w-40"
+              />
               <Button onClick={() => fetchLogs(1)}>
                 <Search className="h-4 w-4 mr-2" />
                 Search
+              </Button>
+              <Button variant="outline" onClick={handleExport}>
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
               </Button>
             </div>
           </CardContent>
@@ -348,20 +423,23 @@ export default function ActivityLog() {
                 <thead>
                   <tr className="bg-muted/50 border-b">
                     <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Time</th>
-                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Customer</th>
+                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Actor</th>
+                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Role</th>
                     <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Action</th>
                     <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Details</th>
+                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">IP</th>
                   </tr>
                 </thead>
                 <tbody>
                   {logs.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="text-center text-muted-foreground py-12">No activity found</td>
+                      <td colSpan={6} className="text-center text-muted-foreground py-12">No activity found</td>
                     </tr>
                   ) : (
                     logs.map((entry) => {
                       const meta = getActionMeta(entry.action);
                       const Icon = meta.icon;
+                      const actorName = entry.user?.username || entry.email;
                       return (
                         <tr key={entry._id} className="border-b last:border-b-0 hover:bg-muted/40 transition-colors">
                           <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">
@@ -371,8 +449,19 @@ export default function ActivityLog() {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                              <span className="font-medium">{entry.email ?? "—"}</span>
+                              <span className="font-medium whitespace-nowrap">{actorName ?? "—"}</span>
                             </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                                entry.isAdmin
+                                  ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+                                  : "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                              }`}
+                            >
+                              {entry.isAdmin ? "Admin" : "Customer"}
+                            </span>
                           </td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${meta.color}`}>
@@ -381,6 +470,7 @@ export default function ActivityLog() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">{entry.details || "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">{entry.ip || "—"}</td>
                         </tr>
                       );
                     })

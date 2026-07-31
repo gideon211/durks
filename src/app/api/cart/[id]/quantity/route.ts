@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Cart from "@/models/cart";
 import { verifyAuth } from "@/lib/auth";
-import { logActivity } from "@/lib/activityLogger";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,18 +27,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ message: "Cart item not found" }, { status: 404 });
     }
 
-    logActivity({
-      user: authUser.id,
-      email: null,
+    await logActivity({
+      ...buildActor(req, authUser),
       action: "update_cart_quantity",
       details: `Updated cart item quantity to ${quantity}`,
       metadata: { cartItemId: id, quantity, drinkId: cartItem.drinkId },
-      isAdmin: authUser.isAdmin,
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
     });
 
     return NextResponse.json({ message: "Quantity updated", cartItem });
   } catch (err) {
     console.error("Update cart item quantity error:", err);
+    await logError({ req, error: err, status: 500 });
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

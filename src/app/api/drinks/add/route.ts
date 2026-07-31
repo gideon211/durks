@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Drink from "@/models/drinks";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, type AuthUser } from "@/lib/auth";
 import { uploadImage } from "@/lib/cloudinary";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 const VALID_STATUSES = ["active", "inactive", "few packs left", "out of stock"];
 
@@ -45,14 +46,14 @@ function parsePacks(raw: FormDataEntryValue | null): { packs: unknown[]; error?:
 }
 
 export async function POST(req: NextRequest) {
+  let authUser: AuthUser | null = null;
   try {
-    let authUser;
     try {
       authUser = verifyAuth(req);
     } catch {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
-    if (!authUser.isAdmin) {
+    if (!authUser || !authUser.isAdmin) {
       return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
     }
 
@@ -97,10 +98,20 @@ export async function POST(req: NextRequest) {
       packs,
     });
 
+    await logActivity({
+      ...buildActor(req, authUser),
+      action: "create_drink",
+      details: `Created drink "${drink.name}"${drink.category ? ` (${drink.category})` : ""}`,
+      metadata: { drinkId: drink._id.toString(), name: drink.name, category: drink.category, status: drinkStatus, packs, imageUploaded: !!imageUrl },
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
     return NextResponse.json({ success: true, message: "Drink added", drink }, { status: 201 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Server error";
     console.error("Add drink error:", error);
+    await logError({ req, error, status: 500, actor: authUser, metadata: { message } });
     return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

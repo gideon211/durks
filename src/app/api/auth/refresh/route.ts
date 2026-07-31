@@ -11,10 +11,15 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const decoded = jwt.verify(refreshToken, REFRESH_SECRET) as { id: string; isAdmin: boolean };
+    const decoded = jwt.verify(refreshToken, REFRESH_SECRET) as {
+      id: string;
+      isAdmin: boolean;
+      email?: string;
+      username?: string;
+    };
 
     const newAccessToken = jwt.sign(
-      { id: decoded.id, isAdmin: decoded.isAdmin },
+      { id: decoded.id, isAdmin: decoded.isAdmin, email: decoded.email, username: decoded.username },
       JWT_SECRET,
       { expiresIn: "1d" }
     );

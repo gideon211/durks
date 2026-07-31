@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Drink from "@/models/drinks";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, type AuthUser } from "@/lib/auth";
 import { uploadImage } from "@/lib/cloudinary";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 const VALID_STATUSES = ["active", "inactive", "few packs left", "out of stock"];
 
@@ -61,19 +62,24 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  let authUser: AuthUser | null = null;
   try {
-    let authUser;
     try {
       authUser = verifyAuth(req);
     } catch {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
-    if (!authUser.isAdmin) {
+    if (!authUser || !authUser.isAdmin) {
       return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
     }
 
     await connectDB();
     const { id } = await params;
+
+    const before = await Drink.findById(id).lean();
+    if (!before) {
+      return NextResponse.json({ success: false, message: "Drink not found" }, { status: 404 });
+    }
 
     const fd = await req.formData();
     const updates: Record<string, unknown> = {};
@@ -121,23 +127,40 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, message: "Drink not found" }, { status: 404 });
     }
 
+    const changedFields: Record<string, { from: unknown; to: unknown }> = {};
+    for (const key of Object.keys(updates)) {
+      if (JSON.stringify((before as Record<string, unknown>)[key]) !== JSON.stringify(updates[key])) {
+        changedFields[key] = { from: (before as Record<string, unknown>)[key], to: updates[key] };
+      }
+    }
+
+    await logActivity({
+      ...buildActor(req, authUser),
+      action: "update_drink",
+      details: `Updated drink "${updatedDrink.name}"`,
+      metadata: { drinkId: id, changed: changedFields },
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
     return NextResponse.json({ success: true, message: "Drink updated successfully", drink: updatedDrink });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Server error";
     console.error("Error updating drink:", error);
+    await logError({ req, error, status: 500, actor: authUser, metadata: { message } });
     return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  let authUser: AuthUser | null = null;
   try {
-    let authUser;
     try {
       authUser = verifyAuth(req);
     } catch {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
-    if (!authUser.isAdmin) {
+    if (!authUser || !authUser.isAdmin) {
       return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
     }
 
@@ -147,10 +170,21 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!deletedDrink) {
       return NextResponse.json({ success: false, message: "Drink not found" }, { status: 404 });
     }
+
+    await logActivity({
+      ...buildActor(req, authUser),
+      action: "delete_drink",
+      details: `Deleted drink "${deletedDrink.name}"`,
+      metadata: { drinkId: id, name: deletedDrink.name, category: deletedDrink.category },
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
     return NextResponse.json({ success: true, message: "Drink deleted successfully" });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Server error";
     console.error("Error deleting drink:", error);
+    await logError({ req, error, status: 500, actor: authUser, metadata: { message } });
     return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

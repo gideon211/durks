@@ -27,14 +27,21 @@ export async function POST(req: NextRequest) {
       isAdmin: false,
     });
 
-    const { token, refreshToken } = signTokens({ id: user._id.toString(), isAdmin: false });
+    const { token, refreshToken } = signTokens({
+      id: user._id.toString(),
+      isAdmin: false,
+      email: user.email,
+      username: user.username,
+    });
 
-    logActivity({
+    await logActivity({
       user: user._id.toString(),
       email: user.email,
       action: "signup",
       details: `User ${user.username} created an account`,
       ip: req.headers.get("x-forwarded-for") || req.ip || null,
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
     });
 
     return NextResponse.json({

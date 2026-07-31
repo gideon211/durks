@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import ActivityLog from "@/models/ActivityLog";
 import { verifyAuth } from "@/lib/auth";
-import { logActivity } from "@/lib/activityLogger";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,14 +14,27 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
     const action = searchParams.get("action");
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 200);
 
     await connectDB();
 
     const filter: Record<string, unknown> = {};
     if (email) filter.email = { $regex: email, $options: "i" };
     if (action) filter.action = action;
+
+    const dateFilter: Record<string, Date> = {};
+    if (from) {
+      const d = new Date(from);
+      if (!isNaN(d.getTime())) dateFilter.$gte = d;
+    }
+    if (to) {
+      const d = new Date(to);
+      if (!isNaN(d.getTime())) dateFilter.$lte = d;
+    }
+    if (Object.keys(dateFilter).length) filter.createdAt = dateFilter;
 
     const skip = (page - 1) * limit;
 
@@ -35,12 +48,12 @@ export async function GET(req: NextRequest) {
       ActivityLog.countDocuments(filter),
     ]);
 
-    logActivity({
-      user: authUser.id,
-      email: null,
+    await logActivity({
+      ...buildActor(req, authUser),
       action: "admin_view_activity",
       details: `Admin viewed activity logs${email ? ` filtered by ${email}` : ""}`,
-      isAdmin: true,
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
     });
 
     return NextResponse.json({
@@ -52,6 +65,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error("getActivityLogs error:", error);
+    await logError({ req, error, status: 500 });
     return NextResponse.json({ success: false, message: "Failed to fetch activity logs" }, { status: 500 });
   }
 }

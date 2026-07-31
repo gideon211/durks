@@ -22,7 +22,12 @@ export async function clearCollections() {
   }
 }
 
-export function signTestToken(payload: { id: string; isAdmin: boolean }): string {
+export function signTestToken(payload: {
+  id: string;
+  isAdmin: boolean;
+  email?: string;
+  username?: string;
+}): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
 }
 
@@ -34,7 +39,12 @@ export async function createTestUser(overrides: Partial<{ username: string; emai
   const { username = "testuser", email = "test@test.com", password = "password123", isAdmin = false } = overrides;
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await User.create({ username, email, passwordHash, isAdmin });
-  const token = signTestToken({ id: user._id.toString(), isAdmin: user.isAdmin });
+  const token = signTestToken({
+    id: user._id.toString(),
+    isAdmin: user.isAdmin,
+    email: user.email,
+    username: user.username,
+  });
   return { user, token, password };
 }
 

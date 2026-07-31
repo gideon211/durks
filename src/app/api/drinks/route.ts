@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Drink from "@/models/drinks";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, type AuthUser } from "@/lib/auth";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 export async function GET() {
   try {
@@ -16,14 +17,14 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  let authUser: AuthUser | null = null;
   try {
-    let authUser;
     try {
       authUser = verifyAuth(req);
     } catch {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
-    if (!authUser.isAdmin) {
+    if (!authUser || !authUser.isAdmin) {
       return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
     }
 
@@ -77,10 +78,20 @@ export async function POST(req: NextRequest) {
 
     const savedDrink = await newDrink.save();
 
+    await logActivity({
+      ...buildActor(req, authUser),
+      action: "create_drink",
+      details: `Created drink "${savedDrink.name}"${savedDrink.category ? ` (${savedDrink.category})` : ""}`,
+      metadata: { drinkId: savedDrink._id.toString(), name: savedDrink.name, category: savedDrink.category, status: savedDrink.status, packs: parsedPacks },
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
     return NextResponse.json({ success: true, message: "Drink added successfully", drink: savedDrink }, { status: 201 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Server error";
     console.error("Error adding drink:", error);
+    await logError({ req, error, status: 500, actor: authUser, metadata: { message } });
     return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

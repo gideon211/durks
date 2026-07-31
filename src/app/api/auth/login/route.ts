@@ -47,15 +47,22 @@ export async function POST(req: NextRequest) {
         await admin.save();
       }
 
-      const { token, refreshToken } = signTokens({ id: admin._id.toString(), isAdmin: true });
+      const { token, refreshToken } = signTokens({
+        id: admin._id.toString(),
+        isAdmin: true,
+        email: admin.email,
+        username: admin.username,
+      });
 
-      logActivity({
+      await logActivity({
         user: admin._id.toString(),
         email: admin.email,
         action: "login",
         details: "Admin logged in",
         ip: req.headers.get("x-forwarded-for") || req.ip || null,
         isAdmin: true,
+        route: req.nextUrl?.pathname ?? null,
+        method: req.method ?? null,
       });
 
       return NextResponse.json({
@@ -77,14 +84,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Invalid credentials" }, { status: 400 });
     }
 
-    const { token, refreshToken } = signTokens({ id: user._id.toString(), isAdmin: user.isAdmin });
+    const { token, refreshToken } = signTokens({
+      id: user._id.toString(),
+      isAdmin: user.isAdmin,
+      email: user.email,
+      username: user.username,
+    });
 
-    logActivity({
+    await logActivity({
       user: user._id.toString(),
       email: user.email,
       action: "login",
       details: `User ${user.username} logged in`,
       ip: req.headers.get("x-forwarded-for") || req.ip || null,
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
     });
 
     return NextResponse.json({

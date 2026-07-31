@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Training from "@/models/Training";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, type AuthUser } from "@/lib/auth";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 export async function GET() {
   try {
@@ -16,9 +17,14 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  let authUser: AuthUser | null = null;
   try {
-    const authUser = verifyAuth(req);
-    if (!authUser.isAdmin) {
+    try {
+      authUser = verifyAuth(req);
+    } catch {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+    if (!authUser || !authUser.isAdmin) {
       return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
     }
 
@@ -45,10 +51,21 @@ export async function POST(req: NextRequest) {
     });
 
     const savedTraining = await newTraining.save();
+
+    await logActivity({
+      ...buildActor(req, authUser),
+      action: "create_training",
+      details: `Created training "${savedTraining.name}"`,
+      metadata: { trainingId: savedTraining._id.toString(), name: savedTraining.name, price: savedTraining.price, status: savedTraining.status },
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
     return NextResponse.json({ success: true, message: "Training added successfully", training: savedTraining }, { status: 201 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Server error";
     console.error("Error adding training:", error);
+    await logError({ req, error, status: 500, actor: authUser, metadata: { message } });
     return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

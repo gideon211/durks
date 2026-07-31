@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Order from "@/models/order";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, type AuthUser } from "@/lib/auth";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -28,9 +29,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  let authUser: AuthUser | null = null;
   try {
-    const authUser = verifyAuth(req);
-    if (!authUser.isAdmin) {
+    try {
+      authUser = verifyAuth(req);
+    } catch {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+    if (!authUser || !authUser.isAdmin) {
       return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
     }
 
@@ -41,17 +47,33 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!order) {
       return NextResponse.json({ success: false, message: "Order not found" }, { status: 404 });
     }
+
+    await logActivity({
+      ...buildActor(req, authUser),
+      action: "delete_order",
+      details: `Deleted order ${order.orderNumber || id}`,
+      metadata: { orderId: id, orderNumber: order.orderNumber, totalAmount: order.totalAmount },
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
     return NextResponse.json({ success: true, message: "Order deleted permanently" });
   } catch (error: unknown) {
     console.error("Delete order error:", error);
+    await logError({ req, error, status: 500, actor: authUser });
     return NextResponse.json({ success: false, message: "Failed to delete order" }, { status: 500 });
   }
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  let authUser: AuthUser | null = null;
   try {
-    const authUser = verifyAuth(req);
-    if (!authUser.isAdmin) {
+    try {
+      authUser = verifyAuth(req);
+    } catch {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+    if (!authUser || !authUser.isAdmin) {
       return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
     }
 
@@ -65,14 +87,29 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     await connectDB();
 
+    const before = await Order.findById(id).lean();
+    if (!before) {
+      return NextResponse.json({ success: false, message: "Order not found" }, { status: 404 });
+    }
+
     const order = await Order.findByIdAndUpdate(id, { orderStatus }, { new: true }).populate("userId", "email name fullName");
     if (!order) {
       return NextResponse.json({ success: false, message: "Order not found" }, { status: 404 });
     }
 
+    await logActivity({
+      ...buildActor(req, authUser),
+      action: "update_order_status",
+      details: `Order ${order.orderNumber || id} status: ${(before as { orderStatus?: string }).orderStatus} → ${orderStatus}`,
+      metadata: { orderId: id, orderNumber: order.orderNumber, from: (before as { orderStatus?: string }).orderStatus, to: orderStatus },
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
     return NextResponse.json({ success: true, message: "Order status updated successfully", order });
   } catch (error: unknown) {
     console.error("Update order status error:", error);
+    await logError({ req, error, status: 500, actor: authUser });
     return NextResponse.json({ success: false, message: "Failed to update order status" }, { status: 500 });
   }
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Cart from "@/models/cart";
 import { verifyAuth } from "@/lib/auth";
-import { logActivity } from "@/lib/activityLogger";
+import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -29,13 +29,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       await existingItem.save();
       await cartItem.deleteOne();
 
-      logActivity({
-        user: authUser.id,
-        email: null,
+      await logActivity({
+        ...buildActor(req, authUser),
         action: "update_cart_pack",
         details: `Changed pack to ${pack} (merged with existing)`,
         metadata: { cartItemId: id, pack, drinkId: cartItem.drinkId },
-        isAdmin: authUser.isAdmin,
+        route: req.nextUrl?.pathname ?? null,
+        method: req.method ?? null,
       });
 
       return NextResponse.json({ message: "Pack updated (merged with existing item)", cartItem: existingItem });
@@ -44,18 +44,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     cartItem.pack = pack;
     await cartItem.save();
 
-    logActivity({
-      user: authUser.id,
-      email: null,
+    await logActivity({
+      ...buildActor(req, authUser),
       action: "update_cart_pack",
       details: `Changed pack to ${pack}`,
       metadata: { cartItemId: id, pack, drinkId: cartItem.drinkId },
-      isAdmin: authUser.isAdmin,
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
     });
 
     return NextResponse.json({ message: "Pack updated", cartItem });
   } catch (err) {
     console.error("Update cart item pack error:", err);
+    await logError({ req, error: err, status: 500 });
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
