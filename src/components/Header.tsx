@@ -176,16 +176,31 @@ const Header = () => {
             variant="ghost"
             size="icon"
             onClick={() => router.push("/cart")}
-            className="relative"
+            className="relative lg:w-auto lg:px-3"
             aria-label="Cart"
           >
             <ShoppingCart className="h-5 w-5" />
+            <span className="hidden lg:inline text-sm font-medium">Cart</span>
             {distinctCount > 0 && (
               <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold flex items-center justify-center border border-background">
                 {distinctCount > 9 ? "9+" : distinctCount}
               </span>
             )}
           </Button>
+
+          {/* My Orders (desktop) */}
+          {mounted && user && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/orders")}
+              className="hidden lg:flex lg:w-auto lg:px-3"
+              aria-label="My Orders"
+            >
+              <Package className="h-5 w-5" />
+              <span className="hidden lg:inline text-sm font-medium">My Orders</span>
+            </Button>
+          )}
 
           {/* User menu (desktop) */}
           {mounted && user ? (

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/user";
 import Drink from "@/models/drinks";

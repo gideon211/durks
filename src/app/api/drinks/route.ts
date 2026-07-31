@@ -6,7 +6,7 @@ import { verifyAuth } from "@/lib/auth";
 export async function GET() {
   try {
     await connectDB();
-    const drinks = await Drink.find();
+    const drinks = await Drink.find().sort({ createdAt: -1 });
     return NextResponse.json({ success: true, count: drinks.length, drinks });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Server error";
@@ -17,7 +17,12 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const authUser = verifyAuth(req);
+    let authUser;
+    try {
+      authUser = verifyAuth(req);
+    } catch {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
     if (!authUser.isAdmin) {
       return NextResponse.json({ success: false, message: "Admin access required" }, { status: 403 });
     }

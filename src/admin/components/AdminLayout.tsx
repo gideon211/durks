@@ -2,7 +2,7 @@
 
 import { ReactNode, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -42,6 +42,7 @@ const menuItems = [
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const userInitial = (user?.username ?? "U").charAt(0).toUpperCase();
 
@@ -162,7 +163,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
           <div className="flex items-center gap-2">
             <NotificationDropdown />
-            <Button variant="ghost" size="icon" onClick={logout} className="h-9 w-9 rounded-xl text-muted-foreground hover:text-red-500 transition-colors" aria-label="Log out">
+            <Button variant="ghost" size="icon" onClick={() => router.push("/products")} className="h-9 w-9 rounded-xl text-muted-foreground hover:text-red-500 transition-colors" aria-label="Exit to store">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
