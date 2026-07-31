@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
         deliveryDate: deliveryDate || null,
         deliveryTime: deliveryTime || null,
         paystackReference: reference,
+        paymentMethod: "Cash on Delivery",
         paymentStatus: "pending",
         orderStatus: "confirmed",
       });

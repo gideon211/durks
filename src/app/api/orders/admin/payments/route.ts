@@ -11,9 +11,27 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    const payments = await Order.aggregate([
-      { $group: { _id: "$paymentStatus", count: { $sum: 1 }, total: { $sum: "$totalAmount" } } },
-    ]);
+    const orders = await Order.find()
+      .sort({ createdAt: -1 })
+      .populate("userId", "email username")
+      .lean();
+
+    const payments = orders.map((o) => {
+      const reference = String(o.paystackReference || "");
+      return {
+        _id: o._id,
+        orderNumber: o.orderNumber ?? null,
+        customer: o.customer,
+        userId: o.userId,
+        totalAmount: o.totalAmount,
+        paymentStatus: o.paymentStatus,
+        paystackReference: reference,
+        paymentMethod:
+          o.paymentMethod ||
+          (reference.startsWith("COD-") ? "Cash on Delivery" : "Card"),
+        createdAt: o.createdAt,
+      };
+    });
 
     await logActivity({
       ...buildActor(req, authUser),

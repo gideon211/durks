@@ -27,6 +27,7 @@ export interface IOrder extends Document {
   totalAmount: number;
   totalItems?: number;
   paystackReference: string;
+  paymentMethod: string;
   paymentStatus: "pending" | "paid" | "refunded";
   orderStatus: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "completed" | "cancelled";
   orderNumber: string | null;
@@ -78,6 +79,7 @@ const orderSchema = new Schema<IOrder>(
     deliveryTime: { type: String, trim: true, default: null },
     totalAmount: { type: Number, required: true, min: 0 },
     paystackReference: { type: String, required: true, trim: true, unique: true, index: true },
+    paymentMethod: { type: String, trim: true, default: "Card" },
     paymentStatus: {
       type: String,
       enum: ["pending", "paid", "refunded"],

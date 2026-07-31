@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import AdminLayout from "@/admin/components/AdminLayout";
 import DataTable from "@/admin/components/DataTable";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ShimmerBar } from "@/components/ui/shimmer-bar";
@@ -31,6 +30,33 @@ interface Payment {
   paymentMethod?: string;
   paymentStatus?: string;
   createdAt?: string;
+}
+
+const METHOD_LABELS: Record<string, string> = {
+  Card: "Card",
+  "Cash on Delivery": "Cash on Delivery",
+  cash_on_delivery: "Cash on Delivery",
+  "Pay on Delivery": "Cash on Delivery",
+  Paystack: "Card",
+  transfer: "Bank Transfer",
+  bank_transfer: "Bank Transfer",
+};
+
+function methodLabel(m?: string): string {
+  return m ? (METHOD_LABELS[m] ?? m) : "—";
+}
+
+function statusBadge(status?: string) {
+  const styles: Record<string, string> = {
+    paid: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    pending: "bg-amber-50 text-amber-700 border-amber-200",
+    refunded: "bg-slate-100 text-slate-600 border-slate-200",
+  };
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${styles[status ?? ""] || "bg-muted text-muted-foreground border-border"}`}>
+      {status ?? "pending"}
+    </span>
+  );
 }
 
 export default function Payments() {
@@ -96,7 +122,7 @@ export default function Payments() {
       `Date: ${payment.createdAt ? new Date(payment.createdAt).toLocaleDateString("en-GB") : "—"}`,
       `Customer: ${payment.customer?.fullName || payment.userId?.email || payment.userId?.username || "—"}`,
       `Amount: GH₵ ${Number(payment.totalAmount ?? 0).toFixed(2)}`,
-      `Payment: ${payment.paymentStatus}`,
+      `Payment: ${methodLabel(payment.paymentMethod)} — ${payment.paymentStatus}`,
       "============================",
     ].join("\n");
     const blob = new Blob([receipt], { type: "text/plain" });
@@ -127,13 +153,11 @@ export default function Payments() {
     },
     {
       key: "method", label: "Method",
-      render: (_: unknown, row: Payment) => <span>{row.paymentMethod || "—"}</span>,
+      render: (_: unknown, row: Payment) => <span>{methodLabel(row.paymentMethod)}</span>,
     },
     {
       key: "status", label: "Status",
-      render: (_: unknown, row: Payment) => (
-        <Badge variant={row.paymentStatus === "paid" ? "default" : "secondary"}>{row.paymentStatus ?? "pending"}</Badge>
-      ),
+      render: (_: unknown, row: Payment) => statusBadge(row.paymentStatus),
     },
     {
       key: "date", label: "Date",

@@ -34,6 +34,13 @@ import { useRouter } from "next/navigation";
 
 const CHART_COLORS = ["#3b82f6", "#10b981", "#06b6d4", "#f59e0b", "#ec4899"];
 
+function formatTrendDate(value: string): string {
+  if (!value) return "";
+  const d = new Date(value.length === 10 ? `${value}T00:00:00Z` : value);
+  if (isNaN(d.getTime())) return value;
+  return d.toLocaleDateString("en-GB", { timeZone: "UTC", day: "numeric", month: "short" });
+}
+
 interface Order {
   _id: string;
   orderNumber?: string;
@@ -48,10 +55,10 @@ interface Order {
 export default function Dashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ totalOrders: 0, totalRevenue: 0, pendingOrders: 0, recentOrders: 0 });
+  const [stats, setStats] = useState({ totalOrders: 0, totalRevenue: 0, pendingOrders: 0, ordersThisWeek: 0 });
   const [userCount, setUserCount] = useState(0);
   const [productCount, setProductCount] = useState(0);
-  const [revenueTrend, setRevenueTrend] = useState<{ month: string; revenue: number }[]>([]);
+  const [revenueTrend, setRevenueTrend] = useState<{ date: string; revenue: number }[]>([]);
   const [categoryData, setCategoryData] = useState<{ name: string; count: number }[]>([]);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
 
@@ -67,7 +74,15 @@ export default function Dashboard() {
           axiosInstance.get("/orders/admin/all"),
         ]);
 
-        if (statsRes.status === "fulfilled") setStats(statsRes.value.data.stats);
+        if (statsRes.status === "fulfilled") {
+          const s = statsRes.value.data.stats ?? {};
+          setStats({
+            totalOrders: s.totalOrders ?? 0,
+            totalRevenue: s.totalRevenue ?? 0,
+            pendingOrders: s.pendingOrders ?? 0,
+            ordersThisWeek: s.ordersThisWeek ?? 0,
+          });
+        }
         if (usersRes.status === "fulfilled") setUserCount((usersRes.value.data.customers ?? []).length);
         if (drinksRes.status === "fulfilled") setProductCount(drinksRes.value.data.count ?? 0);
         if (trendRes.status === "fulfilled") setRevenueTrend(trendRes.value.data.trend ?? []);
@@ -167,7 +182,7 @@ export default function Dashboard() {
             </div>
           ) : (
           <div className="grid grid-cols-2 gap-4 lg:gap-5 lg:grid-cols-4">
-            <StatCard title="Total Orders" value={stats.totalOrders} change={`+${stats.recentOrders} this week`} changeType="positive" icon={ShoppingCart} color="text-blue-500" />
+            <StatCard title="Total Orders" value={stats.totalOrders} change={`+${stats.ordersThisWeek} this week`} changeType="positive" icon={ShoppingCart} color="text-blue-500" />
             <StatCard title="Pending" value={stats.pendingOrders} change="Awaiting fulfillment" changeType="neutral" icon={Clock} color="text-amber-500" />
             <StatCard title="Revenue" value={`GH\u20B5 ${Number(stats.totalRevenue).toLocaleString()}`} change="From paid orders" changeType="positive" icon={DollarSign} color="text-emerald-500" />
             <StatCard title="Customers" value={userCount} change={`${productCount} products`} changeType="neutral" icon={Users} color="text-blue-500" />
@@ -194,13 +209,15 @@ export default function Dashboard() {
             ) : (
               <div className="h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={revenueTrend.length > 0 ? revenueTrend : [{ month: "No data", revenue: 0 }]}>
+                  <LineChart data={revenueTrend.length > 0 ? revenueTrend : [{ date: "No data", revenue: 0 }]}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                    <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
+                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatTrendDate} minTickGap={28} tickMargin={8} />
+                    <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} width={36} />
                     <Tooltip
                       contentStyle={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)", fontSize: "13px" }}
                       cursor={{ stroke: "#e2e8f0" }}
+                      labelFormatter={(label) => formatTrendDate(String(label))}
+                      formatter={(value) => [`GH₵ ${Number(value).toLocaleString()}`, "Revenue"]}
                     />
                     <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2.5} dot={{ fill: "#3b82f6", strokeWidth: 0, r: 4 }} activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }} />
                   </LineChart>

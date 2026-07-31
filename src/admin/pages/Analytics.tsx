@@ -19,7 +19,7 @@ import {
 import axiosInstance from "@/api/axios";
 
 interface RevenuePoint {
-  month: string;
+  date: string;
   revenue: number;
 }
 
@@ -35,11 +35,21 @@ interface TopCustomer {
   totalSpent: number;
 }
 
+function formatTrendDate(value: string): string {
+  if (!value) return "";
+  const d = new Date(value.length === 10 ? `${value}T00:00:00Z` : value);
+  if (isNaN(d.getTime())) return value;
+  return d.toLocaleDateString("en-GB", { timeZone: "UTC", day: "numeric", month: "short" });
+}
+
 export default function Analytics() {
   const [loading, setLoading] = useState(true);
   const [revenueData, setRevenueData] = useState<RevenuePoint[]>([]);
   const [categoryData, setCategoryData] = useState<CategoryStat[]>([]);
   const [avgOrderValue, setAvgOrderValue] = useState(0);
+  const [repeatPurchaseRate, setRepeatPurchaseRate] = useState(0);
+  const [customerLifetimeValue, setCustomerLifetimeValue] = useState(0);
+  const [preorderRatio, setPreorderRatio] = useState(0);
   const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
 
   useEffect(() => {
@@ -53,7 +63,10 @@ export default function Analytics() {
       if (catRes.status === "fulfilled") setCategoryData(catRes.value.data.categories ?? []);
       if (statsRes.status === "fulfilled") {
         const s = statsRes.value.data.stats;
-        setAvgOrderValue(s.totalRevenue && s.totalOrders ? s.totalRevenue / s.totalOrders : 0);
+        setAvgOrderValue(s.totalRevenue && (s.paidOrders || s.totalOrders) ? s.totalRevenue / (s.paidOrders || s.totalOrders) : 0);
+        setRepeatPurchaseRate(s.repeatPurchaseRate ?? 0);
+        setCustomerLifetimeValue(s.customerLifetimeValue ?? 0);
+        setPreorderRatio(s.preorderRatio ?? 0);
       }
       if (custRes.status === "fulfilled") {
         const all = custRes.value.data.customers ?? [];
@@ -102,7 +115,7 @@ export default function Analytics() {
               ) : (
                 <>
                   <p className="text-xs sm:text-sm text-muted-foreground">Repeat Purchase Rate</p>
-                  <h3 className="text-lg sm:text-2xl font-bold mt-1">—</h3>
+                  <h3 className="text-lg sm:text-2xl font-bold mt-1">{((repeatPurchaseRate || 0) * 100).toFixed(1)}%</h3>
                 </>
               )}
             </CardContent>
@@ -117,7 +130,7 @@ export default function Analytics() {
               ) : (
                 <>
                   <p className="text-xs sm:text-sm text-muted-foreground">Customer Lifetime Value</p>
-                  <h3 className="text-lg sm:text-2xl font-bold mt-1">—</h3>
+                  <h3 className="text-lg sm:text-2xl font-bold mt-1">GH₵ {(customerLifetimeValue || 0).toFixed(2)}</h3>
                 </>
               )}
             </CardContent>
@@ -132,7 +145,7 @@ export default function Analytics() {
               ) : (
                 <>
                   <p className="text-xs sm:text-sm text-muted-foreground">Preorder Ratio</p>
-                  <h3 className="text-lg sm:text-2xl font-bold mt-1">—</h3>
+                  <h3 className="text-lg sm:text-2xl font-bold mt-1">{((preorderRatio || 0) * 100).toFixed(1)}%</h3>
                 </>
               )}
             </CardContent>
@@ -141,7 +154,7 @@ export default function Analytics() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Revenue Growth</CardTitle>
+            <CardTitle>Revenue — Last 30 Days</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -151,9 +164,13 @@ export default function Analytics() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={revenueData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
+                    <XAxis dataKey="date" stroke="hsl(var(--foreground))" tickFormatter={formatTrendDate} minTickGap={28} tickMargin={8} />
                     <YAxis stroke="hsl(var(--foreground))" />
-                    <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
+                      labelFormatter={(label) => formatTrendDate(String(label))}
+                      formatter={(value) => [`GH₵ ${Number(value).toLocaleString()}`, "Revenue"]}
+                    />
                     <Legend />
                     <Line type="monotone" dataKey="revenue" stroke="hsl(221, 83%, 53%)" strokeWidth={3} dot={{ fill: "hsl(221, 83%, 53%)", r: 3 }} />
                   </LineChart>

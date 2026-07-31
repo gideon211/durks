@@ -15,6 +15,23 @@ const verifyPaystackSignature = (body: string, signature: string | null) => {
   return hash === signature;
 };
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  card: "Card",
+  mobile_money: "Mobile Money",
+  mobilemoney: "Mobile Money",
+  bank: "Bank Transfer",
+  bank_transfer: "Bank Transfer",
+  ussd: "USSD",
+  qr: "QR",
+  apple_pay: "Apple Pay",
+  google_pay: "Google Pay",
+};
+
+function mapChannel(channel?: string): string {
+  const c = String(channel || "").trim();
+  return c ? (PAYMENT_METHOD_LABELS[c] ?? c) : "Card";
+}
+
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
@@ -33,7 +50,7 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const { reference, metadata = {}, amount: paystackAmount } = data;
+    const { reference, metadata = {}, amount: paystackAmount, channel } = data;
     const { userId, customer, items, deliveryDate, deliveryTime, calculatedTotal } = metadata;
 
     if (!items || items.length === 0 || !customer?.email) {
@@ -77,6 +94,7 @@ export async function POST(req: NextRequest) {
           deliveryDate: deliveryDate || null,
           deliveryTime: deliveryTime || null,
           paystackReference: reference,
+          paymentMethod: mapChannel(channel),
           paymentStatus: "paid",
           orderStatus: "confirmed",
           createdAt: new Date(),

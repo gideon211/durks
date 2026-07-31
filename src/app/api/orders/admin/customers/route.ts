@@ -13,10 +13,22 @@ export async function GET(req: NextRequest) {
     await connectDB();
 
     const customers = await Order.aggregate([
-      { $group: { _id: "$userId", totalOrders: { $sum: 1 }, totalSpent: { $sum: "$totalAmount" }, lastOrder: { $max: "$createdAt" } } },
-      { $lookup: { from: "users", localField: "_id", foreignField: "_id", as: "user" } },
+      { $match: { paymentStatus: "paid" } },
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: "$customer.email",
+          fullName: { $first: "$customer.fullName" },
+          phone: { $first: "$customer.phone" },
+          city: { $first: "$customer.city" },
+          orders: { $sum: 1 },
+          totalSpent: { $sum: "$totalAmount" },
+          lastOrder: { $max: "$createdAt" },
+        },
+      },
+      { $lookup: { from: "users", localField: "_id", foreignField: "email", as: "user" } },
       { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
-      { $project: { email: "$user.email", username: "$user.username", totalOrders: 1, totalSpent: 1, lastOrder: 1 } },
+      { $project: { email: "$_id", fullName: 1, name: "$fullName", phone: 1, city: 1, orders: 1, totalSpent: 1, lastOrder: 1, username: "$user.username" } },
       { $sort: { totalSpent: -1 } },
     ]);
 
