@@ -7,7 +7,7 @@ import { buildActor, logActivity, logError } from "@/lib/activityLogger";
 export async function GET() {
   try {
     await connectDB();
-    const drinks = await Drink.find().sort({ createdAt: -1 });
+    const drinks = await Drink.find();
     return NextResponse.json({ success: true, count: drinks.length, drinks });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Server error";

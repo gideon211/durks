@@ -233,7 +233,7 @@ export default function Products() {
       if (savedProduct && editingId) {
         setProducts((prev) => prev.map((p) => (p.id === editingId ? normalizeDrink(savedProduct) : p)));
       } else if (savedProduct && !editingId) {
-        setProducts((prev) => [normalizeDrink(savedProduct), ...prev]);
+        setProducts((prev) => [...prev, normalizeDrink(savedProduct)]);
       }
       toast.success("Product saved successfully");
       setOpenModal(false);
