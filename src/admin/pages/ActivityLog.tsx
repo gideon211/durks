@@ -277,12 +277,12 @@ export default function ActivityLog() {
 
   return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-heading font-bold">Activity Log</h1>
             <p className="text-muted-foreground mt-1">Audit trail — who did what and when (customers & admins)</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleVerify} disabled={verifying}>
               <ShieldCheck className="h-4 w-4 mr-2" />
               {verifying ? "Verifying..." : "Verify Integrity"}
@@ -390,7 +390,7 @@ export default function ActivityLog() {
 
         <Card className="shadow-sm">
           <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -427,11 +427,11 @@ export default function ActivityLog() {
                 onChange={(e) => setToDate(e.target.value)}
                 className="w-full sm:w-40"
               />
-              <Button onClick={() => setPage(1)}>
+              <Button onClick={() => setPage(1)} className="w-full sm:w-auto">
                 <Search className="h-4 w-4 mr-2" />
                 Search
               </Button>
-              <Button variant="outline" onClick={handleExport}>
+              <Button variant="outline" onClick={handleExport} className="w-full sm:w-auto">
                 <Download className="h-4 w-4 mr-2" />
                 Export CSV
               </Button>
@@ -455,7 +455,7 @@ export default function ActivityLog() {
           <>
             <div className="rounded-lg border bg-card shadow-sm overflow-hidden min-w-0">
               <div className="w-full overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[720px]">
                 <thead>
                   <tr className="bg-muted/50 border-b">
                     <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">Time</th>

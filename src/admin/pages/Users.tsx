@@ -149,7 +149,7 @@ export default function Users() {
 
             <div className="rounded-lg border bg-card shadow-sm overflow-hidden min-w-0">
               <div className="w-full overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[640px]">
                 <thead>
                   <tr className="bg-muted/50 border-b">
                     <th className="w-10 px-4 py-3">

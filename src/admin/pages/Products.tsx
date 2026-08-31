@@ -572,20 +572,20 @@ export default function Products() {
                     </div>
                     <div className="space-y-2">
                       {form.packs.map((p, idx) => (
-                        <div key={idx} className="flex items-end gap-2 bg-gray-50 border border-border/40 rounded-xl p-3 group">
-                          <div className="flex-1 space-y-1">
+                        <div key={idx} className="flex flex-wrap items-end gap-2 bg-gray-50 border border-border/40 rounded-xl p-3 group">
+                          <div className="flex-1 min-w-[120px] space-y-1">
                             <Label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Size</Label>
                             <Input type="number" placeholder="6" value={p.pack} onChange={(e) => { const np = [...form.packs]; np[idx].pack = e.target.value; setForm({ ...form, packs: np }); }} step={1} className="rounded-lg h-9 text-sm border-border/50" />
                           </div>
-                          <div className="flex-1 space-y-1">
+                          <div className="flex-1 min-w-[120px] space-y-1">
                             <Label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Price (GH₵)</Label>
                             <Input type="number" placeholder="0.00" value={p.price} onChange={(e) => { const np = [...form.packs]; np[idx].price = e.target.value; setForm({ ...form, packs: np }); }} step={0.01} className="rounded-lg h-9 text-sm border-border/50" />
                           </div>
-                          <div className="flex-1 space-y-1">
+                          <div className="flex-1 min-w-[120px] space-y-1">
                             <Label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Was</Label>
                             <Input type="number" placeholder="0.00" value={p.oldPrice ?? ""} onChange={(e) => { const np = [...form.packs]; np[idx].oldPrice = e.target.value; setForm({ ...form, packs: np }); }} step={0.01} className="rounded-lg h-9 text-sm border-border/50" />
                           </div>
-                          <Button variant="ghost" size="icon" type="button" onClick={() => setForm({ ...form, packs: form.packs.filter((_, i) => i !== idx) })} className="h-9 w-9 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 shrink-0 opacity-0 group-hover:opacity-100 transition-all">
+                          <Button variant="ghost" size="icon" type="button" onClick={() => setForm({ ...form, packs: form.packs.filter((_, i) => i !== idx) })} className="h-9 w-9 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 shrink-0 self-end opacity-0 group-hover:opacity-100 transition-all">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -596,13 +596,13 @@ export default function Products() {
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between px-6 py-4 border-t border-border/40 bg-gray-50/50">
-                <p className="text-[11px] text-muted-foreground">{form.packs.length} pack{form.packs.length !== 1 ? "s" : ""} configured</p>
-                <div className="flex items-center gap-3">
-                  <Button type="button" variant="ghost" onClick={() => setOpenModal(false)} className="rounded-xl h-10 px-5 text-gray-600 hover:text-gray-800">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4 border-t border-border/40 bg-gray-50/50">
+                <p className="text-[11px] text-muted-foreground text-center sm:text-left">{form.packs.length} pack{form.packs.length !== 1 ? "s" : ""} configured</p>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                  <Button type="button" variant="ghost" onClick={() => setOpenModal(false)} className="rounded-xl h-10 px-5 text-gray-600 hover:text-gray-800 w-full sm:w-auto">
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={saving} className="rounded-xl h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-600/20 transition-all duration-300">
+                  <Button type="submit" disabled={saving} className="rounded-xl h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-600/20 transition-all duration-300 w-full sm:w-auto">
                     {saving ? (
                       <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Saving...</span>
                     ) : editingId ? "Update Product" : "Add Product"}

@@ -142,7 +142,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       )}
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col lg:pl-60">
+      <div className="flex flex-1 flex-col lg:pl-60 min-w-0">
         {/* Top bar */}
         <header className="sticky top-0 z-30 h-16 bg-white/80 backdrop-blur-xl border-b border-border/40 flex items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
