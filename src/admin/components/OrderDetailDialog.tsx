@@ -201,7 +201,7 @@ export default function OrderDetailDialog({
   const isUpdating = updatingOrderId === order._id;
 
   const placed = order.createdAt
-    ? `Placed ${new Date(order.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · ${new Date(order.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+    ? `Placed ${new Date(order.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })} · ${new Date(order.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true, timeZone: "UTC" })}`
     : "Placed \u2014";
 
   const addressLine =
@@ -255,10 +255,10 @@ export default function OrderDetailDialog({
                             <div className="mt-1 grid max-w-xs grid-cols-3 gap-3">
                               <Spec label="Pack" value={it.pack != null && String(it.pack).trim() !== "" ? String(it.pack) : "\u2014"} />
                               <Spec label="Qty" value={String(Number(it.quantity) || 1)} />
-                              <Spec label="Unit" value={`GH\u20B5${(Number(it.price) || 0).toFixed(2)}`} />
+                              <Spec label="Unit" value={`GH₵${(Number(it.price) || 0).toFixed(2)}`} />
                             </div>
                           </div>
-                          <p className="shrink-0 text-sm font-semibold tabular-nums">GH\u20B5{lineTotal.toFixed(2)}</p>
+                          <p className="shrink-0 text-sm font-semibold tabular-nums">GH₵{lineTotal.toFixed(2)}</p>
                         </div>
                       );
                     })}
@@ -269,7 +269,7 @@ export default function OrderDetailDialog({
                 <div className="space-y-1.5 border-t border-border/40 px-5 py-4">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="tabular-nums">GH\u20B5{subtotal.toFixed(2)}</span>
+                    <span className="tabular-nums">GH₵{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Delivery</span>
@@ -277,7 +277,7 @@ export default function OrderDetailDialog({
                   </div>
                   <div className="flex items-center justify-between border-t border-border/40 pt-2">
                     <span className="text-sm font-semibold">Total</span>
-                    <span className="text-lg font-extrabold tabular-nums">GH\u20B5{total.toFixed(2)}</span>
+                    <span className="text-lg font-extrabold tabular-nums">GH₵{total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -353,7 +353,7 @@ export default function OrderDetailDialog({
           <div className="flex shrink-0 items-center justify-between gap-3 border-t px-5 py-4 sm:px-6">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total</p>
-              <p className="text-xl font-extrabold tabular-nums">GH\u20B5{total.toFixed(2)}</p>
+              <p className="text-xl font-extrabold tabular-nums">GH₵{total.toFixed(2)}</p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" className="rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700" disabled={isDone || isUpdating} onClick={() => onCancelOrder?.(order._id)}>
