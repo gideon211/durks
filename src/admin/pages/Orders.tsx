@@ -15,11 +15,8 @@ import {
 import { Search, Filter, Eye, Package, X, Loader2, Trash2 } from "lucide-react";
 import { ShimmerBar } from "@/components/ui/shimmer-bar";
 import { useAdminOrders, useUpdateOrderStatus, useCancelOrder, useDeleteOrder } from "@/admin/queries";
+import OrderDetailDialog from "@/admin/components/OrderDetailDialog";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -30,7 +27,6 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Separator } from "@/components/ui/separator";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RawOrder = any;
@@ -146,22 +142,6 @@ export default function OrdersAdminPage() {
   function closeOrderModal() {
     setSelectedOrder(null);
     setIsModalOpen(false);
-  }
-
-  function formatDeliveryDate(dateStr?: string | null) {
-    if (!dateStr) return "\u2014";
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString("en-GB");
-  }
-
-  function formatTime(timeStr?: string | null) {
-    if (!timeStr) return "\u2014";
-    const [h, m] = timeStr.split(":").map(Number);
-    if (isNaN(h) || isNaN(m)) return timeStr;
-    const period = h >= 12 ? "PM" : "AM";
-    const hour12 = h % 12 || 12;
-    return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
   }
 
   function errorMessage(err: unknown): string {
@@ -375,100 +355,14 @@ export default function OrdersAdminPage() {
         )}
 
         {/* Order detail modal */}
-        <Dialog open={isModalOpen} onOpenChange={(v) => { if (!v) closeOrderModal(); }}>
-          <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden rounded-2xl">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider opacity-70">Order</p>
-                  <p className="text-lg font-bold mt-0.5">{selectedOrder?.orderNumber || selectedOrder?._id?.slice(-8) || ""}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${selectedOrder?.paymentStatus === "paid" ? "bg-white/20 text-white" : "bg-red-500/30 text-white"}`}>
-                    {selectedOrder?.paymentStatus || "\u2014"}
-                  </span>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${selectedOrder?.orderStatus === "completed" ? "bg-emerald-500/30 text-white" : selectedOrder?.orderStatus === "cancelled" ? "bg-red-500/30 text-white" : "bg-white/20 text-white"}`}>
-                    {selectedOrder?.orderStatus || "\u2014"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="px-6 py-5 space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Customer</p>
-                  <p className="text-sm font-medium mt-1">{selectedOrder?.customer?.fullName ?? selectedOrder?.customer?.email ?? "\u2014"}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Contact</p>
-                  <p className="text-sm mt-1">{selectedOrder?.customer?.phone ? `Phone: ${selectedOrder.customer.phone}` : "\u2014"}</p>
-                  <p className="text-sm">{selectedOrder?.customer?.email || "\u2014"}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Delivery Address</p>
-                  <p className="text-sm font-medium mt-1">
-                    {selectedOrder?.customer?.address && selectedOrder?.customer?.address !== "Not provided"
-                      ? selectedOrder.customer.address
-                      : "\u2014"}
-                    {selectedOrder?.customer?.city ? `, ${selectedOrder.customer.city}` : ""}
-                    {selectedOrder?.customer?.country ? `, ${selectedOrder.customer.country}` : ""}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Delivery Date</p>
-                  <p className="text-sm font-medium mt-1">{formatDeliveryDate(selectedOrder?.deliveryDate)}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Delivery Time</p>
-                  <p className="text-sm font-medium mt-1">{formatTime(selectedOrder?.deliveryTime)}</p>
-                </div>
-              </div>
-
-              <Separator className="bg-border/50" />
-
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                  Items ({selectedOrder?.items?.length || 0})
-                </p>
-                {selectedOrder?.items?.length ? (
-                  <div className="space-y-2 max-h-44 overflow-auto rounded-xl">
-                    {selectedOrder.items.map((it: Record<string, unknown>, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between bg-muted/40 rounded-xl px-4 py-3">
-                        <div className="flex items-start gap-2 min-w-0">
-                          <span className="text-xs font-semibold text-muted-foreground shrink-0">x{it.quantity as number}</span>
-                          <span className="text-sm">{it.name as string}{it.pack ? ` (${it.pack}-pack)` : ""}</span>
-                        </div>
-                        <span className="text-sm font-semibold tabular-nums shrink-0 ml-3">
-                          GH₵ {Number(it.price || 0).toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">\u2014</p>
-                )}
-              </div>
-
-              <Separator className="bg-border/50" />
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">
-                    Payment: <span className="capitalize font-medium text-foreground">{selectedOrder?.paymentStatus || "\u2014"}</span>
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Status: <span className="capitalize font-medium text-foreground">{selectedOrder?.orderStatus || "\u2014"}</span>
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Total</p>
-                  <p className="text-2xl font-extrabold tabular-nums">GH₵ {Number(selectedOrder?.totalAmount || 0).toFixed(2)}</p>
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <OrderDetailDialog
+          order={selectedOrder}
+          open={isModalOpen}
+          onOpenChange={(v) => { if (!v) closeOrderModal(); }}
+          onMarkCompleted={handleMarkCompleted}
+          onCancelOrder={handleCancelOrder}
+          updatingOrderId={updatingOrderId}
+        />
 
         {/* Delete confirmation */}
         <AlertDialog open={!!deleteTarget} onOpenChange={(v) => { if (!v) setDeleteTarget(null); }}>
