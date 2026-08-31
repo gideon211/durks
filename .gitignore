@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated reconciliation report (contains customer data)
+scripts/reconcile-report.json

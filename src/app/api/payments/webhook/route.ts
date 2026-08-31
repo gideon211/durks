@@ -4,7 +4,7 @@ import connectDB from "@/lib/mongodb";
 import Order from "@/models/order";
 import Cart from "@/models/cart";
 import { sendEmail } from "@/lib/email";
-import { logActivity } from "@/lib/activityLogger";
+import { logActivity, logError } from "@/lib/activityLogger";
 import { createNotification } from "@/lib/notifier";
 
 const verifyPaystackSignature = (body: string, signature: string | null) => {
@@ -33,11 +33,51 @@ function mapChannel(channel?: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  let eventName: string | null = null;
+  let reference: string | null = null;
+  let customerEmail: string | null = null;
+  let signatureValid = false;
+
+  const clientIp = req.headers.get("x-forwarded-for") || null;
+
   try {
     const rawBody = await req.text();
     const signature = req.headers.get("x-paystack-signature");
+    signatureValid = verifyPaystackSignature(rawBody, signature);
 
-    if (!verifyPaystackSignature(rawBody, signature)) {
+    // Best-effort extraction for audit logging (payload is not trusted yet).
+    try {
+      const parsed = JSON.parse(rawBody);
+      eventName = parsed?.event ?? null;
+      reference = parsed?.data?.reference ?? null;
+      customerEmail = parsed?.data?.customer?.email ?? parsed?.data?.metadata?.customer?.email ?? null;
+    } catch {
+      // Not JSON — leave defaults.
+    }
+
+    // Always record that a webhook arrived, so delivery gaps are visible in the
+    // activity log even when the event is ignored or the signature fails.
+    await logActivity({
+      user: null,
+      email: customerEmail,
+      action: "webhook_received",
+      details: `Paystack webhook received — event: ${eventName ?? "unknown"}, reference: ${reference ?? "unknown"}, signature: ${signatureValid ? "valid" : "INVALID"}`,
+      metadata: { event: eventName, reference, signatureValid },
+      ip: clientIp,
+      route: req.nextUrl?.pathname ?? null,
+      method: req.method ?? null,
+    });
+
+    if (!signatureValid) {
+      await logError({
+        req,
+        error: new Error("Invalid Paystack signature"),
+        status: 401,
+        action: "webhook_invalid_signature",
+        details: `Rejected webhook — event ${eventName ?? "unknown"}, reference ${reference ?? "unknown"}`,
+        metadata: { event: eventName, reference },
+        actor: { email: customerEmail, ip: clientIp },
+      });
       return new NextResponse("Invalid signature", { status: 401 });
     }
 
@@ -50,8 +90,8 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const { reference, metadata = {}, amount: paystackAmount, channel } = data;
-    const { userId, customer, items, deliveryDate, deliveryTime, calculatedTotal } = metadata;
+    const { reference: paystackReference, metadata = {}, channel } = data;
+    const { userId, customer, items, deliveryDate, deliveryTime } = metadata;
 
     if (!items || items.length === 0 || !customer?.email) {
       return new NextResponse("Invalid data", { status: 400 });
@@ -83,7 +123,7 @@ export async function POST(req: NextRequest) {
 
     // Create order (atomic to prevent duplicates)
     const order = await Order.findOneAndUpdate(
-      { paystackReference: reference },
+      { paystackReference: paystackReference },
       {
         $setOnInsert: {
           userId: userId || null,
@@ -113,17 +153,30 @@ export async function POST(req: NextRequest) {
       email: customer.email,
       action: "order_placed",
       details: `Order placed — GH₵ ${totalAmount.toFixed(2)}`,
-      metadata: { orderId: order._id, totalAmount, reference },
-      ip: req.headers.get("x-forwarded-for") || req.ip || null,
+      metadata: { orderId: order._id, totalAmount, reference: paystackReference },
+      ip: clientIp,
       route: req.nextUrl?.pathname ?? null,
       method: req.method ?? null,
     });
 
-    // Send emails (async)
-    Promise.all([
+    // Send confirmation emails, then surface any failures to the audit trail
+    // (awaited so they actually complete before the function returns).
+    await Promise.all([
       sendCustomerEmail(order, customer, normalizedItems, totalAmount),
       sendAdminEmail(order, customer, normalizedItems, totalAmount),
-    ]).catch((err) => console.error("Email error:", err));
+    ]).catch(async (err) => {
+      console.error("Email error:", err);
+      await logActivity({
+        user: userId || null,
+        email: customer.email,
+        action: "email_failed",
+        details: `Order confirmation email failed — ${err instanceof Error ? err.message : String(err)}`,
+        metadata: { orderId: order._id, reference: paystackReference },
+        ip: clientIp,
+        route: req.nextUrl?.pathname ?? null,
+        method: req.method ?? null,
+      });
+    });
 
     createNotification({
       type: "new_order",
@@ -145,6 +198,15 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Webhook processed successfully", { status: 200 });
   } catch (error: unknown) {
     console.error("Webhook error:", error);
+    await logError({
+      req,
+      error,
+      status: 500,
+      action: "webhook_error",
+      details: `Webhook processing failed — event ${eventName ?? "unknown"}, reference ${reference ?? "unknown"}, signature ${signatureValid ? "valid" : "unknown"}`,
+      metadata: { event: eventName, reference, signatureValid },
+      actor: { email: customerEmail, ip: clientIp },
+    });
     return new NextResponse("Webhook processing failed", { status: 500 });
   }
 }
