@@ -1,6 +1,5 @@
 ﻿"use client";
 
-import AdminLayout from "@/admin/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,6 @@ import { Settings as SettingsIcon, CreditCard, Bell, Heart } from "lucide-react"
 
 export default function Settings() {
   return (
-    <AdminLayout>
       <div className="space-y-6 max-w-4xl">
         <div>
           <h1 className="text-3xl font-heading font-bold">Settings</h1>
@@ -170,6 +168,5 @@ export default function Settings() {
           <Button variant="default">Save Changes</Button>
         </div>
       </div>
-    </AdminLayout>
   );
 }

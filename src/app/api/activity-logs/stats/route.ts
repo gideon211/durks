@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
-    await logActivity({
+    void logActivity({
       ...buildActor(req, authUser),
       action: "admin_view_stats",
       details: "Admin fetched activity log stats",

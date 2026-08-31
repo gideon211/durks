@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import AdminLayout from "@/admin/components/AdminLayout";
+import { useState, useCallback, useMemo } from "react";
 import DataTable from "@/admin/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,7 +18,7 @@ import {
 import { Download, ExternalLink, Trash2, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import axiosInstance from "@/api/axios";
+import { usePayments, useBatchDeleteOrders, useDeleteOrder } from "@/admin/queries";
 
 interface Payment {
   _id: string;
@@ -61,18 +60,19 @@ function statusBadge(status?: string) {
 
 export default function Payments() {
   const router = useRouter();
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<Payment | null>(null);
   const [batchDeleting, setBatchDeleting] = useState(false);
 
-  useEffect(() => {
-    axiosInstance.get("/orders/admin/payments")
-      .then(({ data }) => setPayments(data.payments ?? []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, isLoading } = usePayments({ page, limit: 50 });
+  const batchDeleteMutation = useBatchDeleteOrders();
+  const deleteMutation = useDeleteOrder();
+
+  const payments = useMemo(() => (data?.payments ?? []) as Payment[], [data?.payments]);
+  const total = data?.total ?? 0;
+  const pages = data?.pages ?? 1;
+  const loading = isLoading;
 
   const toggleSelect = useCallback((id: string) => {
     setSelected((prev) => {
@@ -86,32 +86,27 @@ export default function Payments() {
     setSelected((prev) => prev.size === payments.length ? new Set() : new Set(payments.map((p) => p._id)));
   }, [payments]);
 
-  async function handleBatchDelete() {
+  function handleBatchDelete() {
     if (selected.size === 0) return;
     setBatchDeleting(true);
-    try {
-      const { data } = await axiosInstance.post("/orders/admin/batch-delete", { ids: Array.from(selected) });
-      setPayments((prev) => prev.filter((p) => !selected.has(p._id)));
-      toast.success(`${data.deleted ?? selected.size} payment(s) deleted`);
-      setSelected(new Set());
-    } catch {
-      toast.error("Failed to delete payments");
-    } finally {
-      setBatchDeleting(false);
-    }
+    batchDeleteMutation.mutate(Array.from(selected), {
+      onSuccess: (res) => {
+        const deleted = (res as { deleted?: number })?.deleted ?? selected.size;
+        toast.success(`${deleted} payment(s) deleted`);
+        setSelected(new Set());
+      },
+      onError: () => toast.error("Failed to delete payments"),
+      onSettled: () => setBatchDeleting(false),
+    });
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!deleteTarget) return;
-    try {
-      await axiosInstance.delete(`/orders/admin/${deleteTarget._id}`);
-      setPayments((prev) => prev.filter((p) => p._id !== deleteTarget._id));
-      toast.success("Payment record deleted");
-    } catch {
-      toast.error("Failed to delete payment");
-    } finally {
-      setDeleteTarget(null);
-    }
+    deleteMutation.mutate(deleteTarget._id, {
+      onSuccess: () => toast.success("Payment record deleted"),
+      onError: () => toast.error("Failed to delete payment"),
+      onSettled: () => setDeleteTarget(null),
+    });
   }
 
   function handleDownloadReceipt(payment: Payment) {
@@ -182,7 +177,7 @@ export default function Payments() {
   );
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-heading font-bold">Payments</h1>
@@ -217,6 +212,16 @@ export default function Payments() {
         ) : (
           <DataTable columns={columnsWithSelectAll} data={payments} emptyMessage="No payments found" />
         )}
+
+        {!loading && pages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground font-medium">Page {page} of {pages} · {total} payments</p>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="rounded-xl" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Previous</Button>
+              <Button variant="outline" size="sm" className="rounded-xl" disabled={page >= pages} onClick={() => setPage((p) => Math.min(pages, p + 1))}>Next</Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => { if (!v) setDeleteTarget(null); }}>
@@ -231,6 +236,6 @@ export default function Payments() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
+    </>
   );
 }

@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
     const csv = [header.join(","), ...rows].join("\r\n");
     const filename = `activity-log-${new Date().toISOString().slice(0, 10)}.csv`;
 
-    await logActivity({
+    void logActivity({
       ...buildActor(req, authUser),
       action: "admin_export_activity",
       details: `Admin exported activity logs (${rows.length} rows)`,

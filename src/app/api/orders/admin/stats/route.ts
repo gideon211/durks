@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
     const distinctCustomers = customerSummary?.distinctCustomers || 0;
     const repeatCustomers = customerSummary?.repeatCustomers || 0;
 
-    await logActivity({
+    void logActivity({
       ...buildActor(req, authUser),
       action: "admin_view_order_stats",
       details: "Admin fetched order statistics",

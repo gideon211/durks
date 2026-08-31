@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
       Order.countDocuments({ orderStatus: { $in: ["pending", "confirmed"] } }),
     ]);
 
-    await logActivity({
+    void logActivity({
       ...buildActor(req, authUser),
       action: "admin_view_dashboard",
       details: "Admin fetched dashboard data",

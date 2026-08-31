@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import AdminLayout from "@/admin/components/AdminLayout";
 import DataTable from "@/admin/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Eye, Mail, Trash2, Trash } from "lucide-react";
 import { toast } from "sonner";
-import axiosInstance from "@/api/axios";
+import { useAdminCustomers, useBatchDeleteCustomers, useDeleteCustomer } from "@/admin/queries";
 
 interface Customer {
   email: string;
@@ -32,18 +31,19 @@ interface Customer {
 
 export default function Customers() {
   const router = useRouter();
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
   const [batchDeleting, setBatchDeleting] = useState(false);
 
-  useEffect(() => {
-    axiosInstance.get("/orders/admin/customers")
-      .then(({ data }) => setCustomers(data.customers ?? []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, isLoading } = useAdminCustomers(page, 100);
+  const batchDeleteMutation = useBatchDeleteCustomers();
+  const deleteMutation = useDeleteCustomer();
+
+  const customers = useMemo(() => (data?.customers ?? []) as Customer[], [data?.customers]);
+  const total = data?.total ?? 0;
+  const pages = data?.pages ?? 1;
+  const loading = isLoading;
 
   const toggleSelect = useCallback((email: string) => {
     setSelected((prev) => {
@@ -57,32 +57,30 @@ export default function Customers() {
     setSelected((prev) => prev.size === customers.length ? new Set() : new Set(customers.map((c) => c.email)));
   }, [customers]);
 
-  async function handleBatchDelete() {
+  function handleBatchDelete() {
     if (selected.size === 0) return;
     setBatchDeleting(true);
-    try {
-      const { data } = await axiosInstance.post("/orders/admin/customer/batch-delete", { emails: Array.from(selected) });
-      setCustomers((prev) => prev.filter((c) => !selected.has(c.email)));
-      toast.success(`${data.deleted ?? 0} order(s) deleted from ${selected.size} customer(s)`);
-      setSelected(new Set());
-    } catch {
-      toast.error("Failed to delete customer records");
-    } finally {
-      setBatchDeleting(false);
-    }
+    batchDeleteMutation.mutate(Array.from(selected), {
+      onSuccess: (res) => {
+        const deleted = (res as { deleted?: number })?.deleted ?? 0;
+        toast.success(`${deleted} order(s) deleted from ${selected.size} customer(s)`);
+        setSelected(new Set());
+      },
+      onError: () => toast.error("Failed to delete customer records"),
+      onSettled: () => setBatchDeleting(false),
+    });
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!deleteTarget) return;
-    try {
-      const { data } = await axiosInstance.delete(`/orders/admin/customer/${encodeURIComponent(deleteTarget.email)}`);
-      setCustomers((prev) => prev.filter((c) => c.email !== deleteTarget.email));
-      toast.success(data.message || "Customer deleted");
-    } catch {
-      toast.error("Failed to delete customer records");
-    } finally {
-      setDeleteTarget(null);
-    }
+    deleteMutation.mutate(deleteTarget.email, {
+      onSuccess: (res) => {
+        const message = (res as { message?: string })?.message;
+        toast.success(message || "Customer deleted");
+      },
+      onError: () => toast.error("Failed to delete customer records"),
+      onSettled: () => setDeleteTarget(null),
+    });
   }
 
   const columns = [
@@ -118,7 +116,7 @@ export default function Customers() {
   );
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-heading font-bold">Customers</h1>
@@ -153,6 +151,16 @@ export default function Customers() {
         ) : (
           <DataTable columns={columnsWithSelectAll} data={customers} emptyMessage="No customers with orders yet" />
         )}
+
+        {!loading && pages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground font-medium">Page {page} of {pages} · {total} customers</p>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="rounded-xl" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Previous</Button>
+              <Button variant="outline" size="sm" className="rounded-xl" disabled={page >= pages} onClick={() => setPage((p) => Math.min(pages, p + 1))}>Next</Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => { if (!v) setDeleteTarget(null); }}>
@@ -169,6 +177,6 @@ export default function Customers() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
+    </>
   );
 }

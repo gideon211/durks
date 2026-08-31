@@ -1,7 +1,5 @@
-import AdminLayoutClient from "./AdminLayoutClient";
-
-export const dynamic = "force-dynamic";
+import AdminLayout from "@/admin/components/AdminLayout";
 
 export default function AdminLayoutPage({ children }: { children: React.ReactNode }) {
-  return <AdminLayoutClient>{children}</AdminLayoutClient>;
+  return <AdminLayout>{children}</AdminLayout>;
 }

@@ -1,6 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
-const Dashboard = dynamic(() => import("@/admin/pages/Dashboard"), { ssr: false });
+import AdminPageLoader from "@/admin/components/AdminPageLoader";
+const Dashboard = dynamic(() => import("@/admin/pages/Dashboard"), { ssr: false, loading: () => <AdminPageLoader /> });
 export default function DashboardPage() {
   return <Dashboard />;
 }

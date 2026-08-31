@@ -1,7 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
-import AdminLayout from "@/admin/components/AdminLayout";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Users as UsersIcon, UserPlus, Trash2, Trash } from "lucide-react";
 import { toast } from "sonner";
-import axiosInstance from "@/api/axios";
+import { useUsers, useUsersCount, useBatchDeleteUsers, useDeleteUser } from "@/admin/queries";
 
 interface AdminUser {
   _id: string;
@@ -31,27 +30,20 @@ interface AdminUser {
 }
 
 export default function Users() {
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [newThisMonth, setNewThisMonth] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
   const [batchDeleting, setBatchDeleting] = useState(false);
 
-  useEffect(() => {
-    Promise.allSettled([
-      axiosInstance.get("/auth/users/count"),
-      axiosInstance.get("/auth/users"),
-    ]).then(([countRes, usersRes]) => {
-      if (countRes.status === "fulfilled") {
-        setTotalUsers(countRes.value.data.total ?? 0);
-        setNewThisMonth(countRes.value.data.thisMonth ?? 0);
-      }
-      if (usersRes.status === "fulfilled") setUsers(usersRes.value.data.users ?? []);
-      setLoading(false);
-    });
-  }, []);
+  const { data: usersData, isLoading } = useUsers();
+  const { data: countData } = useUsersCount();
+  const batchDeleteMutation = useBatchDeleteUsers();
+  const deleteMutation = useDeleteUser();
+
+  const users = (usersData?.users ?? []) as AdminUser[];
+  const totalUsers = countData?.count ?? 0;
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
+  const newThisMonth = users.filter((u) => new Date(u.createdAt).getTime() >= monthStart).length;
+  const loading = isLoading;
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -65,40 +57,33 @@ export default function Users() {
     setSelected((prev) => prev.size === users.length ? new Set() : new Set(users.map((u) => u._id)));
   }
 
-  async function handleBatchDelete() {
+  function handleBatchDelete() {
     if (selected.size === 0) return;
     setBatchDeleting(true);
-    try {
-      const { data } = await axiosInstance.post("/auth/users/batch-delete", { ids: Array.from(selected) });
-      setUsers((prev) => prev.filter((u) => !selected.has(u._id)));
-      setTotalUsers((prev) => prev - (data.deleted ?? selected.size));
-      toast.success(`${data.deleted ?? selected.size} user(s) deleted`);
-      setSelected(new Set());
-    } catch {
-      toast.error("Failed to delete users");
-    } finally {
-      setBatchDeleting(false);
-    }
+    batchDeleteMutation.mutate(Array.from(selected), {
+      onSuccess: (res) => {
+        const deleted = (res as { deleted?: number })?.deleted ?? selected.size;
+        toast.success(`${deleted} user(s) deleted`);
+        setSelected(new Set());
+      },
+      onError: () => toast.error("Failed to delete users"),
+      onSettled: () => setBatchDeleting(false),
+    });
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!deleteTarget) return;
-    try {
-      await axiosInstance.delete(`/auth/users/${deleteTarget._id}`);
-      setUsers((prev) => prev.filter((u) => u._id !== deleteTarget._id));
-      setTotalUsers((prev) => prev - 1);
-      toast.success("User deleted permanently");
-    } catch {
-      toast.error("Failed to delete user");
-    } finally {
-      setDeleteTarget(null);
-    }
+    deleteMutation.mutate(deleteTarget._id, {
+      onSuccess: () => toast.success("User deleted permanently"),
+      onError: () => toast.error("Failed to delete user"),
+      onSettled: () => setDeleteTarget(null),
+    });
   }
 
   const monthName = new Date().toLocaleString("default", { month: "long" });
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-heading font-bold">User Management</h1>
@@ -228,6 +213,6 @@ export default function Users() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
+    </>
   );
 }

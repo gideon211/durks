@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   try {
     const result = await verifyAuditChain();
 
-    await logActivity({
+    void logActivity({
       ...buildActor(req, authUser),
       action: "admin_verify_activity",
       details: result.valid

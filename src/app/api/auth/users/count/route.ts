@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
     const count = await User.countDocuments();
-    await logActivity({
+    void logActivity({
       ...buildActor(req, authUser),
       action: "admin_view_user_count",
       details: "Admin fetched user count",

@@ -1,7 +1,5 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
-import AdminLayout from "@/admin/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShimmerBar } from "@/components/ui/shimmer-bar";
 import {
@@ -16,7 +14,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import axiosInstance from "@/api/axios";
+import { useRevenueTrend, useCategoryStats, useOrderStats, useAdminCustomers } from "@/admin/queries";
 
 interface RevenuePoint {
   date: string;
@@ -43,38 +41,21 @@ function formatTrendDate(value: string): string {
 }
 
 export default function Analytics() {
-  const [loading, setLoading] = useState(true);
-  const [revenueData, setRevenueData] = useState<RevenuePoint[]>([]);
-  const [categoryData, setCategoryData] = useState<CategoryStat[]>([]);
-  const [avgOrderValue, setAvgOrderValue] = useState(0);
-  const [repeatPurchaseRate, setRepeatPurchaseRate] = useState(0);
-  const [customerLifetimeValue, setCustomerLifetimeValue] = useState(0);
-  const [preorderRatio, setPreorderRatio] = useState(0);
-  const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
+  const { data: revData, isLoading: revLoading } = useRevenueTrend();
+  const { data: catData, isLoading: catLoading } = useCategoryStats();
+  const { data: statsData, isLoading: statsLoading } = useOrderStats();
+  const { data: custData, isLoading: custLoading } = useAdminCustomers(1, 100);
 
-  useEffect(() => {
-    Promise.allSettled([
-      axiosInstance.get("/orders/admin/revenue-trend"),
-      axiosInstance.get("/drinks/stats/category"),
-      axiosInstance.get("/orders/admin/stats"),
-      axiosInstance.get("/orders/admin/customers"),
-    ]).then(([revRes, catRes, statsRes, custRes]) => {
-      if (revRes.status === "fulfilled") setRevenueData(revRes.value.data.trend ?? []);
-      if (catRes.status === "fulfilled") setCategoryData(catRes.value.data.categories ?? []);
-      if (statsRes.status === "fulfilled") {
-        const s = statsRes.value.data.stats;
-        setAvgOrderValue(s.totalRevenue && (s.paidOrders || s.totalOrders) ? s.totalRevenue / (s.paidOrders || s.totalOrders) : 0);
-        setRepeatPurchaseRate(s.repeatPurchaseRate ?? 0);
-        setCustomerLifetimeValue(s.customerLifetimeValue ?? 0);
-        setPreorderRatio(s.preorderRatio ?? 0);
-      }
-      if (custRes.status === "fulfilled") {
-        const all = custRes.value.data.customers ?? [];
-        setTopCustomers(all.slice(0, 5));
-      }
-      setLoading(false);
-    });
-  }, []);
+  const revenueData = (revData?.trend ?? []) as RevenuePoint[];
+  const categoryData = (catData?.categories ?? []) as CategoryStat[];
+  const s = statsData?.stats;
+  const avgOrderValue =
+    s && s.totalRevenue && (s.paidOrders || s.totalOrders) ? s.totalRevenue / (s.paidOrders || s.totalOrders) : 0;
+  const repeatPurchaseRate = s?.repeatPurchaseRate ?? 0;
+  const customerLifetimeValue = s?.customerLifetimeValue ?? 0;
+  const preorderRatio = s?.preorderRatio ?? 0;
+  const topCustomers = ((custData?.customers ?? []) as TopCustomer[]).slice(0, 5);
+  const loading = revLoading || catLoading || statsLoading || custLoading;
 
   const categoryPerformance = categoryData.map((c) => ({
     category: c.name,
@@ -82,7 +63,6 @@ export default function Analytics() {
   }));
 
   return (
-    <AdminLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-heading font-bold">Analytics</h1>
@@ -248,6 +228,5 @@ export default function Analytics() {
           </Card>
         </div>
       </div>
-    </AdminLayout>
   );
 }

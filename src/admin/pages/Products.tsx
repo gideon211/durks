@@ -1,15 +1,12 @@
 "use client";
 
-import AdminLayout from "@/admin/components/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Grid3x3, List, Edit2, Trash2, ImageIcon, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { ShimmerBar } from "@/components/ui/shimmer-bar";
-import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import axiosInstance from "@/api/axios";
+import { useProducts, useSaveProduct, useDeleteProduct } from "@/admin/queries";
 
 interface Product {
   id: string | number;
@@ -53,13 +50,15 @@ const CATEGORY_MATCH: Record<string, string[]> = Object.fromEntries(
 );
 
 export default function Products() {
-  const [products, setProducts] = useState<Product[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [openModal, setOpenModal] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | number | null>(null);
+
+  const { data: productsData, isLoading } = useProducts();
+  const saveMutation = useSaveProduct();
+  const deleteMutation = useDeleteProduct();
 
   const [form, setForm] = useState({
     name: "",
@@ -100,20 +99,8 @@ export default function Products() {
       : [],
   });
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const res = await axiosInstance.get("/drinks/");
-      const rawItems = Array.isArray(res.data) ? res.data : (res.data?.drinks ?? []);
-      const normalized: Product[] = rawItems.map((item: Record<string, unknown>) => normalizeDrink(item));
-      setProducts(normalized);
-    } catch (err) {
-      console.error("fetchProducts error:", err);
-      toast.error("Could not load products. Check backend connection or login.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const products: Product[] = ((Array.isArray(productsData) ? productsData : (productsData?.drinks ?? [])) as Record<string, unknown>[]).map((item) => normalizeDrink(item));
+  const loading = isLoading;
 
   useEffect(() => {
     return () => {
@@ -122,10 +109,6 @@ export default function Products() {
       }
       blobPreviewRef.current = null;
     };
-  }, []);
-
-  useEffect(() => {
-    fetchProducts();
   }, []);
 
   const resetFileInput = () => {
@@ -212,53 +195,44 @@ export default function Products() {
       toast.error("Please add at least one valid pack with a price.");
       return;
     }
+    const fd = new FormData();
+    fd.append("name", form.name.trim());
+    fd.append("category", form.category);
+    fd.append("description", form.description || "");
+    fd.append("status", form.status);
+    fd.append("size", form.size || "");
+    if (selectedFile) fd.append("image", selectedFile);
+    fd.append("packs", JSON.stringify(packsToSend));
     setSaving(true);
-    try {
-      const fd = new FormData();
-      fd.append("name", form.name.trim());
-      fd.append("category", form.category);
-      fd.append("description", form.description || "");
-      fd.append("status", form.status);
-      fd.append("size", form.size || "");
-      if (selectedFile) fd.append("image", selectedFile);
-      fd.append("packs", JSON.stringify(packsToSend));
-      let res;
-      if (editingId) {
-        res = await axiosInstance.put(`/drinks/${editingId}`, fd);
-      } else {
-        res = await axiosInstance.post("/drinks/add", fd);
+    saveMutation.mutate(
+      { id: editingId ? String(editingId) : undefined, formData: fd },
+      {
+        onSuccess: () => {
+          toast.success("Product saved successfully");
+          setOpenModal(false);
+          revokeBlobPreviewIfAny();
+          setSelectedFile(null);
+          resetFileInput();
+          existingImageUrlRef.current = null;
+        },
+        onError: (err) => {
+          console.error("handleSaveProduct error:", err);
+          toast.error((err as Error).message || "Failed to save product.");
+        },
+        onSettled: () => setSaving(false),
       }
-      const responseData = res.data;
-      const savedProduct = responseData?.drink ?? responseData?.data ?? responseData;
-      if (savedProduct && editingId) {
-        setProducts((prev) => prev.map((p) => (p.id === editingId ? normalizeDrink(savedProduct) : p)));
-      } else if (savedProduct && !editingId) {
-        setProducts((prev) => [...prev, normalizeDrink(savedProduct)]);
-      }
-      toast.success("Product saved successfully");
-      setOpenModal(false);
-      revokeBlobPreviewIfAny();
-      setSelectedFile(null);
-      resetFileInput();
-      existingImageUrlRef.current = null;
-    } catch (err) {
-      console.error("handleSaveProduct error:", err);
-      toast.error((err as Error).message || "Failed to save product.");
-    } finally {
-      setSaving(false);
-    }
+    );
   };
 
-  const handleDelete = async (id: string | number) => {
+  const handleDelete = (id: string | number) => {
     if (!window.confirm("Delete this product? This action cannot be undone.")) return;
-    try {
-      await axiosInstance.delete(`/drinks/${id}`);
-      setProducts((prev) => prev.filter((p) => p.id !== id));
-      toast.success("Product deleted");
-    } catch (err) {
-      console.error("handleDelete error:", err);
-      toast.error("Failed to delete product.");
-    }
+    deleteMutation.mutate(String(id), {
+      onSuccess: () => toast.success("Product deleted"),
+      onError: (err) => {
+        console.error("handleDelete error:", err);
+        toast.error("Failed to delete product.");
+      },
+    });
   };
 
   const onSelectPackForProduct = (productId: string | number, packValue: string) => {
@@ -274,7 +248,6 @@ export default function Products() {
       });
 
   return (
-    <AdminLayout>
       <div className="space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -640,6 +613,5 @@ export default function Products() {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
   );
 }

@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
       trend.push({ date: key, revenue: entry?.revenue ?? 0, orders: entry?.orders ?? 0 });
     }
 
-    await logActivity({
+    void logActivity({
       ...buildActor(req, authUser),
       action: "admin_view_revenue_trend",
       details: "Admin fetched revenue trend",

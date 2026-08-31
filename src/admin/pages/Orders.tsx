@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import AdminLayout from "@/admin/components/AdminLayout";
 import DataTable from "@/admin/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,13 +14,11 @@ import {
 } from "@/components/ui/select";
 import { Search, Filter, Eye, Package, X, Loader2, Trash2 } from "lucide-react";
 import { ShimmerBar } from "@/components/ui/shimmer-bar";
-import axiosInstance from "@/api/axios";
+import { useAdminOrders, useUpdateOrderStatus, useCancelOrder, useDeleteOrder } from "@/admin/queries";
 import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -35,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RawOrder = any;
 
 interface TableRow {
@@ -51,15 +49,13 @@ interface TableRow {
 }
 
 export default function OrdersAdminPage() {
-  const [orders, setOrders] = useState<RawOrder[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-
   const searchParams = useSearchParams();
-  const [search, setSearch] = useState(searchParams?.get("search") || "");
+  const [searchInput, setSearchInput] = useState(searchParams?.get("search") || "");
+  const [search, setSearch] = useState(searchInput);
   const [statusFilter, setStatusFilter] = useState<"all" | string>("all");
   const [paymentFilter, setPaymentFilter] = useState<"all" | string>("all");
   const [dateRange, setDateRange] = useState<"all" | "recent" | "month" | "quarter">("all");
+  const [page, setPage] = useState(1);
 
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
@@ -67,30 +63,32 @@ export default function OrdersAdminPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<RawOrder | null>(null);
 
-  const fetchAllOrders = useCallback(async () => {
-    try {
-      setLoading(true);
-      setFetchError(null);
-      const { data } = await axiosInstance.get("/orders/admin/all");
-      const backendOrders = data.orders ?? data;
-      const sorted = Array.isArray(backendOrders)
-        ? backendOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        : [];
-      setOrders(sorted);
-    } catch (err: unknown) {
-      console.error("Failed to fetch orders:", err);
-      const e = err as { response?: { data?: { message?: string } }; message?: string };
-      const msg = e?.response?.data?.message || e.message || "Failed to load orders";
-      setFetchError(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Debounce the search box so we don't hit the server on every keystroke.
   useEffect(() => {
-    fetchAllOrders();
-  }, [fetchAllOrders]);
+    const t = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const { data: ordersData, isLoading, isError, refetch } = useAdminOrders({
+    status: statusFilter,
+    payment: paymentFilter,
+    search,
+    dateRange,
+    page,
+    limit: 50,
+  });
+
+  const markCompletedMutation = useUpdateOrderStatus();
+  const cancelMutation = useCancelOrder();
+  const deleteMutation = useDeleteOrder();
+
+  const orders = useMemo(() => (ordersData?.orders ?? []) as RawOrder[], [ordersData]);
+  const total = ordersData?.total ?? 0;
+  const pages = ordersData?.pages ?? 1;
+  const loading = isLoading;
 
   const rows: TableRow[] = useMemo(
     () =>
@@ -137,27 +135,7 @@ export default function OrdersAdminPage() {
     [orders]
   );
 
-  const filteredRows = useMemo(() => {
-    return rows.filter((r) => {
-      if (search) {
-        const q = search.toLowerCase();
-        const rawEmail = r._raw?.customer?.email?.toLowerCase() || "";
-        if (!(r.id.toLowerCase().includes(q) || r.customer.toLowerCase().includes(q) || r.items.toLowerCase().includes(q) || rawEmail.includes(q)))
-          return false;
-      }
-      if (statusFilter !== "all" && r.fulfillment !== statusFilter.toLowerCase()) return false;
-      if (paymentFilter !== "all" && r.payment !== paymentFilter.toLowerCase()) return false;
-      if (dateRange) {
-        const days = dateRange === "recent" ? 7 : dateRange === "month" ? 30 : dateRange === "quarter" ? 90 : 0;
-        if (days > 0) {
-          const created = new Date(r._raw?.createdAt || r.date).getTime();
-          const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
-          if (isNaN(created) || created < cutoff) return false;
-        }
-      }
-      return true;
-    });
-  }, [rows, search, statusFilter, paymentFilter, dateRange]);
+  const filteredRows = rows;
 
   function openOrderModal(order: RawOrder | undefined | null) {
     if (!order) return;
@@ -186,67 +164,43 @@ export default function OrdersAdminPage() {
     return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
   }
 
-  async function handleMarkCompleted(orderId?: string) {
-    if (!orderId) return;
-    const ok = window.confirm("Mark this order as completed/delivered?");
-    if (!ok) return;
-    try {
-      setUpdatingOrderId(orderId);
-      const res = await axiosInstance.patch(`/orders/admin/${orderId}/status`, { orderStatus: "completed" });
-      const updatedOrder = res.data.order ?? res.data;
-      setOrders((prev) =>
-        prev.map((o) =>
-          o._id === orderId
-            ? { ...o, orderStatus: updatedOrder?.orderStatus ?? "completed", paymentStatus: updatedOrder?.paymentStatus ?? o.paymentStatus }
-            : o
-        )
-      );
-      toast.success("Order marked as completed");
-    } catch (err: unknown) {
-      console.error("Mark completed failed:", err);
-      const e = err as { response?: { data?: { message?: string } }; message?: string };
-      toast.error(e?.response?.data?.message || "Failed to update order");
-    } finally {
-      setUpdatingOrderId(null);
-    }
+  function errorMessage(err: unknown): string {
+    const e = err as { response?: { data?: { message?: string } }; message?: string };
+    return e?.response?.data?.message || e?.message || "Something went wrong";
   }
 
-  async function handleCancelOrder(orderId?: string) {
+  function handleMarkCompleted(orderId?: string) {
     if (!orderId) return;
-    const ok = window.confirm("Cancel this order? Payment may be refunded.");
-    if (!ok) return;
-    try {
-      setUpdatingOrderId(orderId);
-      const res = await axiosInstance.patch(`/orders/${orderId}/cancel`);
-      const updatedOrder = res.data.order ?? res.data;
-      setOrders((prev) =>
-        prev.map((o) =>
-          o._id === orderId
-            ? { ...o, orderStatus: updatedOrder?.orderStatus ?? "cancelled", paymentStatus: updatedOrder?.paymentStatus ?? "refunded" }
-            : o
-        )
-      );
-      toast.success("Order cancelled");
-    } catch (err: unknown) {
-      console.error("Cancel order failed:", err);
-      const e = err as { response?: { data?: { message?: string } }; message?: string };
-      toast.error(e?.response?.data?.message || "Failed to cancel order");
-    } finally {
-      setUpdatingOrderId(null);
-    }
+    if (!window.confirm("Mark this order as completed/delivered?")) return;
+    setUpdatingOrderId(orderId);
+    markCompletedMutation.mutate(
+      { id: orderId, orderStatus: "completed" },
+      {
+        onSuccess: () => toast.success("Order marked as completed"),
+        onError: (err) => toast.error(errorMessage(err)),
+        onSettled: () => setUpdatingOrderId(null),
+      }
+    );
   }
 
-  async function handleDeleteOrder() {
+  function handleCancelOrder(orderId?: string) {
+    if (!orderId) return;
+    if (!window.confirm("Cancel this order? Payment may be refunded.")) return;
+    setUpdatingOrderId(orderId);
+    cancelMutation.mutate(orderId, {
+      onSuccess: () => toast.success("Order cancelled"),
+      onError: (err) => toast.error(errorMessage(err)),
+      onSettled: () => setUpdatingOrderId(null),
+    });
+  }
+
+  function handleDeleteOrder() {
     if (!deleteTarget) return;
-    try {
-      await axiosInstance.delete(`/orders/admin/${deleteTarget._id}`);
-      setOrders((prev) => prev.filter((o) => o._id !== deleteTarget._id));
-      toast.success("Order deleted permanently");
-    } catch {
-      toast.error("Failed to delete order");
-    } finally {
-      setDeleteTarget(null);
-    }
+    deleteMutation.mutate(deleteTarget._id, {
+      onSuccess: () => toast.success("Order deleted permanently"),
+      onError: (err) => toast.error(errorMessage(err)),
+      onSettled: () => setDeleteTarget(null),
+    });
   }
 
   const statusColor = (v: string) => {
@@ -312,7 +266,6 @@ export default function OrdersAdminPage() {
   ];
 
   return (
-    <AdminLayout>
       <div className="space-y-8">
         {/* Page header */}
         <div>
@@ -328,12 +281,12 @@ export default function OrdersAdminPage() {
               <Input
                 placeholder="Search by order ID or customer..."
                 className="pl-10 h-10 rounded-xl border-border/60 bg-muted/30"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
               />
             </div>
 
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v)}>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
               <SelectTrigger className="w-full sm:w-[170px] h-10 rounded-xl border-border/60 bg-muted/30">
                 <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Status" />
@@ -348,7 +301,7 @@ export default function OrdersAdminPage() {
               </SelectContent>
             </Select>
 
-            <Select value={paymentFilter} onValueChange={(v) => setPaymentFilter(v)}>
+            <Select value={paymentFilter} onValueChange={(v) => { setPaymentFilter(v); setPage(1); }}>
               <SelectTrigger className="w-full sm:w-[170px] h-10 rounded-xl border-border/60 bg-muted/30">
                 <SelectValue placeholder="Payment" />
               </SelectTrigger>
@@ -360,7 +313,7 @@ export default function OrdersAdminPage() {
               </SelectContent>
             </Select>
 
-            <Select value={dateRange} onValueChange={(v) => setDateRange(v as typeof dateRange)}>
+            <Select value={dateRange} onValueChange={(v) => { setDateRange(v as typeof dateRange); setPage(1); }}>
               <SelectTrigger className="w-full sm:w-[170px] h-10 rounded-xl border-border/60 bg-muted/30">
                 <SelectValue placeholder="Date Range" />
               </SelectTrigger>
@@ -377,7 +330,7 @@ export default function OrdersAdminPage() {
         {/* Results count */}
         {!loading && (
           <p className="text-xs text-muted-foreground font-medium">
-            {filteredRows.length} order{filteredRows.length !== 1 ? "s" : ""} found
+            {total} order{total !== 1 ? "s" : ""} found
           </p>
         )}
 
@@ -397,13 +350,28 @@ export default function OrdersAdminPage() {
               </div>
             ))}
           </div>
-        ) : fetchError ? (
+        ) : isError ? (
           <div className="rounded-2xl bg-white border border-border/50 p-8 text-center">
-            <p className="text-red-500 mb-4 text-sm">{fetchError}</p>
-            <Button onClick={fetchAllOrders} className="rounded-xl">Retry</Button>
+            <p className="text-red-500 mb-4 text-sm">Failed to load orders</p>
+            <Button onClick={() => refetch()} className="rounded-xl">Retry</Button>
           </div>
         ) : (
           <DataTable columns={columns} data={filteredRows} emptyMessage="No orders match your filters." />
+        )}
+
+        {/* Pagination */}
+        {!loading && pages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4">
+            <p className="text-xs text-muted-foreground font-medium">Page {page} of {pages}</p>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="rounded-xl" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                Previous
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-xl" disabled={page >= pages} onClick={() => setPage((p) => Math.min(pages, p + 1))}>
+                Next
+              </Button>
+            </div>
+          </div>
         )}
 
         {/* Order detail modal */}
@@ -518,6 +486,5 @@ export default function OrdersAdminPage() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AdminLayout>
   );
 }

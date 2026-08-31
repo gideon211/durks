@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import React, { useState, useEffect } from "react";
-import AdminLayout from "@/admin/components/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +33,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import axiosInstance from "@/api/axios";
+import { useActivityLogs, useActivityActions, useActivityStats } from "@/admin/queries";
 
 interface ActivityEntry {
   _id: string;
@@ -194,9 +194,6 @@ function StatCard({ title, value, subtitle, icon: Icon, color }: StatCardProps) 
 }
 
 export default function ActivityLog() {
-  const [logs, setLogs] = useState<ActivityEntry[]>([]);
-  const [stats, setStats] = useState<ActivityStats | null>(null);
-  const [loading, setLoading] = useState(true);
   const [searchEmail, setSearchEmail] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
   const [fromDate, setFromDate] = useState(() => {
@@ -209,8 +206,6 @@ export default function ActivityLog() {
   });
   const [toDate, setToDate] = useState("");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [actions, setActions] = useState<string[]>([]);
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<{
     valid: boolean;
@@ -219,36 +214,27 @@ export default function ActivityLog() {
     error?: string;
   } | null>(null);
 
-  const fetchActions = async () => {
-    try {
-      const { data } = await axiosInstance.get("/activity-logs/actions");
-      if (data.success) setActions(data.actions);
-    } catch {
-      // ignore
-    }
-  };
+  const { data: logsData, isLoading, refetch: refetchLogs } = useActivityLogs({
+    email: searchEmail || undefined,
+    action: actionFilter === "all" ? undefined : actionFilter,
+    from: fromDate || undefined,
+    to: toDate || undefined,
+    page,
+    limit: 50,
+  });
+  const { data: actionsData } = useActivityActions();
+  const { data: statsData, refetch: refetchStats } = useActivityStats();
 
-  const fetchLogs = async (p = page) => {
-    setLoading(true);
-    try {
-      const params: Record<string, string> = { page: String(p), limit: "50" };
-      if (searchEmail) params.email = searchEmail;
-      if (actionFilter !== "all") params.action = actionFilter;
-      if (fromDate) params.from = fromDate;
-      if (toDate) params.to = toDate;
+  const logs = (logsData?.logs ?? []) as ActivityEntry[];
+  const totalPages = logsData?.pages ?? 1;
+  const actions = actionsData?.actions ?? [];
+  const stats = (statsData?.stats ?? null) as ActivityStats | null;
+  const loading = isLoading;
 
-      const { data } = await axiosInstance.get("/activity-logs", { params });
-      if (data.success) {
-        setLogs(data.logs);
-        setTotalPages(data.pages);
-        setPage(data.page);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Reset to page 1 whenever a filter changes.
+  useEffect(() => {
+    setPage(1);
+  }, [searchEmail, actionFilter, fromDate, toDate]);
 
   const handleExport = async () => {
     try {
@@ -284,34 +270,12 @@ export default function ActivityLog() {
     }
   };
 
-  const fetchStats = async () => {
-    try {
-      const { data } = await axiosInstance.get("/activity-logs/stats");
-      if (data.success) setStats(data.stats);
-    } catch {
-      // ignore
-    }
-  };
-
-  useEffect(() => {
-    fetchActions();
-    fetchStats();
-  }, []);
-
-  useEffect(() => {
-    fetchLogs(1);
-    setPage(1);
-  }, [searchEmail, actionFilter, fromDate, toDate]);
-
   function handleRefresh() {
-    fetchStats();
-    fetchLogs(page);
+    refetchLogs();
+    refetchStats();
   }
 
-  const monthName = new Date().toLocaleString("default", { month: "long" });
-
   return (
-    <AdminLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -463,7 +427,7 @@ export default function ActivityLog() {
                 onChange={(e) => setToDate(e.target.value)}
                 className="w-full sm:w-40"
               />
-              <Button onClick={() => fetchLogs(1)}>
+              <Button onClick={() => setPage(1)}>
                 <Search className="h-4 w-4 mr-2" />
                 Search
               </Button>
@@ -558,13 +522,13 @@ export default function ActivityLog() {
 
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-2">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => fetchLogs(page - 1)}>
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
                   Previous
                 </Button>
                 <span className="text-sm text-muted-foreground">
                   Page {page} of {totalPages}
                 </span>
-                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => fetchLogs(page + 1)}>
+                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
                   Next
                 </Button>
               </div>
@@ -572,6 +536,5 @@ export default function ActivityLog() {
           </>
         )}
       </div>
-    </AdminLayout>
   );
 }

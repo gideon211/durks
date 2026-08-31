@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
     const actions = await ActivityLog.distinct("action");
-    await logActivity({
+    void logActivity({
       ...buildActor(req, authUser),
       action: "admin_view_actions",
       details: "Admin fetched activity log actions",

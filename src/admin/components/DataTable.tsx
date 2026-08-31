@@ -52,20 +52,27 @@ export default function DataTable<T = Record<string, unknown>>({
               </TableCell>
             </TableRow>
           ) : (
-            data.map((row, index) => (
-              <TableRow
-                key={index}
-                className="border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors duration-200"
-              >
-                {columns.map((column) => (
-                  <TableCell key={column.key} className="py-3 text-sm">
-                    {column.render
-                      ? column.render(row[column.key], row)
-                      : String(row[column.key] ?? "")}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
+            data.map((row, index) => {
+              const r = row as Record<string, unknown>;
+              const rowKey =
+                r._id ??
+                r.id ??
+                index;
+              return (
+                <TableRow
+                  key={String(rowKey)}
+                  className="border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors duration-200"
+                >
+                  {columns.map((column) => (
+                    <TableCell key={column.key} className="py-3 text-sm">
+                      {column.render
+                        ? column.render(r[column.key], row)
+                        : String(r[column.key] ?? "")}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>

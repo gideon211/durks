@@ -1,6 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
-const Users = dynamic(() => import("@/admin/pages/Users"), { ssr: false });
+import AdminPageLoader from "@/admin/components/AdminPageLoader";
+const Users = dynamic(() => import("@/admin/pages/Users"), { ssr: false, loading: () => <AdminPageLoader /> });
 export default function UsersPage() {
   return <Users />;
 }

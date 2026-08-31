@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import AdminLayout from "@/admin/components/AdminLayout";
+import { useMemo } from "react";
 import StatCard from "@/admin/components/StatCard";
 import DataTable from "@/admin/components/DataTable";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShimmerBar } from "@/components/ui/shimmer-bar";
 import {
@@ -13,7 +11,6 @@ import {
   DollarSign,
   Users,
   TrendingUp,
-  Eye,
   Package,
   ArrowUpRight,
 } from "lucide-react";
@@ -29,8 +26,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import axiosInstance from "@/api/axios";
 import { useRouter } from "next/navigation";
+import { useAdminDashboard } from "@/admin/queries";
 
 const CHART_COLORS = ["#3b82f6", "#10b981", "#06b6d4", "#f59e0b", "#ec4899"];
 
@@ -54,65 +51,38 @@ interface Order {
 
 export default function Dashboard() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ totalOrders: 0, totalRevenue: 0, pendingOrders: 0, ordersThisWeek: 0 });
-  const [userCount, setUserCount] = useState(0);
-  const [productCount, setProductCount] = useState(0);
-  const [revenueTrend, setRevenueTrend] = useState<{ date: string; revenue: number }[]>([]);
-  const [categoryData, setCategoryData] = useState<{ name: string; count: number }[]>([]);
-  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const { data, isLoading } = useAdminDashboard();
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const [statsRes, usersRes, drinksRes, trendRes, categoriesRes, ordersRes] = await Promise.allSettled([
-          axiosInstance.get("/orders/admin/stats"),
-          axiosInstance.get("/orders/admin/customers"),
-          axiosInstance.get("/drinks"),
-          axiosInstance.get("/orders/admin/revenue-trend"),
-          axiosInstance.get("/drinks/stats/category"),
-          axiosInstance.get("/orders/admin/all"),
-        ]);
+  const stats = useMemo(
+    () => ({
+      totalOrders: data?.stats.totalOrders ?? 0,
+      totalRevenue: data?.stats.totalRevenue ?? 0,
+      pendingOrders: data?.stats.pendingOrders ?? 0,
+      ordersThisWeek: data?.stats.ordersThisWeek ?? 0,
+    }),
+    [data]
+  );
+  const userCount = data?.customerCount ?? 0;
+  const productCount = data?.productCount ?? 0;
+  const revenueTrend = data?.revenueTrend ?? [];
+  const categoryData = data?.categories ?? [];
+  const recentOrders = useMemo(() => (data?.recentOrders ?? []) as Order[], [data?.recentOrders]);
+  const loading = isLoading;
 
-        if (statsRes.status === "fulfilled") {
-          const s = statsRes.value.data.stats ?? {};
-          setStats({
-            totalOrders: s.totalOrders ?? 0,
-            totalRevenue: s.totalRevenue ?? 0,
-            pendingOrders: s.pendingOrders ?? 0,
-            ordersThisWeek: s.ordersThisWeek ?? 0,
-          });
-        }
-        if (usersRes.status === "fulfilled") setUserCount((usersRes.value.data.customers ?? []).length);
-        if (drinksRes.status === "fulfilled") setProductCount(drinksRes.value.data.count ?? 0);
-        if (trendRes.status === "fulfilled") setRevenueTrend(trendRes.value.data.trend ?? []);
-        if (categoriesRes.status === "fulfilled") setCategoryData(categoriesRes.value.data.categories ?? []);
-        if (ordersRes.status === "fulfilled") {
-          const orders = ordersRes.value.data.orders ?? [];
-          setRecentOrders(orders.slice(0, 5));
-        }
-      } catch (err) {
-        console.error("Dashboard fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDashboard();
-  }, []);
-
-  const columns = [
-    { key: "id", label: "Order" },
-    { key: "customer", label: "Customer" },
-    { key: "items", label: "Items" },
-    { key: "total", label: "Total" },
-    {
-      key: "status",
-      label: "Status",
-      render: (value: string) => {
-        const colors: Record<string, string> = {
-          completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-          delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
-          processing: "bg-blue-50 text-blue-700 border-blue-200",
+  const columns = useMemo(
+    () => [
+      { key: "id", label: "Order" },
+      { key: "customer", label: "Customer" },
+      { key: "items", label: "Items" },
+      { key: "total", label: "Total" },
+      {
+        key: "status",
+        label: "Status",
+        render: (value: string) => {
+          const colors: Record<string, string> = {
+            completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
+            delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
+            processing: "bg-blue-50 text-blue-700 border-blue-200",
           shipped: "bg-blue-50 text-blue-700 border-blue-200",
           pending: "bg-amber-50 text-amber-700 border-amber-200",
           cancelled: "bg-red-50 text-red-700 border-red-200",
@@ -137,31 +107,36 @@ export default function Dashboard() {
     {
       key: "actions",
       label: "",
-      render: (_: unknown) => (
+      render: () => (
         <Button variant="ghost" size="sm" onClick={() => router.push("/admin/orders")} className="h-8 px-3 text-xs font-medium text-muted-foreground hover:text-foreground">
           View
           <ArrowUpRight className="h-3 w-3 ml-1" />
         </Button>
       ),
     },
-  ];
+    ],
+    [router]
+  );
 
-  const tableData = recentOrders.map((o) => {
-    const itemsArr = o.items ?? [];
-    const itemsSummary = itemsArr.slice(0, 2).map((it) => `${it.name ?? "?"} x${it.quantity ?? 1}`).join(", ");
-    return {
-      id: o.orderNumber ?? o._id?.slice(-6) ?? "\u2014",
-      customer: o.customer?.fullName ?? o.customer?.email ?? "\u2014",
-      items: itemsSummary || "\u2014",
-      total: `GH\u20B5 ${Number(o.totalAmount ?? 0).toFixed(2)}`,
-      status: o.orderStatus ?? "pending",
-      payment: o.paymentStatus ?? "pending",
-      date: o.createdAt ? new Date(o.createdAt).toLocaleDateString("en-GB") : "\u2014",
-    };
-  });
+  const tableData = useMemo(
+    () =>
+      recentOrders.map((o) => {
+        const itemsArr = o.items ?? [];
+        const itemsSummary = itemsArr.slice(0, 2).map((it) => `${it.name ?? "?"} x${it.quantity ?? 1}`).join(", ");
+        return {
+          id: o.orderNumber ?? o._id?.slice(-6) ?? "\u2014",
+          customer: o.customer?.fullName ?? o.customer?.email ?? "\u2014",
+          items: itemsSummary || "\u2014",
+          total: `GH\u20B5 ${Number(o.totalAmount ?? 0).toFixed(2)}`,
+          status: o.orderStatus ?? "pending",
+          payment: o.paymentStatus ?? "pending",
+          date: o.createdAt ? new Date(o.createdAt).toLocaleDateString("en-GB") : "\u2014",
+        };
+      }),
+    [recentOrders]
+  );
 
   return (
-    <AdminLayout>
       <div className="space-y-8">
         {/* Page header */}
         <div>
@@ -307,6 +282,5 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-    </AdminLayout>
   );
 }

@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 
     const logs = await resolveActors(rawLogs);
 
-    await logActivity({
+    void logActivity({
       ...buildActor(req, authUser),
       action: "admin_view_activity",
       details: `Admin viewed activity logs${email ? ` filtered by ${email}` : ""}`,

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
       .filter((s: { _id: string }) => s._id)
       .map((s: { _id: string; count: number }) => ({ name: s._id, count: s.count }));
 
-    await logActivity({
+    void logActivity({
       ...buildActor(req, authUser),
       action: "admin_view_drink_categories",
       details: "Admin fetched product category stats",
