@@ -9,7 +9,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Copy,
   Check,
-  X,
   Package,
   Mail,
   Phone,
@@ -223,12 +222,9 @@ export default function OrderDetailDialog({
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">{placed}</p>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2 pr-10">
               <StatusPill value={order.paymentStatus} styles={PAYMENT_STYLES} />
               <StatusPill value={order.orderStatus} styles={FULFILLMENT_STYLES} />
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground" aria-label="Close" onClick={() => onOpenChange(false)}>
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </div>
 
@@ -251,7 +247,7 @@ export default function OrderDetailDialog({
                         <div key={idx} className="flex items-center gap-3 px-5 py-3">
                           <OrderItemThumb item={it} />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium">{it.name || "Item"}</p>
+                            <p className="text-sm font-medium break-words">{it.name || "Item"}</p>
                             <div className="mt-1 grid max-w-xs grid-cols-3 gap-3">
                               <Spec label="Pack" value={it.pack != null && String(it.pack).trim() !== "" ? String(it.pack) : "\u2014"} />
                               <Spec label="Qty" value={String(Number(it.quantity) || 1)} />
