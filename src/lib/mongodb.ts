@@ -26,7 +26,8 @@ export async function connectDB() {
     dns.setServers(["8.8.8.8", "8.8.4.4"]);
   }
 
-  const MONGODB_URI = process.env.MONGODB_URI;
+  // Accept both MONGODB_URI and MONGO_URI (some setups define one or the other).
+  const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
   if (!MONGODB_URI) {
     throw new Error("Please define the MONGODB_URI environment variable in .env.local");
   }
