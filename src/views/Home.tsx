@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { Phone, MessageCircle } from "lucide-react";
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
@@ -25,7 +26,7 @@ const marqueeMessages = [
 ];
 
 const faqs = [
-  { question: "Can I get juices now, or do I always have to preorder?", answer: "We make fresh juice every day and always have juice in stock. Preordering helps ensure you get your most preferred flavors, quantities, and at your preferred time." },
+  { question: "Can I get juices now, or do I always have to preorder?", answer: "We make fresh juice every day and always have juice in stock. Preordering helps ensure you get your preferred flavors and quantities at your preferred time." },
   { question: "How long do juices stay fresh?", answer: "Fresh natural juices last 3 days in the refrigerator. Without preservatives, they are best kept frozen and can last up to 3 months." },
   { question: "How many flavors do you have?", answer: "We have pure juices, cleanse juices, nutty juices, smoothies, and more. Don't see your flavor online? Reach out to create a custom flavor." },
   { question: "Do you offer bulk juice?", answer: "Yes, we offer bulk and white-label services starting from 300 bottles. Contact us for more details." },
@@ -199,12 +200,12 @@ export default function Home({
               viewport={sectionViewport}
               variants={fadeUp()}
             >
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-green-600 mb-3">Questions</p>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tight mb-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-forest/70 mb-3">Questions</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tight mb-4 text-neutral-charcoal">
                 Frequently Asked
               </h2>
-              <p className="text-base text-gray-500 max-w-md mx-auto">
-                Everything you need to know about Duks juices
+              <p className="text-base text-neutral-charcoal/60 max-w-md mx-auto">
+                Everything you need to know about Duks Juice
               </p>
             </motion.div>
 
@@ -219,18 +220,54 @@ export default function Home({
                 >
                   <AccordionItem
                     value={`item-${index}`}
-                    className="rounded-2xl border border-gray-100 px-5 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden"
+                    className="rounded-2xl border border-forest/10 px-5 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden transition-colors data-[state=open]:border-forest/25 data-[state=open]:shadow-[0_8px_24px_-12px_rgba(16,61,22,0.25)]"
                   >
-                    <AccordionTrigger className="text-sm sm:text-base font-semibold tracking-tight hover:text-green-600 hover:no-underline py-4">
+                    <AccordionTrigger className="text-sm sm:text-base font-semibold tracking-tight text-neutral-charcoal hover:text-forest hover:no-underline py-4 [&>svg]:text-forest [&[data-state=open]>svg]:text-gold">
                       {faq.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-sm text-gray-500 leading-relaxed pb-4">
+                    <AccordionContent className="text-sm text-neutral-charcoal/60 leading-relaxed pb-4">
                       {faq.answer}
                     </AccordionContent>
                   </AccordionItem>
                 </motion.div>
               ))}
             </Accordion>
+
+            {/* Closing CTA */}
+            <motion.div
+              className="mt-10"
+              initial="hidden"
+              whileInView="visible"
+              viewport={sectionViewport}
+              variants={fadeUp(10)}
+            >
+              <div className="rounded-2xl bg-forest px-6 py-8 text-center sm:px-10">
+                <h3 className="text-xl font-bold text-white sm:text-2xl">
+                  Still have a question?
+                </h3>
+                <p className="mx-auto mt-2 max-w-md text-sm text-white/70">
+                  We&apos;re happy to help — call or message us and we&apos;ll get back to you.
+                </p>
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                  <a
+                    href="tel:+233202427880"
+                    className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-forest transition-colors hover:bg-gold hover:text-white"
+                  >
+                    <Phone className="h-4 w-4" />
+                    Call us
+                  </a>
+                  <a
+                    href="https://wa.me/233202427880"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gold/90"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    WhatsApp
+                  </a>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </section>
 
