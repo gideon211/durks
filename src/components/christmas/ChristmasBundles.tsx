@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, MessageCircle, Phone, ArrowRight } from "lucide-react";
@@ -30,7 +30,7 @@ function BundleCard({ bundle, phase }: { bundle: PromoBundle; phase: PromoPhase 
   const ordering = phase === "preorder";
 
   return (
-    <article className="w-[280px] sm:w-[300px] flex-shrink-0 flex flex-col rounded-[1.5rem] overflow-hidden bg-[#FDF8EF] shadow-xl shadow-black/25">
+    <article className="w-[280px] sm:w-[300px] xl:w-full flex-shrink-0 flex flex-col rounded-[1.5rem] overflow-hidden bg-[#FDF8EF] shadow-xl shadow-black/25">
       <div
         className="relative aspect-[4/5] w-full"
         style={{ backgroundColor: bundle.bg }}
@@ -64,20 +64,22 @@ function BundleCard({ bundle, phase }: { bundle: PromoBundle; phase: PromoPhase 
                 type="button"
                 aria-pressed={isSelected}
                 onClick={() => setSelected(index)}
-                className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left transition-all duration-200 ${
+                className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left transition-all duration-200 ${
                   isSelected
                     ? "border-[#0E3B24] bg-white shadow-sm"
                     : "border-transparent bg-black/[0.035] hover:bg-black/[0.06]"
                 }`}
               >
-                <span className="text-[12px] font-semibold text-gray-700">
-                  {option.size} × {option.count}
-                </span>
-                <span className="flex items-baseline gap-1.5">
-                  <s className="text-[11px] text-gray-400">{formatCedis(option.was)}</s>
-                  <span className="text-[13px] font-bold text-[#0E3B24]">
-                    {formatCedis(option.price)}
+                <span className="flex flex-col">
+                  <span className="whitespace-nowrap text-[12px] font-semibold text-gray-700">
+                    {option.size} × {option.count}
                   </span>
+                  <s className="text-[10.5px] text-gray-400">
+                    {formatCedis(option.was)}
+                  </s>
+                </span>
+                <span className="whitespace-nowrap text-[13px] font-bold text-[#0E3B24]">
+                  {formatCedis(option.price)}
                 </span>
               </button>
             );
@@ -117,18 +119,24 @@ function BundleCard({ bundle, phase }: { bundle: PromoBundle; phase: PromoPhase 
 export default function ChristmasBundles({ phase, daysLeft }: Props) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [canLeft, setCanLeft] = useState(false);
-  const [canRight, setCanRight] = useState(true);
+  const [canRight, setCanRight] = useState(false);
 
-  if (phase === "hidden" || phase === "ended") return null;
-
-  const preordering = phase === "preorder";
-
-  const onScroll = () => {
+  const onScroll = useCallback(() => {
     const el = scrollerRef.current;
     if (!el) return;
     setCanLeft(el.scrollLeft > 10);
     setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 10);
-  };
+  }, []);
+
+  useEffect(() => {
+    onScroll();
+    window.addEventListener("resize", onScroll);
+    return () => window.removeEventListener("resize", onScroll);
+  }, [onScroll]);
+
+  if (phase === "hidden" || phase === "ended") return null;
+
+  const preordering = phase === "preorder";
 
   const scrollBy = (dir: "left" | "right") => {
     const el = scrollerRef.current;
@@ -182,12 +190,12 @@ export default function ChristmasBundles({ phase, daysLeft }: Props) {
         </div>
       </div>
 
-      <div className="relative w-full">
+      <div className="container relative mx-auto px-4 sm:px-6">
         <button
           type="button"
           aria-label="Scroll left"
           onClick={() => scrollBy("left")}
-          className={`absolute left-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-lg shadow-black/20 transition-all duration-300 hover:scale-110 active:scale-95 md:flex ${
+          className={`absolute left-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-lg shadow-black/20 transition-all duration-300 hover:scale-110 active:scale-95 md:flex xl:hidden ${
             canLeft ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
@@ -198,7 +206,7 @@ export default function ChristmasBundles({ phase, daysLeft }: Props) {
           type="button"
           aria-label="Scroll right"
           onClick={() => scrollBy("right")}
-          className={`absolute right-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-lg shadow-black/20 transition-all duration-300 hover:scale-110 active:scale-95 md:flex ${
+          className={`absolute right-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-lg shadow-black/20 transition-all duration-300 hover:scale-110 active:scale-95 md:flex xl:hidden ${
             canRight ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
@@ -208,14 +216,16 @@ export default function ChristmasBundles({ phase, daysLeft }: Props) {
         <div
           ref={scrollerRef}
           onScroll={onScroll}
-          className="no-scrollbar flex w-full snap-x snap-mandatory items-stretch gap-5 overflow-x-auto px-4 pb-4 sm:px-6 scroll-pl-4 sm:scroll-pl-6"
+          className="no-scrollbar w-full snap-x snap-mandatory overflow-x-auto pb-4 scroll-pl-4 sm:scroll-pl-6 xl:overflow-visible xl:snap-none"
           style={{ scrollBehavior: "smooth" }}
         >
-          {CHRISTMAS_PROMO.bundles.map((bundle) => (
-            <div key={bundle.id} className="flex snap-start">
-              <BundleCard bundle={bundle} phase={phase} />
-            </div>
-          ))}
+          <div className="mx-auto flex w-max items-stretch gap-5 xl:grid xl:w-full xl:grid-cols-5">
+            {CHRISTMAS_PROMO.bundles.map((bundle) => (
+              <div key={bundle.id} className="flex snap-start">
+                <BundleCard bundle={bundle} phase={phase} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
