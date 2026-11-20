@@ -29,7 +29,7 @@ const trustItems = [
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-soft-sand">
+    <section className="relative overflow-hidden bg-white">
       {/* soft radial accent */}
       <div
         aria-hidden="true"
@@ -56,7 +56,7 @@ export default function HeroSection() {
                 className="absolute -inset-3 rounded-[2.4rem] border border-gold/30"
               />
 
-              <div className="relative h-full w-full overflow-hidden rounded-[2rem] bg-[#F4EFE4] shadow-2xl shadow-forest/15">
+              <div className="relative h-full w-full overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-forest/15">
                 <Image
                   src="/images/hero-image.webp"
                   alt="Duks Juice, cold-pressed and additive-free"

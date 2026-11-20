@@ -88,7 +88,7 @@ export default function ProductRail() {
   };
 
   return (
-    <section className="overflow-hidden bg-soft-sand py-20 md:py-28">
+    <section className="overflow-hidden bg-white py-20 md:py-28">
       <div className="lg:grid lg:grid-cols-12">
         {/* Header — sticky on desktop */}
         <div className="px-4 sm:px-6 lg:sticky lg:top-28 lg:col-span-4 lg:self-start lg:pr-10 lg:pl-[max(1.5rem,calc((100vw-87.5rem)/2+1rem))]">
@@ -163,7 +163,7 @@ export default function ProductRail() {
                     key={category.id}
                     href={`/products/${category.slug}`}
                     data-card
-                    className="group w-[280px] shrink-0 snap-start rounded-[1.5rem] border border-black/[0.06] bg-white p-2.5 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_56px_-28px_rgba(16,61,22,0.4)] sm:w-[300px]"
+                    className="group w-[280px] shrink-0 snap-start rounded-[1.5rem] border border-black/10 bg-white p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-16px_rgba(16,61,22,0.18)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_56px_-28px_rgba(16,61,22,0.4)] sm:w-[300px]"
                   >
                     {/* Image */}
                     <div className="relative aspect-[3/4] overflow-hidden rounded-[1.15rem] bg-[#F4EFE4]">
