@@ -251,7 +251,7 @@ export default function Home({
         <WhyDuks />
 
         {/* ─── TikTok / Social Section ─── */}
-        <section className="py-12 md:py-20 bg-neutral-charcoal text-white mt-24 rounded-b-lg">
+        <section className="py-12 md:py-20 bg-neutral-charcoal text-white">
           <div className="container mx-auto px-4">
             <motion.div
               className="text-center mb-12 md:mb-16"
