@@ -1,6 +1,7 @@
 import Home from "@/views/Home";
 import { Metadata } from "next";
 import JsonLd from "@/components/JsonLd";
+import { daysLeftToPreorder, getPromoPhase } from "@/lib/christmasPromo";
 
 export const revalidate = 300; // Revalidate every 5 minutes
 
@@ -73,7 +74,10 @@ export default function HomePage() {
   return (
     <>
       <JsonLd data={faqSchema} />
-      <Home />
+      <Home
+        promoPhase={getPromoPhase()}
+        promoDaysLeft={daysLeftToPreorder()}
+      />
     </>
   );
 }

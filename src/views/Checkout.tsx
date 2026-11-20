@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/popover";
 import { useAuth } from "@/context/Authcontext";
 import { Modal } from "@/components/Modal";
+import { promoDeliveryWindow } from "@/lib/christmasPromo";
 
 interface Calendar24Props {
   date?: Date;
@@ -59,6 +60,8 @@ function Calendar24({
   const [date, setDate] = useState<Date | undefined>(propDate);
   const [time, setTime] = useState<string>(propTime || "");
 
+  const promoWindow = useMemo(() => promoDeliveryWindow(), []);
+
   useEffect(() => setDate(propDate), [propDate]);
   useEffect(() => setTime(propTime || "10:30:00"), [propTime]);
 
@@ -84,7 +87,11 @@ function Calendar24({
               mode="single"
               selected={date}
               captionLayout="dropdown"
-              disabled={{ before: new Date(new Date().setHours(0, 0, 0, 0)) }}
+              disabled={
+                promoWindow
+                  ? { before: promoWindow.from, after: promoWindow.to }
+                  : { before: new Date(new Date().setHours(0, 0, 0, 0)) }
+              }
               onSelect={(selectedDate) => {
                 setDate(selectedDate);
                 onDateChange?.(selectedDate);
@@ -754,7 +761,9 @@ export default function Checkout(): JSX.Element {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Pick a convenient date and time for your delivery
+                  {promoDeliveryWindow()
+                    ? "Christmas preorders deliver between 1 and 31 December."
+                    : "Pick a convenient date and time for your delivery"}
                 </p>
                 <Calendar24
                   date={formData.deliveryDate}

@@ -22,6 +22,8 @@ import {
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
+import ChristmasBundles from "@/components/christmas/ChristmasBundles";
+import type { PromoPhase } from "@/lib/christmasPromo";
 import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -81,7 +83,13 @@ const fadeUp = (y = 30) => ({
   visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const } },
 });
 
-export default function Home() {
+export default function Home({
+  promoPhase = "hidden",
+  promoDaysLeft = 0,
+}: {
+  promoPhase?: PromoPhase;
+  promoDaysLeft?: number;
+}) {
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -125,7 +133,9 @@ export default function Home() {
     <div>
       <Header />
       <div className="min-h-screen bg-white">
-        <HeroSection />
+        <HeroSection promoActive={promoPhase === "preorder"} />
+
+        <ChristmasBundles phase={promoPhase} daysLeft={promoDaysLeft} />
 
         {/* ─── Products Carousel ─── */}
         <section className="py-20 md:py-28 bg-[#f8fafc]">

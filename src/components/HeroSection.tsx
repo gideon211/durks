@@ -27,7 +27,7 @@ const headlineVariants = heroChild(40, 0.8);
 const descVariants = heroChild(20, 0.7);
 const btnVariants = heroChild(16, 0.6);
 
-function HeroSection() {
+function HeroSection({ promoActive = false }: { promoActive?: boolean }) {
   return (
     <motion.section
       className="relative"
@@ -89,9 +89,19 @@ function HeroSection() {
                 <Button
                   asChild
                   variant="ghost"
-                  className="rounded-full px-6 py-5 text-white/90 font-semibold text-sm hover:bg-white/10 hover:text-white active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                  className={
+                    promoActive
+                      ? "rounded-full px-6 py-5 bg-black/25 text-white font-semibold text-sm backdrop-blur-sm border border-white/20 hover:bg-black/35 hover:text-white active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                      : "rounded-full px-6 py-5 text-white/90 font-semibold text-sm hover:bg-white/10 hover:text-white active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                  }
                 >
-                  <Link href="/products/cleanse">Start Your Cleanse</Link>
+                  {promoActive ? (
+                    <Link href="#christmas" className="flex items-center gap-2">
+                      Christmas Bundles — 50% off
+                    </Link>
+                  ) : (
+                    <Link href="/products/cleanse">Start Your Cleanse</Link>
+                  )}
                 </Button>
               </motion.div>
             </motion.div>
