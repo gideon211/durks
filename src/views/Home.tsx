@@ -8,52 +8,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import Image from "next/image";
-import {
-  Share2,
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
 import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import ChristmasBundles from "@/components/christmas/ChristmasBundles";
 import WhyDuks from "@/components/home/WhyDuks";
+import ProductRail from "@/components/home/ProductRail";
 import type { PromoPhase } from "@/lib/christmasPromo";
-import { useRef, useState, useEffect } from "react";
-import { toast } from "sonner";
-
-const smoothie1 = "/images/smoothie1.jpeg";
-const smoothie2 = "/images/smoothie2.jpeg";
-const smoothie3 = "/images/smoothie3.jpeg";
-const smoothie4 = "/images/smoothie4.jpeg";
-const cutFruit1 = "/images/cutFruit1.jpeg";
-const cutFruit2 = "/images/cutFruit2.jpeg";
-const cutFruit3 = "/images/cutFruit3.jpeg";
-const cutFruit4 = "/images/cutFruit4.jpeg";
-const gift1 = "/images/gift1.jpeg";
-const gift2 = "/images/gift2.jpeg";
-const gift3 = "/images/gift3.jpeg";
-const gift4 = "/images/gift4.jpeg";
-const bundle3 = "/images/bundle3.jpeg";
-const flavor1 = "/images/flavor1.jpg";
-const flavor2 = "/images/flavor2.jpg";
-const flavor3 = "/images/flavor3.jpg";
-const flavor4 = "/images/flavor4.jpg";
-
-const productCategories = [
-  { id: "bundles", name: "BUNDLES", slug: "bundle", images: [bundle3], description: "Perfectly curated juice packs to serve your unique quantity and dietary needs." },
-  { id: "pure-juice", name: "PURE JUICES", slug: "pure-juice", image: "/images/pure-juice.webp", description: "Single strength juices and delicious juice blend combinations." },
-  { id: "cleanse", name: "CLEANSE JUICES", slug: "cleanse", image: "/images/cleanse-juice.webp", description: "Cleanse your system regularly with powerful, carefully selected ingredients." },
-  { id: "shots", name: "WELLNESS SHOTS", slug: "shots", image: "/images/wellness-shot.webp", description: "Small but mighty potions of health. Let your shots do the waking up!" },
-  { id: "smoothies", name: "SMOOTHIES", slug: "smoothies", images: [smoothie1, smoothie2, smoothie3, smoothie4], description: "Rich blends of powerful detoxing ingredients." },
-  { id: "flavors", name: "FLAVORS", slug: "flavors", images: [flavor1, flavor2, flavor3, flavor4], description: "Delicious juice blends for your specific health needs." },
-  { id: "cut-fruits", name: "CUT FRUITS", slug: "cut-fruits", images: [cutFruit1, cutFruit2, cutFruit3, cutFruit4], description: "Fresh fruit packs for snacks and desserts." },
-  { id: "gift-packs", name: "GIFT PACKS", slug: "gift-packs", images: [gift1, gift2, gift3, gift4], description: "Share the gift of health with beautifully curated packs." },
-  { id: "events", name: "EVENTS", slug: "events", image: "/images/events.webp", description: "Bulk juice catering for weddings, festivals, and corporate events." },
-];
 
 const marqueeMessages = [
   "Packed with vitamins and natural energy",
@@ -88,43 +50,6 @@ export default function Home({
   promoPhase?: PromoPhase;
   promoDaysLeft?: number;
 }) {
-  const carouselRef = useRef<HTMLDivElement | null>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
-
-  useEffect(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const onScroll = () => {
-      setCanScrollLeft(el.scrollLeft > 10);
-      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 10);
-    };
-    onScroll();
-    el.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      el.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, []);
-
-  const scrollCarousel = (dir: "left" | "right") => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const amount = Math.floor(el.clientWidth * 0.8);
-    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
-  };
-
-  const handleShare = async (name: string, slug: string) => {
-    const url = `${window.location.origin}/products/${slug}`;
-    if (navigator.share) {
-      try { await navigator.share({ title: name, url }); } catch { /* cancelled */ }
-    } else {
-      await navigator.clipboard.writeText(url);
-      toast("Link copied!", { icon: "\uD83D\uDD17", duration: 2000 });
-    }
-  };
-
   const sectionViewport = { once: true, amount: 0.15 as const };
 
   return (
@@ -135,98 +60,8 @@ export default function Home({
 
         <ChristmasBundles phase={promoPhase} daysLeft={promoDaysLeft} />
 
-        {/* ─── Products Carousel ─── */}
-        <section className="py-20 md:py-28 bg-[#f8fafc]">
-          <div className="container mx-auto px-4 sm:px-6">
-            <motion.div
-              className="text-center mb-12 md:mb-16"
-              initial="hidden"
-              whileInView="visible"
-              viewport={sectionViewport}
-              variants={fadeUp()}
-            >
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tight mb-3">
-                Explore Our Products
-              </h2>
-              <p className="text-base md:text-lg text-gray-500 max-w-md mx-auto">
-                Discover the perfect juice for your lifestyle
-              </p>
-            </motion.div>
-          </div>
-
-          <div className="relative w-full px-4 sm:px-6 lg:px-8">
-            <button
-              aria-label="Scroll left"
-              onClick={() => scrollCarousel("left")}
-              className={`hidden md:flex items-center justify-center absolute left-2 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white shadow-lg shadow-black/8 border border-black/5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-110 active:scale-95 ${canScrollLeft ? "opacity-100" : "opacity-0 pointer-events-none"}`}
-            >
-              <ChevronLeft className="w-5 h-5 text-gray-700" />
-            </button>
-
-            <button
-              aria-label="Scroll right"
-              onClick={() => scrollCarousel("right")}
-              className={`hidden md:flex items-center justify-center absolute right-2 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white shadow-lg shadow-black/8 border border-black/5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-110 active:scale-95 ${canScrollRight ? "opacity-100" : "opacity-0 pointer-events-none"}`}
-            >
-              <ChevronRight className="w-5 h-5 text-gray-700" />
-            </button>
-
-            <div
-              ref={carouselRef}
-              className="w-full flex gap-5 overflow-x-auto pb-6 no-scrollbar scroll-pl-4"
-              style={{ scrollBehavior: "smooth" }}
-            >
-              {productCategories.map((category) => (
-                <div key={category.id} className="w-[280px] sm:w-[300px] flex-shrink-0">
-                  <Link
-                    href={`/products/${category.slug}`}
-                    className="group block relative rounded-[1.5rem] overflow-hidden aspect-[3/4] cursor-pointer"
-                  >
-                    {/* Full-bleed image — the hero */}
-                    <Image
-                      src={category.images ? category.images[0] : category.image}
-                      alt={category.name}
-                      fill
-                      className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
-                      sizes="300px"
-                    />
-
-                    {/* Gradient — bottom 60% fade for text readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
-
-                    {/* Top-right share */}
-                    <button
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleShare(category.name, category.slug); }}
-                      className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/15 backdrop-blur-md border border-white/20 hover:bg-white/30 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
-                      aria-label={`Share ${category.name}`}
-                    >
-                      <Share2 className="h-4 w-4 text-white" />
-                    </button>
-
-                    {/* Bottom content — stacked text on dark scrim */}
-                    <div className="absolute bottom-0 inset-x-0 p-5 sm:p-6 z-10">
-                      {/* Category tag */}
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[9px] font-bold tracking-[0.12em] uppercase text-white/90 mb-3">
-                        {category.name}
-                      </span>
-
-                      {/* Description */}
-                      <p className="text-[13px] text-white/70 leading-relaxed line-clamp-2 mb-4">
-                        {category.description}
-                      </p>
-
-                      {/* CTA */}
-                      <div className="inline-flex items-center gap-2 bg-white rounded-full py-2.5 px-5 text-[12px] font-bold text-gray-900 tracking-wide transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:bg-green-50 group-hover:text-green-700 group-hover:shadow-lg group-hover:shadow-green-500/20">
-                        Shop Now
-                        <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1" />
-                      </div>
-                    </div>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* ─── Products ─── */}
+        <ProductRail />
 
         {/* ─── Marquee ─── */}
         <div className="bg-green-600 text-white py-2.5 overflow-hidden relative">
