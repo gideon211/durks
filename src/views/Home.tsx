@@ -57,7 +57,7 @@ export default function Home({
     <div>
       <Header />
       <div className="min-h-screen bg-white">
-        <HeroSection promoActive={promoPhase === "preorder"} />
+        <HeroSection />
 
         <ChristmasBundles phase={promoPhase} daysLeft={promoDaysLeft} />
 
