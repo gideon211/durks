@@ -167,7 +167,7 @@ export default function WhyDuks() {
             </div>
 
             {/* Credentials + mission, side by side */}
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-5">
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-5">
               <div className="flex items-center gap-4">
                 <CoachSeal />
                 <div>
