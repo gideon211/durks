@@ -38,6 +38,77 @@ const pillars = [
   },
 ];
 
+function CoachSeal() {
+  return (
+    <span
+      aria-hidden="true"
+      className="relative flex h-[76px] w-[76px] shrink-0 items-center justify-center"
+    >
+      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
+        <defs>
+          <path id="coachSealTop" d="M50 50 m -30 0 a30 30 0 0 1 60 0" fill="none" />
+          <path id="coachSealBottom" d="M50 50 m 30 0 a30 30 0 0 1 -60 0" fill="none" />
+        </defs>
+        {/* serrated stamp edge */}
+        <circle
+          cx="50"
+          cy="50"
+          r="48"
+          fill="none"
+          stroke="hsl(var(--gold))"
+          strokeWidth="2.4"
+          strokeDasharray="1.7 3.6"
+          opacity="0.85"
+        />
+        {/* disc and rings */}
+        <circle cx="50" cy="50" r="40" fill="hsl(var(--forest))" />
+        <circle
+          cx="50"
+          cy="50"
+          r="40"
+          fill="none"
+          stroke="hsl(var(--gold))"
+          strokeWidth="1"
+          opacity="0.55"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r="26"
+          fill="none"
+          stroke="hsl(var(--gold))"
+          strokeWidth="0.6"
+          opacity="0.4"
+        />
+        {/* curved labels */}
+        <text
+          fill="hsl(var(--gold))"
+          fontSize="10"
+          fontWeight="700"
+          letterSpacing="1.2"
+          fontFamily="Poppins, sans-serif"
+        >
+          <textPath href="#coachSealTop" startOffset="50%" textAnchor="middle">
+            CERTIFIED
+          </textPath>
+        </text>
+        <text
+          fill="hsl(var(--gold))"
+          fontSize="8.6"
+          fontWeight="600"
+          letterSpacing="0.8"
+          fontFamily="Poppins, sans-serif"
+        >
+          <textPath href="#coachSealBottom" startOffset="50%" textAnchor="middle">
+            HEALTH COACH
+          </textPath>
+        </text>
+      </svg>
+      <Leaf className="relative h-6 w-6 text-gold" strokeWidth={1.6} />
+    </span>
+  );
+}
+
 export default function WhyDuks() {
   return (
     <section className="bg-soft-sand py-20 md:py-28">
@@ -59,7 +130,7 @@ export default function WhyDuks() {
         </motion.div>
 
         {/* Founder */}
-        <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-14">
+        <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-14">
           <motion.div
             className="lg:col-span-7"
             initial="hidden"
@@ -76,30 +147,53 @@ export default function WhyDuks() {
               healthier, stronger life.
             </p>
 
-            <div className="mt-7 flex flex-wrap items-end gap-x-4 gap-y-1">
+            {/* Signature */}
+            <div className="mt-9">
               <span
-                className="text-4xl leading-none text-forest"
+                className="block text-4xl leading-none text-forest"
                 style={{ fontFamily: "var(--font-signature), cursive" }}
               >
                 Duku I. Plange
               </span>
-              <span className="pb-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-charcoal/50">
-                Founder &amp; Certified Health Coach
+              <span className="mt-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-charcoal/50">
+                Founder
               </span>
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-2">
-              <span className="rounded-full border border-forest/15 bg-white/70 px-3 py-1 text-[11px] font-semibold text-forest/80">
-                CPD Standards Office accredited
-              </span>
-              <span className="rounded-full border border-forest/15 bg-white/70 px-3 py-1 text-[11px] font-semibold text-forest/80">
-                Certified Health Coach
-              </span>
+            {/* gold rule */}
+            <div className="mt-6 flex items-center gap-1.5" aria-hidden="true">
+              <span className="h-px w-14 bg-gold/60" />
+              <span className="h-[3px] w-3 rounded-full bg-gold" />
             </div>
 
-            <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-forest px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white/90">
-              <Leaf className="h-3.5 w-3.5 text-gold" />
-              Your Health Is My <span className="text-gold">Mission</span>
+            {/* Credentials + mission, side by side */}
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-5">
+              <div className="flex items-center gap-4">
+                <CoachSeal />
+                <div>
+                  <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-forest">
+                    CPD Standards Office
+                  </p>
+                  <p className="mt-0.5 text-[12px] text-neutral-charcoal/60">
+                    Accredited Health Coach
+                  </p>
+                </div>
+              </div>
+
+              <div className="inline-flex items-center gap-3 rounded-full border border-gold/50 bg-forest py-2 pl-2 pr-5 shadow-lg shadow-forest/25">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gold text-forest">
+                  <Leaf className="h-4 w-4" strokeWidth={1.9} />
+                </span>
+                <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-white">
+                  Your Health Is My{" "}
+                  <span
+                    className="text-xl normal-case leading-none text-gold"
+                    style={{ fontFamily: "var(--font-signature), cursive" }}
+                  >
+                    Mission
+                  </span>
+                </span>
+              </div>
             </div>
           </motion.div>
 
@@ -110,14 +204,20 @@ export default function WhyDuks() {
             viewport={sectionViewport}
             variants={fadeUp(20)}
           >
-            <div className="relative mx-auto aspect-[4/5] w-full max-w-[340px] overflow-hidden rounded-[2rem] bg-[#EFE9DB] shadow-xl shadow-forest/10 lg:ml-auto">
-              <Image
-                src="/images/founder-duku.webp"
-                alt="Duku I. Plange, founder and certified health coach at Duks Juice"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 80vw, 340px"
+            <div className="relative mx-auto aspect-[4/5] w-full max-w-[340px] lg:ml-auto">
+              <div
+                aria-hidden="true"
+                className="absolute -inset-3 rounded-[2.4rem] border border-gold/30"
               />
+              <div className="relative h-full w-full overflow-hidden rounded-[2rem] bg-[#EFE9DB] shadow-xl shadow-forest/10">
+                <Image
+                  src="/images/founder-duku.webp"
+                  alt="Duku I. Plange, founder and certified health coach at Duks Juice"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 80vw, 340px"
+                />
+              </div>
             </div>
           </motion.div>
         </div>
