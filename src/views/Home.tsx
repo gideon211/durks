@@ -12,9 +12,6 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   Share2,
-  Leaf,
-  Heart,
-  Sparkles,
   ArrowRight,
   ChevronLeft,
   ChevronRight,
@@ -23,6 +20,7 @@ import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import ChristmasBundles from "@/components/christmas/ChristmasBundles";
+import WhyDuks from "@/components/home/WhyDuks";
 import type { PromoPhase } from "@/lib/christmasPromo";
 import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -250,73 +248,7 @@ export default function Home({
         </div>
 
         {/* ─── Why Choose Duks ─── */}
-        <section className="py-20 md:py-28 bg-[#f8fafc]">
-          <div className="container mx-auto px-4 sm:px-6">
-            <motion.div
-              className="text-center mb-12 md:mb-16"
-              initial="hidden"
-              whileInView="visible"
-              viewport={sectionViewport}
-              variants={fadeUp()}
-            >
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-green-600 mb-3">Why Duks</p>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tight mb-4">
-                Why Choose Duks
-              </h2>
-              <Image
-                src="/images/whychooseus.jpeg"
-                alt="Why choose Duks Juice"
-                width={400}
-                height={400}
-                className="w-full max-w-[240px] sm:max-w-xs md:max-w-sm mx-auto h-auto object-contain rounded-xl py-3 sm:py-4"
-                sizes="(max-width: 640px) 240px, (max-width: 768px) 320px, 384px"
-              />
-              <p className="text-base md:text-lg text-gray-500 max-w-lg mx-auto mt-2">
-                Every bottle is a commitment to your health and our planet
-              </p>
-            </motion.div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
-              {[
-                {
-                  icon: Leaf,
-                  title: "Pure & Clean",
-                  text: "No added sugar, preservatives, or artificial colors. Juices are bottled as juiced — nothing hidden.",
-                  iconColor: "text-green-600",
-                },
-                {
-                  icon: Sparkles,
-                  title: "Maximum Nutrition",
-                  text: "Cold-press technology preserves maximum vitamins, minerals, and enzymes in every bottle.",
-                  iconColor: "text-amber-600",
-                },
-                {
-                  icon: Heart,
-                  title: "Expertly Blended",
-                  text: "Our master blenders create flavor combinations that excite your taste buds while nourishing your body.",
-                  iconColor: "text-rose-600",
-                },
-              ].map((item, index) => (
-                <motion.div
-                  key={index}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={sectionViewport}
-                  variants={fadeUp(15 + index * 80)}
-                  className="group"
-                >
-                  <div className="h-full rounded-xl border border-gray-100 bg-white p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-                    <div className="mb-5">
-                      <item.icon className={`w-6 h-6 ${item.iconColor}`} />
-                    </div>
-                    <h3 className="text-base font-semibold tracking-tight mb-2 text-gray-900">{item.title}</h3>
-                    <p className="text-sm text-gray-500 leading-relaxed">{item.text}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <WhyDuks />
 
         {/* ─── TikTok / Social Section ─── */}
         <section className="py-12 md:py-20 bg-neutral-charcoal text-white mt-24 rounded-b-lg">

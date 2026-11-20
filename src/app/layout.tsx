@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Sora, Poppins } from "next/font/google";
+import { Sora, Poppins, Caveat } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/Providers";
 import JsonLd from "@/components/JsonLd";
@@ -16,6 +16,14 @@ const poppins = Poppins({
   variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+});
+
+const caveat = Caveat({
+  variable: "--font-signature",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -64,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${sora.variable} ${poppins.variable}`}>
+    <html lang="en" className={`${sora.variable} ${poppins.variable} ${caveat.variable}`}>
       <body>
         <JsonLd
           data={{

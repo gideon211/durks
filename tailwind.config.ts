@@ -69,6 +69,8 @@ export default {
         "ocean-teal": "hsl(var(--ocean-teal))",
         "neutral-charcoal": "hsl(var(--neutral-charcoal))",
         "soft-sand": "hsl(var(--soft-sand))",
+        "forest": "hsl(var(--forest))",
+        "gold": "hsl(var(--gold))",
       },
       borderRadius: {
         lg: "var(--radius)",
