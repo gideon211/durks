@@ -63,7 +63,7 @@ export default function HeroSection() {
       />
 
       <div className="container relative mx-auto px-5 pb-14 pt-24 sm:px-6 md:pb-24 md:pt-32 lg:px-8 lg:pb-20">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center lg:gap-14 lg:min-h-[calc(88vh-8rem)]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center lg:gap-14 lg:min-h-[calc(80vh-8rem)]">
           {/* Product — seen first on mobile; sits right on desktop */}
           <motion.div
             className="order-1 lg:order-2 lg:col-span-6"
@@ -75,7 +75,7 @@ export default function HeroSection() {
               {/* offset forest block for depth */}
               <div
                 aria-hidden="true"
-                className="absolute left-6 -bottom-5 -right-5 top-10 rounded-[2.2rem] bg-gradient-to-br from-forest via-forest to-[#1B5127]"
+                className="absolute left-6 -bottom-3 -right-5 top-10 rounded-[2.2rem] bg-gradient-to-br from-forest via-forest to-[#1B5127] sm:-bottom-5"
               />
 
               {/* image frame */}
@@ -106,7 +106,7 @@ export default function HeroSection() {
               </div>
 
               {/* floating pill */}
-              <div className="absolute -bottom-4 left-6 flex items-center gap-2 rounded-full border border-forest/10 bg-white px-4 py-2.5 shadow-lg shadow-forest/15">
+              <div className="absolute -bottom-3 left-6 flex items-center gap-2 rounded-full border border-forest/10 bg-white px-4 py-2.5 shadow-lg shadow-forest/15 sm:-bottom-4">
                 <Leaf className="h-4 w-4 text-forest" strokeWidth={1.9} />
                 <span className="text-[12px] font-semibold text-forest">
                   Pressed fresh daily
@@ -143,7 +143,7 @@ export default function HeroSection() {
                   aria-hidden="true"
                   viewBox="0 0 300 12"
                   preserveAspectRatio="none"
-                  className="absolute left-0 -bottom-1.5 h-2.5 w-full text-gold"
+                  className="absolute left-0 -bottom-2.5 h-2.5 w-full text-gold"
                 >
                   <path
                     d="M4 8.5C58 3.2 116 9.6 176 5.4C220 2.3 262 4.1 296 6.8"
@@ -158,7 +158,7 @@ export default function HeroSection() {
 
             <motion.p
               variants={child(24)}
-              className="mt-6 max-w-md text-base leading-relaxed text-neutral-charcoal/60 md:text-lg"
+              className="mt-6 max-w-md text-base leading-relaxed text-neutral-charcoal/70 md:text-lg"
             >
               Fresh cold-pressed juice, delivered to your door.
             </motion.p>
@@ -178,7 +178,7 @@ export default function HeroSection() {
             {/* Category quick-links */}
             <motion.ul
               variants={child(20)}
-              className="mt-6 flex flex-wrap gap-2.5"
+              className="mt-6 grid grid-cols-2 justify-items-start gap-2.5 sm:grid-cols-3"
             >
               {categoryPills.map((pill) => (
                 <li key={pill.href}>
